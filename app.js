@@ -331,7 +331,7 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 | search_patient_procedure | Procedures, surgeries | PATIENT, CODE, PAGE |
 | search_patient_medications | Medications, drugs, prescriptions | PATIENT, DRUG_CODE, STATUS, PAGE |
 | search_patient_encounter | Admissions, discharges, insurance | PATIENT, STATUS, CLASS (IMP/AMB), DATE (two date params for range), PAGE |
-| search_patient_observations | Labs, vitals, test results | PATIENT, CODE (LOINC), CATEGORY, VALUE_QUANTITY, PAGE |
+| search_patient_observations | Labs, vitals, test results | PATIENT, CODE (LOINC), CATEGORY, VALUE_QUANTITY, DATE, PAGE |
 
 ## CRITICAL PARAMETER RULES
 - NEVER pass null to any parameter — leave empty string instead
@@ -511,8 +511,8 @@ Step 3: Present all matching patients returned in the response with their observ
 3. Recent / Latest Observations (General Request)
 When the user asks for "recent observations", "latest observations", "his observations", "her observations", or any general observation request without specifying a type:
 
-Step 1: Do NOT ask the user for clarification — automatically determine the key observations clinically relevant to the patient based on their active conditions, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with PATIENT and the respective LOINC code looked up from the LOINC_CODES knowledge base
-Step 2: Apply a date filter on the returned results — include ONLY data points from the year 2025 onwards. Any entry dated before 1st January 2025 must be completely excluded
+Step 1: Do NOT ask the user for clarification — automatically determine the key observations clinically relevant to the patient based on their active conditions, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with PATIENT, the respective LOINC code looked up from the LOINC_CODES knowledge base, and DATE=gt2025-01-01
+Step 2: Apply a date filter — include ONLY data points from the year 2025 onwards. Any entry dated before 1st January 2025 must be completely excluded
 Step 3: Present all results together as a clinical summary with observation name, value, unit, and date
 Critical Rules — all are MANDATORY and non-negotiable:
 
@@ -709,6 +709,7 @@ const TOOLS = [
           CODE:           { type: "string", description: "LOINC observation code" },
           CATEGORY:       { type: "string", description: "Observation category filter (e.g. vital-signs, laboratory)" },
           VALUE_QUANTITY: { type: "string", description: "Filter by value e.g. 'gt10|mEq/L' or 'lt5|mg/dL'" },
+          DATE:           { type: "string", description: "Date filter e.g. 'gt2025-01-01' to return results after a date" },
           page:           { type: "number", description: "Page number for pagination, starting at 0" }
         }
       }
@@ -831,6 +832,7 @@ async function executeTool(name, args) {
         if (args.CODE)           params.code               = args.CODE;
         if (args.CATEGORY)       params.category           = args.CATEGORY;
         if (args.VALUE_QUANTITY) params["value-quantity"]   = args.VALUE_QUANTITY;
+        if (args.DATE)           params.date               = args.DATE;
         params.page = (args.page !== undefined && args.page !== null && args.page !== "") ? Number(args.page) : 0;
         params.size = 20;
         return await callFhirApi(buildUrl("/baseR4/Observation/search", params));
