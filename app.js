@@ -330,7 +330,7 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 | search_patient_condition | Diagnoses, conditions, history | PATIENT, CODE, PAGE |
 | search_patient_procedure | Procedures, surgeries | PATIENT, CODE, PAGE |
 | search_patient_medications | Medications, drugs, prescriptions | PATIENT, DRUG_CODE, STATUS, PAGE |
-| search_patient_encounter | Admissions, discharges, insurance | SUBJECT, DATE (two date params for range), PAGE |
+| search_patient_encounter | Admissions, discharges, insurance | PATIENT, STATUS, CLASS (IMP/AMB), DATE (two date params for range), PAGE |
 | search_patient_observations | Labs, vitals, test results | SUBJECT, CODE (LOINC), value_quantity, PAGE, DATE (two date params for range) |
 
 ## CRITICAL PARAMETER RULES
@@ -447,42 +447,40 @@ Step 5: If user says yes — call again with page=1, display all results returne
 Step 6: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 
-Note: No SUBJECT parameter is needed for cross-patient date-based searches.
+Note: No PATIENT parameter is needed for cross-patient date-based searches.
 
 3. Inpatient Encounters
 When the user asks specifically for inpatient encounters or admissions:
 
-Step 1: Call search_patient_encounter with SUBJECT and page=0
-Step 2: Filter and display ONLY encounters where class.code = "IMP"
-Step 3: Display each encounter with date, reason, doctor, and location
-Step 4: After displaying, ask: "There may be more inpatient encounters. Would you like to see more?"
-Step 5: If user says yes — call again with SUBJECT and page=1, apply the same filter, then ask again
-Step 6: Continue with page=2, page=3 and so on until the user says no or no more data is returned
+Step 1: Call search_patient_encounter with PATIENT and CLASS=IMP and page=0
+Step 2: Display each encounter with date, reason, doctor, and location
+Step 3: After displaying, ask: "There may be more inpatient encounters. Would you like to see more?"
+Step 4: If user says yes — call again with PATIENT and CLASS=IMP and page=1, then ask again
+Step 5: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 4. Outpatient / OPD / Consultation Encounters
 When the user asks specifically for outpatient, OPD, or consultation encounters:
 
-Step 1: Call search_patient_encounter with SUBJECT and page=0
-Step 2: Filter and display ONLY encounters where class.code = "AMB"
-Step 3: Display each encounter with date, reason, doctor, and location
-Step 4: After displaying, ask: "There may be more outpatient encounters. Would you like to see more?"
-Step 5: If user says yes — call again with SUBJECT and page=1, apply the same filter, then ask again
-Step 6: Continue with page=2, page=3 and so on until the user says no or no more data is returned
+Step 1: Call search_patient_encounter with PATIENT and CLASS=AMB and page=0
+Step 2: Display each encounter with date, reason, doctor, and location
+Step 3: After displaying, ask: "There may be more outpatient encounters. Would you like to see more?"
+Step 4: If user says yes — call again with PATIENT and CLASS=AMB and page=1, then ask again
+Step 5: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 5. Both Inpatient and Outpatient Encounters
 When the user asks for both types, or asks for recent/general encounters without specifying a type:
 
-Step 1: Call search_patient_encounter with SUBJECT and page=0
+Step 1: Call search_patient_encounter with PATIENT and page=0
 Step 2: Separate results into two groups — class.code = "IMP" (Inpatient) and class.code = "AMB" (Outpatient)
 Step 3: Present results in two clearly labeled sections: Inpatient Encounters and Outpatient Encounters
 Step 4: After displaying, ask: "There may be more encounters. Would you like to see more?"
-Step 5: If user says yes — call again with SUBJECT and page=1, separate and display under the same two sections, then ask again
+Step 5: If user says yes — call again with PATIENT and page=1, separate and display under the same two sections, then ask again
 Step 6: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 6. Episodes of Care
 When the user asks for "episodes of care" for a patient:
 
-Step 1: Call search_patient_encounter with SUBJECT and page=0 — continue paginating through all pages until no more data is returned, collecting all encounters before proceeding
+Step 1: Call search_patient_encounter with PATIENT and page=0 — continue paginating through all pages until no more data is returned, collecting all encounters before proceeding
 Step 2: Group all encounters by overarching clinical condition — NOT by time period and NOT by exact diagnosis string. Clinically related conditions must be merged into a single episode (e.g. CKD Stage 2, Stage 3, Stage 4, Stage 5, Hypertensive CKD, Acute Kidney Failure, Anemia of CKD → all grouped under one episode titled "Chronic Kidney Disease Progression")
 Step 3: Each episode must include ALL related encounters — both OPD (class.code = "AMB") and Inpatient (class.code = "IMP") — do not exclude outpatient encounters
 Step 4: Present each episode as a numbered section with a broad clinical condition as the title. Within each episode, list all encounters chronologically, each clearly labeled as OPD or Inpatient, with date, reason/type, doctor (if available), and location (if available)
@@ -689,7 +687,9 @@ const TOOLS = [
       parameters: {
         type: "object",
         properties: {
-          SUBJECT: { type: "string", description: "Patient numeric ID" },
+          PATIENT: { type: "string", description: "Patient ID (do NOT include 'Patient/' prefix)" },
+          STATUS:  { type: "string", description: "Encounter status filter (e.g. planned, arrived, in-progress, finished, cancelled)" },
+          CLASS:   { type: "string", description: "Encounter class filter (IMP=inpatient, AMB=outpatient/ambulatory)" },
           DATE:    { type: "string", description: "Start date filter e.g. 'gt2000-01-13' (gt=after, lt=before)" },
           DATE2:   { type: "string", description: "End date filter e.g. 'lt2024-09-13'" },
           page:    { type: "number", description: "Page number for pagination, starting at 0" }
@@ -813,14 +813,16 @@ async function executeTool(name, args) {
         return await callFhirApi(buildUrl("/baseR4/MedicationRequest", params));
       }
       case "search_patient_encounter": {
-        // date params need special handling (multiple values same key)
         const base = `${FHIR_BASE}/baseR4/Encounter`;
         const url  = new URL(base);
-        if (args.SUBJECT) url.searchParams.append("subject", args.SUBJECT);
+        if (args.PATIENT) url.searchParams.append("patient", args.PATIENT);
+        if (args.STATUS)  url.searchParams.append("status",  args.STATUS);
+        if (args.CLASS)   url.searchParams.append("class",   args.CLASS);
         if (args.DATE)    url.searchParams.append("date",    args.DATE);
         if (args.DATE2)   url.searchParams.append("date",    args.DATE2);
         const page = (args.page !== undefined && args.page !== null && args.page !== "") ? Number(args.page) : 0;
         url.searchParams.append("page", page);
+        url.searchParams.append("size", 20);
         return await callFhirApi(url.toString());
       }
       case "search_patient_observations": {
