@@ -7,7 +7,7 @@
 // OpenAI API key is stored in localStorage (entered by user on first run)
 // Never hardcode API keys in source code
 const OPENAI_MODEL   = "gpt-5.4-nano-2026-03-17";
-const FHIR_BASE      = "https://fhirassist.rsystems.com:481";
+const FHIR_BASE      = "https://fhirassist.rsystems.com:8081";
 const LOGIN_URL      = `${FHIR_BASE}/auth/login`;
 
 // ── State ────────────────────────────────────────────
@@ -326,8 +326,8 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 ## FUNCTION REFERENCE
 | Function | When to Call | Key Parameters |
 |---|---|---|
-| search_fhir_patient | Patient lookup by any identifier | EMAIL, GIVEN, FAMILY, PHONE, BIRTHDATE |
-| search_patient_condition | Diagnoses, conditions, history | SUBJECT, CODE, PAGE |
+| search_fhir_patient | Patient lookup by any identifier | EMAIL, GIVEN, FAMILY, GENDER, BIRTHDATE |
+| search_patient_condition | Diagnoses, conditions, history | PATIENT, CODE, PAGE |
 | search_patient_procedure | Procedures, surgeries | SUBJECT, CODE, PAGE |
 | search_patient_medications | Medications, drugs, prescriptions | SUBJECT, CODE, PAGE |
 | search_patient_encounter | Admissions, discharges, insurance | SUBJECT, DATE (two date params for range), PAGE |
@@ -335,7 +335,7 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 
 ## CRITICAL PARAMETER RULES
 - NEVER pass null to any parameter — leave empty string instead
-- NEVER pass "Patient/10017" in SUBJECT param — pass only "10017"
+- NEVER pass "Patient/10017" in PATIENT param — pass only "10017"
 - Never call same function twice for same data — except when paginating results using the page parameter, where repeated calls with incrementing page        numbers are expected and required
 - Store patient ID for follow-up queries in the same conversation
 
@@ -349,10 +349,10 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 1. Active Conditions for a Specific Patient
 When the user asks for active conditions of a patient, load and display conditions page by page — the number of results per page may vary depending on the API response:
 
-Step 1: Call search_patient_condition with SUBJECT and page=0
+Step 1: Call search_patient_condition with PATIENT and page=0
 Step 2: Filter and display ONLY conditions whose clinicalStatus is active — exclude inactive, resolved, or any other status
 Step 3: After displaying, ask: "There may be more conditions. Would you like to see more?"
-Step 4: If user says yes — call again with SUBJECT and page=1, display the next 10 active conditions, then ask again
+Step 4: If user says yes — call again with PATIENT and page=1, display the next 10 active conditions, then ask again
 Step 5: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 2. Single Condition Result
@@ -364,7 +364,7 @@ When the user asks about a specific condition on a patient and multiple matching
 When the user asks to find all patients with a specific condition (e.g. "show all patients with Amebic lung abscess"):
 
 Step 1: Look up the condition's ICD code from the CONDITION_CODES knowledge base
-Step 2: Call search_patient_condition passing only the CODE parameter (e.g. CODE=0064) — do NOT pass SUBJECT
+Step 2: Call search_patient_condition passing only the CODE parameter (e.g. CODE=0064) — do NOT pass PATIENT
 Step 3: Present all matching patients returned in the response with their relevant details
 
 
@@ -621,14 +621,14 @@ const TOOLS = [
     type: "function",
     function: {
       name: "search_fhir_patient",
-      description: "Search for patients in the FHIR system by name, email, phone, birthdate, or patient ID.",
+      description: "Search for patients in the FHIR system by name, email, gender, birthdate, or patient ID.",
       parameters: {
         type: "object",
         properties: {
           GIVEN:      { type: "string", description: "Patient first/given name" },
           FAMILY:     { type: "string", description: "Patient last/family name" },
           EMAIL:      { type: "string", description: "Patient email address" },
-          PHONE:      { type: "string", description: "Patient phone number" },
+          GENDER:     { type: "string", description: "Patient gender (male, female, other, unknown)" },
           BIRTHDATE:  { type: "string", description: "Patient date of birth (YYYY-MM-DD)" },
           PATIENT_ID: { type: "string", description: "Patient numeric ID" }
         }
@@ -639,13 +639,12 @@ const TOOLS = [
     type: "function",
     function: {
       name: "search_patient_condition",
-      description: "Search patient conditions/diagnoses from FHIR. Can search by subject (patient ID) and/or ICD-9 code.",
+      description: "Search patient conditions/diagnoses from FHIR. Can search by patient ID and/or ICD-9 code.",
       parameters: {
         type: "object",
         properties: {
-          SUBJECT:   { type: "string", description: "Patient numeric ID (do NOT include 'Patient/' prefix)" },
+          PATIENT:   { type: "string", description: "Patient ID (do NOT include 'Patient/' prefix)" },
           CODE:      { type: "string", description: "ICD-9 diagnosis code" },
-          ENCOUNTER: { type: "string", description: "Encounter numeric ID" },
           page:      { type: "number", description: "Page number for pagination, starting at 0" }
         }
       }
@@ -772,9 +771,11 @@ async function executeTool(name, args) {
         if (args.FAMILY)     params.family    = args.FAMILY;
         if (args.GIVEN)      params.given     = args.GIVEN;
         if (args.EMAIL)      params.email     = args.EMAIL;
-        if (args.PHONE)      params.phone     = args.PHONE;
+        if (args.GENDER)     params.gender    = args.GENDER;
         if (args.BIRTHDATE)  params.birthdate = args.BIRTHDATE;
         if (args.PATIENT_ID) params._id       = args.PATIENT_ID;
+        params.page = 0;
+        params.size = 20;
         const patientResult = await callFhirApi(buildUrl("/baseR4/Patient", params));
         try {
           const entries = patientResult?.entry || [];
@@ -789,10 +790,10 @@ async function executeTool(name, args) {
       }
       case "search_patient_condition": {
         const params = {};
-        if (args.SUBJECT)   params.subject   = args.SUBJECT;
+        if (args.PATIENT)   params.patient   = args.PATIENT;
         if (args.CODE)      params.code      = args.CODE;
-        if (args.ENCOUNTER) params.encounter = args.ENCOUNTER;
         params.page = (args.page !== undefined && args.page !== null && args.page !== "") ? Number(args.page) : 0;
+        params.size = 20;
         return await callFhirApi(buildUrl("/baseR4/Condition", params));
       }
       case "search_patient_procedure": {
