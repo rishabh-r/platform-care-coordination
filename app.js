@@ -71,7 +71,7 @@ V4511=Renal dialysis status, V560=Renal dialysis encounter,
 `;
 
 const DRUG_CODES = `
-DRUG CODES (pass as CODE param to search_patient_medications):
+DRUG CODES (pass as DRUG_CODE param to search_patient_medications):
 ACET20/4I, ACET325, ADAL60, ALBU25, ALTE1I, AMBI5, AMID200, APAP500, ARTI3.5O, ASA325, ASA81EC,
 ATOR10, ATOR20, BISA10R, CALC500, CALG1I, CEFA10I, CEFX1F, CEPH500, CIPR250, CIPR500, CISA10I,
 CLOP75, D5W100, D5W250, D5W50, DEXA4I, DIAZ5, DOBPREM, DOCU100, DOCU100L, DOLA12.5I, DONE5,
@@ -329,7 +329,7 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 | search_fhir_patient | Patient lookup by any identifier | EMAIL, GIVEN, FAMILY, GENDER, BIRTHDATE |
 | search_patient_condition | Diagnoses, conditions, history | PATIENT, CODE, PAGE |
 | search_patient_procedure | Procedures, surgeries | PATIENT, CODE, PAGE |
-| search_patient_medications | Medications, drugs, prescriptions | SUBJECT, CODE, PAGE |
+| search_patient_medications | Medications, drugs, prescriptions | PATIENT, DRUG_CODE, STATUS, PAGE |
 | search_patient_encounter | Admissions, discharges, insurance | SUBJECT, DATE (two date params for range), PAGE |
 | search_patient_observations | Labs, vitals, test results | SUBJECT, CODE (LOINC), value_quantity, PAGE, DATE (two date params for range) |
 
@@ -402,27 +402,27 @@ Step 3: Present all matching patients returned in the response with their releva
 1. All Medications for a Specific Patient
 When the user asks for medications of a patient (e.g. "Give me medications for patient X", "Show prescriptions for patient X"):
 
-Step 1: Call search_patient_medications with SUBJECT and page=0
+Step 1: Call search_patient_medications with PATIENT and page=0
 Step 2: Display all medications returned, each with medication name, code, status, and prescribed date
 Step 3: After displaying, ask: "There may be more medications. Would you like to see more?"
-Step 4: If user says yes — call again with SUBJECT and page=1, display the next 10, then ask again
+Step 4: If user says yes — call again with PATIENT and page=1, display the next 10, then ask again
 Step 5: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 2. Active Medications for a Specific Patient
 When the user asks for active medications of a patient (e.g. "Give active medications for patient X"):
 
-Step 1: Call search_patient_medications with SUBJECT and page=0
+Step 1: Call search_patient_medications with PATIENT and page=0
 Step 2: Filter and display ONLY medications whose status is active — exclude stopped, on-hold, cancelled, completed, or any other status
 Step 3: For each medication that passed the status = active filter, additionally check the note.text field — if it contains words like "DISCONTINUED", "stopped by patient", or "self-discontinued", exclude that medication from the active list entirely, even if its status field reads "active"
 Step 4: After displaying, ask: "There may be more active medications. Would you like to see more?"
-Step 5: If user says yes — call again with SUBJECT and page=1, apply the same active status filter, display results, then ask again
+Step 5: If user says yes — call again with PATIENT and page=1, apply the same active status filter, display results, then ask again
 Step 6: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 3. Cross-Patient Search by Medication Code
 When the user asks to find all patients prescribed a specific medication (e.g. "List all patients prescribed medication with code ASA325"):
 
 Step 1: Look up the medication code from the DRUG_CODES knowledge base (e.g. ASA325)
-Step 2: Call search_patient_medications passing only the CODE parameter (e.g. CODE=ASA325) — do NOT pass SUBJECT
+Step 2: Call search_patient_medications passing only the DRUG_CODE parameter (e.g. DRUG_CODE=ASA325) — do NOT pass PATIENT
 Step 3: Present all matching patients returned in the response with their relevant details
 
 
@@ -673,9 +673,9 @@ const TOOLS = [
       parameters: {
         type: "object",
         properties: {
-          SUBJECT:        { type: "string", description: "Patient numeric ID" },
-          CODE:           { type: "string", description: "Drug code (e.g. INSULIN, ACET325)" },
-          PRESCRIPTIONID: { type: "string", description: "Prescription ID number" },
+          PATIENT:        { type: "string", description: "Patient ID (do NOT include 'Patient/' prefix)" },
+          DRUG_CODE:      { type: "string", description: "Formulary drug code (e.g. INSULIN, ACET325)" },
+          STATUS:         { type: "string", description: "Medication status filter (e.g. active, stopped, on-hold, cancelled)" },
           page:           { type: "number", description: "Page number for pagination, starting at 0" }
         }
       }
@@ -805,10 +805,11 @@ async function executeTool(name, args) {
       }
       case "search_patient_medications": {
         const params = {};
-        if (args.SUBJECT)        params.subject        = args.SUBJECT;
-        if (args.CODE)           params.code           = args.CODE;
-        if (args.PRESCRIPTIONID) params.prescriptionId = args.PRESCRIPTIONID;
+        if (args.PATIENT)    params.patient              = args.PATIENT;
+        if (args.DRUG_CODE)  params["formulary-drug-cd"] = args.DRUG_CODE;
+        if (args.STATUS)     params.status               = args.STATUS;
         params.page = (args.page !== undefined && args.page !== null && args.page !== "") ? Number(args.page) : 0;
+        params.size = 20;
         return await callFhirApi(buildUrl("/baseR4/MedicationRequest", params));
       }
       case "search_patient_encounter": {
