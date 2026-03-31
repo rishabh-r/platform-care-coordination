@@ -328,7 +328,7 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 |---|---|---|
 | search_fhir_patient | Patient lookup by any identifier | EMAIL, GIVEN, FAMILY, GENDER, BIRTHDATE |
 | search_patient_condition | Diagnoses, conditions, history | PATIENT, CODE, PAGE |
-| search_patient_procedure | Procedures, surgeries | SUBJECT, CODE, PAGE |
+| search_patient_procedure | Procedures, surgeries | PATIENT, CODE, PAGE |
 | search_patient_medications | Medications, drugs, prescriptions | SUBJECT, CODE, PAGE |
 | search_patient_encounter | Admissions, discharges, insurance | SUBJECT, DATE (two date params for range), PAGE |
 | search_patient_observations | Labs, vitals, test results | SUBJECT, CODE (LOINC), value_quantity, PAGE, DATE (two date params for range) |
@@ -373,27 +373,27 @@ Step 3: Present all matching patients returned in the response with their releva
 1. Procedures for a Specific Patient
 When the user asks about procedures performed on a patient (e.g. "What procedures has patient X had?", "Show me recent procedures for patient X"):
 
-Step 1: Call search_patient_procedure with SUBJECT and page=0
+Step 1: Call search_patient_procedure with PATIENT and page=0
 Step 2: Display all procedures returned, each with procedure name, code, status, and date
 Step 3: After displaying, ask: "There may be more procedures. Would you like to see more?"
-Step 4: If user says yes — call again with SUBJECT and page=1, display all results returned on that page, then ask again
+Step 4: If user says yes — call again with PATIENT and page=1, display all results returned on that page, then ask again
 Step 5: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 2. Active Procedures for a Specific Patient
 When the user asks for active procedures of a patient (e.g. "List active procedures for patient X"):
 
-Step 1: Call search_patient_procedure with SUBJECT and page=0
+Step 1: Call search_patient_procedure with PATIENT and page=0
 Step 2: From the results, check the performedDateTime field — include ONLY procedures where the year in performedDateTime is 2025 or 2026 (current year). Exclude any procedure with a performedDateTime before 2025
 Step 3: Display all qualifying procedures with procedure name, code, status, and date
 Step 4: After displaying, ask: "There may be more active procedures. Would you like to see more?"
-Step 5: If user says yes — call again with SUBJECT and page=1, apply the same year filter, display results, then ask again
+Step 5: If user says yes — call again with PATIENT and page=1, apply the same year filter, display results, then ask again
 Step 6: Continue with page=2, page=3 and so on until the user says no or no more data is returned
 
 3. Cross-Patient Search by Procedure Name
 When the user asks to find all patients on whom a specific procedure was performed (e.g. "List all patients who had Evaluation and Management / Consultations"):
 
 Step 1: Look up the procedure's code from the PROCEDURE_CODES knowledge base — codes may be specific (e.g. 99241) or in ranges (e.g. 99241–99255). Use either the minimum or maximum value from the range, or the specific code if available. Also check SPECIFIC CPT CODES knowledge base for an exact match
-Step 2: Call search_patient_procedure passing only the CODE parameter (e.g. CODE=99241) — do NOT pass SUBJECT
+Step 2: Call search_patient_procedure passing only the CODE parameter (e.g. CODE=99241) — do NOT pass PATIENT
 Step 3: Present all matching patients returned in the response with their relevant details
 
 
@@ -654,13 +654,12 @@ const TOOLS = [
     type: "function",
     function: {
       name: "search_patient_procedure",
-      description: "Search patient procedures/surgeries from FHIR. Can search by subject and/or CPT code or code range.",
+      description: "Search patient procedures/surgeries from FHIR. Can search by patient ID and/or CPT code.",
       parameters: {
         type: "object",
         properties: {
-          SUBJECT:   { type: "string", description: "Patient numeric ID" },
-          CODE:      { type: "string", description: "CPT procedure code" },
-          ENCOUNTER: { type: "string", description: "Encounter numeric ID" },
+          PATIENT:   { type: "string", description: "Patient ID (do NOT include 'Patient/' prefix)" },
+          CODE:      { type: "number", description: "CPT procedure code (integer)" },
           page:      { type: "number", description: "Page number for pagination, starting at 0" }
         }
       }
@@ -798,10 +797,10 @@ async function executeTool(name, args) {
       }
       case "search_patient_procedure": {
         const params = {};
-        if (args.SUBJECT)   params.subject   = args.SUBJECT;
-        if (args.CODE)      params.code      = args.CODE;
-        if (args.ENCOUNTER) params.encounter = args.ENCOUNTER;
+        if (args.PATIENT)   params.patient   = args.PATIENT;
+        if (args.CODE !== undefined && args.CODE !== null && args.CODE !== "") params.code = Number(args.CODE);
         params.page = (args.page !== undefined && args.page !== null && args.page !== "") ? Number(args.page) : 0;
+        params.size = 20;
         return await callFhirApi(buildUrl("/baseR4/Procedure", params));
       }
       case "search_patient_medications": {
