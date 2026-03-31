@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSICareBridge – Clinical AI Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="chatbot_image/chatbot.png" />
+</head>
+<body>
+
+  <!-- ───────────────── LOGIN SCREEN ───────────────── -->
+  <div id="login-screen">
+    <!-- Top bar -->
+    <div class="login-topbar">
+      <img src="images/LogoRsi.png" alt="R Systems" class="rsi-logo" />
+      <span class="login-topbar-badge">For Care Coordinators &amp; Providers</span>
+    </div>
+    <!-- Main two-column body -->
+    <div class="login-body">
+    <div class="login-left">
+      <div class="login-content">
+        <h1 class="login-heading">Instant <span class="teal">Patient Insights</span><br>for Care Teams</h1>
+        <p class="login-desc">Give care coordination team instant, secure access to a complete patient view, labs, medications, patient history, and care gaps, <b>Powered by AI</b> and <b>fully integrated with your existing EHR</b>, to act faster, reduce risk, and keep patients on track.</p>
+        <form id="login-form" autocomplete="off">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="Enter your email" required autocomplete="username" />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" id="toggle-password" class="pw-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="login-error" class="error-banner hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span id="login-error-text">Invalid credentials. Please try again.</span>
+          </div>
+          <button type="submit" id="login-btn" class="launch-btn">
+            <img src="images/ChatBigIcon.png" alt="" id="btn-icon" class="btn-icon" />
+            <span id="btn-text">Launch Provider Assistant</span>
+            <span id="btn-spinner" class="spinner hidden"></span>
+          </button>
+        </form>
+        <p class="login-footer">Secure access for healthcare professionals</p>
+      </div>
+    </div>
+    <div class="login-right">
+      <img src="images/ChatBigIcon.png" alt="CareBridge" class="hero-icon" />
+    </div>
+    </div><!-- /.login-body -->
+    <!-- Signing-in overlay -->
+    <div id="signin-overlay" class="signin-overlay hidden">
+      <div class="signin-box">
+        <div class="spinner-dark"></div>
+        <p>Signing you in...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── HOME SCREEN ───────────────── -->
+  <div id="home-screen" class="hidden">
+    <nav class="navbar">
+      <img src="images/LogoRsi.png" alt="R Systems" class="nav-logo" />
+      <span class="nav-tagline">For Care Coordinators &amp; Providers</span>
+    </nav>
+    <main class="home-main">
+      <section class="hero">
+        <div class="hero-badge">AI-Powered FHIR Assistant</div>
+        <h1 class="hero-heading">Streamline Your<br><span class="teal">Care Coordination</span></h1>
+        <p class="hero-sub">Access patient records, lab results, medications, and clinical history instantly — powered by AI and FHIR R4 integration.</p>
+      </section>
+      <section class="features">
+        <div class="feat-card">
+          <div class="feat-icon teal-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <h3>Instant Record Retrieval</h3>
+          <p>Search patient records, diagnoses, and procedures in seconds using natural language.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon blue-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h3>HIPAA Compliant &amp; Secure</h3>
+          <p>Bearer token authentication with secure FHIR R4 APIs. No patient data stored on servers.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon purple-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <h3>AI-Powered Insights</h3>
+          <p>GPT-powered analysis of lab results and vitals with normal range flags and clinical context.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon green-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <h3>Comprehensive Reports</h3>
+          <p>Generate discharge summaries, medication lists, and encounter histories on demand.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Fixed logout button – bottom left -->
+    <button id="logout-btn" class="logout-btn-fixed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Log Out
+    </button>
+  </div>
+
+  <!-- ───────────────── CHAT WIDGET ───────────────── -->
+  <div id="chat-widget" class="hidden">
+
+    <!-- Expandable Chat Panel -->
+    <div id="chat-panel" class="chat-panel hidden">
+      <div class="chat-panel-header">
+        <div class="chat-panel-info">
+          <img src="chatbot_image/chatbot.png" alt="CareBridge" class="panel-avatar" />
+          <div>
+            <span class="panel-name">RSICareBridge</span>
+            <span class="panel-status"><span class="online-dot"></span>Online</span>
+          </div>
+        </div>
+        <div class="panel-header-actions">
+          <button id="clear-chat-btn" class="panel-action-btn" title="Clear chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+          </button>
+          <button id="close-chat-btn" class="panel-action-btn" title="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="messages" class="messages-area"></div>
+
+      <div id="typing-indicator" class="typing-indicator hidden">
+        <img src="chatbot_image/chatbot.png" alt="" class="typing-avatar" />
+        <div class="typing-bubble">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <div class="input-container">
+          <textarea
+            id="user-input"
+            placeholder="Ask about patient records, labs..."
+            rows="1"
+            maxlength="2000"
+          ></textarea>
+          <div id="predefined-dropdown" class="predefined-dropdown hidden">
+          <div class="predefined-dropdown-item" data-label="Search Patient">Search Patient</div>
+          <div class="predefined-dropdown-item" data-label="View Active Conditions">View Active Conditions</div>
+          <div class="predefined-dropdown-item" data-label="View Latest Observations">View Latest Observations</div>
+          <div class="predefined-dropdown-item" data-label="View Active Medications">View Active Medications</div>
+          <div class="predefined-dropdown-item" data-label="View Last 12 months encounters">View Last 12 months encounters</div>
+          <div class="predefined-dropdown-item" data-label="View Care Gaps">View Care Gaps</div>
+        </div>
+        <button id="bulb-btn" class="bulb-btn" title="Predefined questions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="9" y1="18" x2="15" y2="18"/>
+            <line x1="10" y1="22" x2="14" y2="22"/>
+            <path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4.5 6.5V17H9.5v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z"/>
+          </svg>
+        </button>
+    <button id="send-btn" class="send-btn" disabled title="Send">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="input-hint">CareBridge retrieves FHIR R4 data. Never provides treatment recommendations.</p>
+      </div>
+    </div>
+
+    <!-- Floating Toggle Button -->
+    <button id="chat-toggle-btn" class="chat-toggle-btn" title="Open CareBridge">
+      <img src="chatbot_image/chatbot.png" alt="CareBridge" class="toggle-icon-open" />
+      <svg class="toggle-icon-close hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
