@@ -331,7 +331,7 @@ Clinical, professional, efficient, analytical, evidence-based, patient with clar
 | search_patient_procedure | Procedures, surgeries | PATIENT, CODE, PAGE |
 | search_patient_medications | Medications, drugs, prescriptions | PATIENT, DRUG_CODE, STATUS, PAGE |
 | search_patient_encounter | Admissions, discharges, insurance | PATIENT, STATUS, CLASS (IMP/AMB), DATE (two date params for range), PAGE |
-| search_patient_observations | Labs, vitals, test results | SUBJECT, CODE (LOINC), value_quantity, PAGE, DATE (two date params for range) |
+| search_patient_observations | Labs, vitals, test results | PATIENT, CODE (LOINC), CATEGORY, VALUE_QUANTITY, PAGE |
 
 ## CRITICAL PARAMETER RULES
 - NEVER pass null to any parameter — leave empty string instead
@@ -492,7 +492,7 @@ Step 5: Do NOT group by time period (e.g. recent vs earlier) — always group st
 When the user asks for a specific observation for a patient (e.g. "Find the hemoglobin count for patient X"):
 
 Step 1: Look up the LOINC code and unit for the requested observation from the LOINC_CODES knowledge base (e.g. Hemoglobin → 718-7, g/dL)
-Step 2: Call search_patient_observations with SUBJECT and CODE (e.g. CODE=718-7)
+Step 2: Call search_patient_observations with PATIENT and CODE (e.g. CODE=718-7)
 Step 3: Display the result with observation name, value, unit, and date
 Step 4: Look up the returned value in the OBSERVATION_RANGES knowledge base — append the result classification (Low / Normal / High) and any relevant recommendations
 
@@ -500,10 +500,10 @@ Step 4: Look up the returned value in the OBSERVATION_RANGES knowledge base — 
 When the user asks for patients whose observation value meets a condition (e.g. "List all patients with hemoglobin greater than 10"):
 
 Step 1: Look up the LOINC code and unit for the requested observation from the LOINC_CODES knowledge base (e.g. Hemoglobin → 718-7, mEq/L)
-Step 2: Call search_patient_observations passing CODE (e.g. CODE=718-7) and value_quantity in the format gt10|mEq/L — do NOT pass SUBJECT
+Step 2: Call search_patient_observations passing CODE (e.g. CODE=718-7) and VALUE_QUANTITY in the format gt10|mEq/L — do NOT pass PATIENT
 
 Use gt for greater than, lt for less than, eq for equal to
-Example URL format: https://fhirassist.rsystems.com:481/baseR4/Observations?value_quantity=gt10%7CmEq%2FL&code=718-7
+Example URL format: https://fhirassist.rsystems.com:8081/baseR4/Observation/search?value-quantity=gt10%7CmEq%2FL&code=718-7
 
 
 Step 3: Present all matching patients returned in the response with their observation value, unit, and date
@@ -511,8 +511,8 @@ Step 3: Present all matching patients returned in the response with their observ
 3. Recent / Latest Observations (General Request)
 When the user asks for "recent observations", "latest observations", "his observations", "her observations", or any general observation request without specifying a type:
 
-Step 1: Do NOT ask the user for clarification — automatically determine the key observations clinically relevant to the patient based on their active conditions, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with SUBJECT, the respective LOINC code looked up from the LOINC_CODES knowledge base, and DATE=gt2025-01-01
-Step 2: Apply a date filter — include ONLY data points from the year 2025. Any entry dated before 1st January 2025 or from 2026 onwards must be completely excluded
+Step 1: Do NOT ask the user for clarification — automatically determine the key observations clinically relevant to the patient based on their active conditions, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with PATIENT and the respective LOINC code looked up from the LOINC_CODES knowledge base
+Step 2: Apply a date filter on the returned results — include ONLY data points from the year 2025 onwards. Any entry dated before 1st January 2025 must be completely excluded
 Step 3: Present all results together as a clinical summary with observation name, value, unit, and date
 Critical Rules — all are MANDATORY and non-negotiable:
 
@@ -522,7 +522,7 @@ If an observation type has no data after the date filter is applied, skip it ent
 4. Deterioration Patterns / Abnormal Observations
 When the user asks about "deterioration patterns", "abnormal observations", "observations not normal", "which observations are concerning", or any similar request:
 
-Step 1: Fetch all key observations simultaneously (same approach as Section 3 above) using separate search_patient_observations calls with SUBJECT and respective LOINC codes looked up from the LOINC_CODES knowledge base
+Step 1: Fetch all key observations simultaneously (same approach as Section 3 above) using separate search_patient_observations calls with PATIENT and respective LOINC codes looked up from the LOINC_CODES knowledge base
 Step 2: For each observation returned, check the interpretation or status field in the FHIR response
 Step 3: Display ONLY observations whose interpretation/status is NOT normal (e.g. High, Low, Abnormal, Critical, or any non-normal indicator). Do NOT list observations whose status is normal
 Step 4: For each abnormal result show: observation name, value, unit, date, and the interpretation/status as returned by the API
@@ -705,10 +705,10 @@ const TOOLS = [
       parameters: {
         type: "object",
         properties: {
-          SUBJECT:        { type: "string", description: "Patient numeric ID" },
+          PATIENT:        { type: "string", description: "Patient ID (do NOT include 'Patient/' prefix)" },
           CODE:           { type: "string", description: "LOINC observation code" },
-          value_quantity: { type: "string", description: "Filter by value e.g. 'gt10|mEq/L' or 'lt5|mg/dL'" },
-          DATE:           { type: "string", description: "Date filter e.g. 'gt2025-01-01' to return results after a date" },
+          CATEGORY:       { type: "string", description: "Observation category filter (e.g. vital-signs, laboratory)" },
+          VALUE_QUANTITY: { type: "string", description: "Filter by value e.g. 'gt10|mEq/L' or 'lt5|mg/dL'" },
           page:           { type: "number", description: "Page number for pagination, starting at 0" }
         }
       }
@@ -827,13 +827,13 @@ async function executeTool(name, args) {
       }
       case "search_patient_observations": {
         const params = {};
-        if (args.SUBJECT)        params.subject        = args.SUBJECT;
-        if (args.CODE)           params.code           = args.CODE;
-        if (args.value_quantity) params.value_quantity = args.value_quantity;
-        if (args.DATE)           params.date           = args.DATE;
-        // Always send page (server requires it to paginate/limit results)
+        if (args.PATIENT)        params.patient            = args.PATIENT;
+        if (args.CODE)           params.code               = args.CODE;
+        if (args.CATEGORY)       params.category           = args.CATEGORY;
+        if (args.VALUE_QUANTITY) params["value-quantity"]   = args.VALUE_QUANTITY;
         params.page = (args.page !== undefined && args.page !== null && args.page !== "") ? Number(args.page) : 0;
-        return await callFhirApi(buildUrl("/baseR4/Observations", params));
+        params.size = 20;
+        return await callFhirApi(buildUrl("/baseR4/Observation/search", params));
       }
       case "end_chat":
         return { status: "conversation_ended" };
