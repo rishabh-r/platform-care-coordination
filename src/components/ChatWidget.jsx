@@ -176,13 +176,21 @@ export default function ChatWidget({ displayName }) {
           const finalText = result.content || '';
           history.push({ role: 'assistant', content: finalText });
 
+          const isCareGap = userMessage.toLowerCase().includes('care gap');
+          const carePatientId = isCareGap ? currentPatientRef.current?.id : null;
+          if (isCareGap && carePatientId) {
+            try { sessionStorage.setItem('dashboard_caregap_' + carePatientId, finalText); } catch (_) {}
+          }
+
+          const extraProps = { userQuery: userMessage, showCareCordBtn: isCareGap, patientId: carePatientId };
+
           if (streamingMsgId) {
             setMessages(prev => prev.map(m =>
-              m.id === streamingMsgId ? { ...m, content: finalText, isStreaming: false, userQuery: userMessage } : m
+              m.id === streamingMsgId ? { ...m, content: finalText, isStreaming: false, ...extraProps } : m
             ));
           } else {
             setIsTyping(false);
-            addMessage('bot', finalText, { userQuery: userMessage });
+            addMessage('bot', finalText, extraProps);
           }
           break;
         }
@@ -318,14 +326,19 @@ export default function ChatWidget({ displayName }) {
                       <div className="msg-bubble">
                         <span dangerouslySetInnerHTML={{ __html: simpleMarkdown(cleanText) }} />
                         {chartData && !msg.isStreaming && <ChartBlock chartData={chartData} />}
-                        {showCareGapBtn && (
+                        {msg.showCareCordBtn && (
                           <>
                             <br />
                             <button
                               style={{ display: 'inline-block', marginTop: '10px', padding: '6px 14px', background: 'transparent', color: '#0d9488', border: '1px solid #0d9488', borderRadius: '4px', fontSize: '0.85rem', cursor: 'pointer' }}
                               onMouseEnter={(e) => { e.target.style.background = '#0d9488'; e.target.style.color = '#fff'; }}
                               onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#0d9488'; }}
-                              onClick={() => window.open('https://hull-act-74080093.figma.site/care-manager/P-001', '_blank')}
+                              onClick={() => {
+                                const dashUrl = msg.patientId
+                                  ? `${window.location.origin}/dashboard?patient=${msg.patientId}`
+                                  : `${window.location.origin}/dashboard`;
+                                window.open(dashUrl, '_blank');
+                              }}
                             >
                               Launch CareCord AI
                             </button>

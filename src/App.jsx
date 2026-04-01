@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginScreen from './components/LoginScreen';
 import HomeScreen from './components/HomeScreen';
 import ChatWidget from './components/ChatWidget';
+import DashboardPage from './components/DashboardPage';
+import { formatDisplayName } from './utils';
 
-function formatDisplayName(raw) {
-  let name = raw.includes('@') ? raw.split('@')[0] : raw;
-  name = name.split('.')[0];
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-}
-
-export default function App() {
+function MainApp() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
 
@@ -45,5 +42,16 @@ export default function App() {
       <HomeScreen displayName={displayName} onLogout={handleLogout} />
       <ChatWidget displayName={displayName} />
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
