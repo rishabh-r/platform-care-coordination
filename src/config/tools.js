@@ -12,7 +12,7 @@ export const TOOLS = [
           EMAIL:      { type: "string", description: "Patient email address" },
           GENDER:     { type: "string", description: "Patient gender (male, female, other, unknown)" },
           BIRTHDATE:  { type: "string", description: "Patient date of birth (YYYY-MM-DD)" },
-          PATIENT_ID: { type: "string", description: "Patient numeric ID" }
+          PATIENT_ID: { type: "string", description: "Patient ID (UUID or numeric)" }
         }
       }
     }

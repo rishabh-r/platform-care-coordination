@@ -75,7 +75,8 @@ NORA_IV, KCL_PO, PROP_IV, RAMI25, RAMI5, RAMI10, HYPTON_SAL, SPIRO25, SPIRO125, 
 ACIC400, ACIC800I, AMIK500I, BEND90I, CARM100I, COTRMX, CYCLO500I, DEFIB_IV, DOXO50I,
 FILG300, FLUCON150, GRAN1I, IFOS_IV, MELPH_IV, ONDAN4I, ONDAN8, PLERIX, POLAT140I,
 PRED5, PRED25, RASBU_IV, RITUX500I, TPN_IV,
-ACETY_IV, ETHAMB400, GLYCO_INH, ISONH300, MOXIFL400, PYRAZIN500, PYRIDOX50, RIFAMP450, STREPT_IM, TRANEX_IV
+ACETY_IV, ETHAMB400, GLYCO_INH, ISONH300, MOXIFL400, PYRAZIN500, PYRIDOX50, RIFAMP450, STREPT_IM, TRANEX_IV,
+INSR
 `;
 
 export const PROCEDURE_CODES = `
@@ -110,6 +111,7 @@ SPECIFIC CPT CODES:
 99223=Hospital inpatient visit initial high, 99232=Hospital subsequent visit moderate,
 99233=Hospital subsequent visit high, 99254=Inpatient consultation,
 99291=Critical care first 30-74 minutes,
+11042=Wound debridement subcutaneous tissue,
 38206=Stem cell collection peripheral blood, 38221=Bone marrow biopsy, 38241=Autologous stem cell transplant,
 78816=PET-CT whole body, 88305=Surgical pathology level IV,
 96413=Chemotherapy infusion initial hour, 96415=Chemotherapy infusion each additional hour,
