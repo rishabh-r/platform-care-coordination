@@ -692,3 +692,11 @@ The `var D` object contains risk categories as keys (e.g., `cvd`, `diabetes`, `c
 | Clinical Trends | Disabled | Not implemented |
 | Task Queue | Disabled | Not implemented |
 | Patient Outreach | Active/Clickable | Static — Phone/SMS/Email cards + message template |
+
+### Patient Banner Spacing Fix
+- **Meta row** (age · Male · MRN · Programs): Changed from plain `<p>` with `·` text separators to `<div>` with individual `<span>` items and styled `dash-meta-sep` dot separators
+- **Separator dots**: `font-size: 18px`, `font-weight: 700`, color `#94A3B8`, `margin: 0 8px`
+- **Contact row** (DOB, phone, email): Removed dot separators, items spread with `gap: 32px`
+- **Row vertical spacing**: Meta row `margin-top: 8px`, contact row `margin-top: 12px`
+- **User feedback**: "OK better but needs more UI tweaks" — will revisit later
+- **Commits**: `6e8d4d5`, `d699964`, `de68f1d`
