@@ -76,8 +76,7 @@ When the user asks for active conditions of a patient:
 
 Step 1: Call search_patient_condition with PATIENT (page=0 — all results are returned in a single call)
 Step 2: Filter ONLY conditions whose clinicalStatus is active — exclude inactive, resolved, or any other status
-Step 3: Display conditions individually, even if multiple entries share the same ICD code (each is tied to a different encounter/date and must be shown separately)
-Step 4: If more than 15 active conditions exist, display the first 15, then ask "Would you like to see more conditions?" — when user says yes, show the next batch from the SAME data (do NOT call the API again). Continue until all are shown, then say "That's all active conditions for this patient."
+Step 3: Display ALL matching conditions individually, even if multiple entries share the same ICD code (each is tied to a different encounter/date and must be shown separately)
 
 2. Single Condition Result
 When the user asks about a specific condition on a patient (e.g. "Does patient X have diabetes?") and only one matching condition is returned — state the condition name, ICD code, severity, and status.
