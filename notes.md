@@ -279,7 +279,7 @@ Person, Person_name, Person_Address, Person_Language, Person_Telecom, Extensions
 
 ## System Prompt Key Features (src/config/systemPrompt.js)
 - Response patterns for all 14 APIs — NO API pagination (all results returned in single call with size=100)
-- **Display Pagination Rule**: show 15 results at a time from the same API response (no new API call). If <=15 results, show all at once. LLM treats this as a soft guideline — tested with 21 conditions and it showed all 21 at once which is fine
+- **Display chunking (conditions only)**: Conditions API shows 15 at a time from the same API response (no new API call). User says "more" → next batch from same data. Other APIs show all results at once
 - Explicit instruction to display every entry individually even if ICD/LOINC codes repeat (each is tied to different encounter/date)
 - Care gap analysis (missed follow-ups, clinical deterioration, medication non-adherence)
 - Clinical summary (fetches all APIs simultaneously)
@@ -455,6 +455,8 @@ The dashboard sends the care gap text to AI with a system prompt that extracts:
 - **Fix applied**: Changed `size=20` to `size=100` across all 14 APIs in `src/services/fhir.js`. Since no patient will have >100 results for any single resource type, this fetches everything in one call — no pagination needed, no overlap.
 - **Commit**: `c8c9e0f` — "Update API page size from 20 to 100 to fetch all results in single call"
 - **Status**: FIXED and pushed to GitHub
+- **System prompt update**: Removed ALL multi-page pagination instructions (page=1, page=2 etc.) from all API response patterns. All APIs now say "Display ALL results" from the single call. Conditions API only has display-side chunking (15 at a time from same data, no new API call)
+- **Display pagination rule was tried globally for all APIs (15 at a time) but reverted** — only kept for conditions API since it can have many entries. Other APIs show all results at once
 
 ### 2. Observation API — Missing `code` field (BACKEND FIX NEEDED)
 - **Problem**: The FHIR Observation API response is missing the `code` element entirely. Each observation has `valueQuantity`, `interpretation`, `effectiveDateTime` but NO `code` field (no LOINC code, no display name).
