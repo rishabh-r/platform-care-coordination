@@ -627,3 +627,68 @@ The `var D` object contains risk categories as keys (e.g., `cvd`, `diabetes`, `c
 ### Pending Work
 - **Patient 2**: Female, CHF, 25 encounters — not yet started
 - **Clinical Notes**: Still static mock data — only remaining static section
+
+---
+
+## Session: April 3, 2026
+
+### Patient Outreach Tab — IMPLEMENTED (Static)
+- **Tab switching**: Added `activeTab` state (`'actions'` | `'outreach'`). AI Actions and Patient Outreach tabs are now clickable; Clinical Trends and Task Queue remain disabled.
+- **UI matches Figma** design exactly:
+  - **3 communication cards** in a row: Phone Call, SMS Message, Email Portal — each with icon, description, and green action button
+  - **Outreach Communication Template** section: customizable textarea pre-filled with patient-personalized message (uses patient's first name dynamically via `pt.name`)
+  - **"Send to Patient"** (red) and **"Save as Template"** (outline) buttons
+- **JSX structure**: AI Actions + Approve Modal wrapped in `<>...</>` Fragment, conditionally rendered with `{activeTab === 'actions' && <>...</>}`. Patient Outreach rendered with `{activeTab === 'outreach' && (...)}`
+- **Status**: Static (no API calls), functional tab switching
+- **Commit**: `a2dd340` — "Add static Patient Outreach tab with phone, SMS, email cards and outreach template"
+
+### .gitignore Updated
+- Added `*.xlsx` and `*.py` to `.gitignore` to prevent Excel data files and Python scripts from being accidentally committed
+- Previously committed Excel/Python files were removed from tracking with `git rm --cached`
+
+### R Systems Logo Fix — Multiple Iterations
+
+**Problem**: The original CSS `filter: brightness(0) invert(1)` on the logo made "SYSTEMS" text invisible. The filter turns ALL pixels white — the R icon showed as a white silhouette (visible on dark bg), but the "SYSTEMS" text (originally white on grey box) also became white (invisible against the now-white grey box).
+
+**Iteration 1 — White background badge (REJECTED by user)**:
+- Added `background: white; padding: 3px 6px; border-radius: 6px` to the logo
+- Result: Full R SYSTEMS logo visible but looked odd — white box on dark background
+- User feedback: "looks odd, should merge with background"
+
+**Iteration 2 — No filter, colored logo on dark bg (APPROVED)**:
+- Removed ALL filters and white background
+- Logo displays as original colored image (blue R + grey SYSTEMS box with white text) directly on dark navy background
+- Works because the PNG has transparency — no white rectangle behind it
+- Applied to both navbar and loading screen
+
+**Iteration 3 — Size & positioning tweaks (FINAL)**:
+- **Loading screen logo**: height 44px, `margin-right: 12px` (shifts logo left of spinner), `margin-bottom: 32px`
+- **Navbar logo**: height 32px, `margin-left: -8px` (shifts slightly left)
+- Loading screen kept inline layout (logo beside spinner — user preferred this over stacked)
+
+**Final CSS**:
+```css
+.dash-nav-logo { height: 32px; object-fit: contain; margin-left: -8px; }
+.dash-loading-logo { height: 44px; margin-bottom: 32px; margin-right: 12px; object-fit: contain; }
+```
+
+### Risk Insights Spacing Fix
+- Widened the alerts row grid column from `200px` to `260px` for risk card: `grid-template-columns: 1fr 260px`
+- Changed risk row layout from `justify-content: space-between` to `gap: 10px` with `flex: 1` on `.dash-risk-name`
+- Added `white-space: nowrap` on `.dash-risk-val` to prevent value wrapping
+
+### Git Commits (this session, chronological)
+1. `a2dd340` — Add static Patient Outreach tab with phone, SMS, email cards and outreach template
+2. `beceef9` — Fix R Systems logo visibility and Risk Insights spacing
+3. `9817119` — Fix logo - remove white background, show colored logo directly on dark bg
+4. `452e645` — Reduce logo size and add spacing between logo and spinner
+5. `e64e606` — Revert loading logo to inline layout, shift navbar logo left
+6. `7a8c64d` — Shift loading screen logo left with margin-right spacing
+
+### Current Dashboard Tab State
+| Tab | Status | Content |
+|-----|--------|---------|
+| AI Actions | Active/Clickable | Dynamic — AI-structured actions with approve workflow |
+| Clinical Trends | Disabled | Not implemented |
+| Task Queue | Disabled | Not implemented |
+| Patient Outreach | Active/Clickable | Static — Phone/SMS/Email cards + message template |
