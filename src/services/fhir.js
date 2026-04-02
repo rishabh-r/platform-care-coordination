@@ -42,7 +42,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.BIRTHDATE) params.birthdate = args.BIRTHDATE;
         if (args.PATIENT_ID) params._id = args.PATIENT_ID;
         params.page = 0;
-        params.size = 20;
+        params.size = 100;
         const patientResult = await callFhirApi(buildUrl('/baseR4/Patient', params));
         try {
           const entries = patientResult?.entry || [];
@@ -60,7 +60,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.PATIENT) params.patient = args.PATIENT;
         if (args.CODE) params.code = args.CODE;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/Condition', params));
       }
       case 'search_patient_procedure': {
@@ -68,7 +68,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.PATIENT) params.patient = args.PATIENT;
         if (args.CODE !== undefined && args.CODE !== null && args.CODE !== '') params.code = Number(args.CODE);
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/Procedure', params));
       }
       case 'search_patient_medications': {
@@ -77,7 +77,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.DRUG_CODE) params['formulary-drug-cd'] = args.DRUG_CODE;
         if (args.STATUS) params.status = args.STATUS;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/MedicationRequest', params));
       }
       case 'search_patient_encounter': {
@@ -90,7 +90,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.DATE2) url.searchParams.append('date', args.DATE2);
         const page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
         url.searchParams.append('page', page);
-        url.searchParams.append('size', 20);
+        url.searchParams.append('size', 100);
         return await callFhirApi(url.toString());
       }
       case 'search_patient_observations': {
@@ -101,7 +101,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.VALUE_QUANTITY) params['value-quantity'] = args.VALUE_QUANTITY;
         if (args.DATE) params.date = args.DATE;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/Observation/search', params));
       }
       case 'search_patient_service_request': {
@@ -109,7 +109,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.PATIENT) params.patient = args.PATIENT;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/ServiceRequest', params));
       }
       case 'search_patient_document_reference': {
@@ -117,7 +117,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.PATIENT) params.patient = args.PATIENT;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/DocumentReference', params));
       }
       case 'search_patient_diagnostic_report': {
@@ -125,7 +125,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.PATIENT) params.patient = args.PATIENT;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/DiagnosticReport', params));
       }
       case 'search_patient_episode_of_care': {
@@ -135,7 +135,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.TYPE) params.type = args.TYPE;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/EpisodeOfCare', params));
       }
       case 'search_practitioner': {
@@ -144,7 +144,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.SPECIALTY) params.specialty = args.SPECIALTY;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/Practitioner', params));
       }
       case 'search_patient_allergy': {
@@ -152,7 +152,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.PATIENT) params.patient = args.PATIENT;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/AllergyIntolerance', params));
       }
       case 'search_patient_appointment': {
@@ -161,7 +161,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.STATUS) params.status = args.STATUS;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/Appointment', params));
       }
       case 'search_patient_immunization': {
@@ -169,7 +169,7 @@ export async function executeTool(name, args, onPatientFound) {
         if (args.PATIENT) params.patient = args.PATIENT;
         if (args._ID) params._id = args._ID;
         params.page = (args.page !== undefined && args.page !== null && args.page !== '') ? Number(args.page) : 0;
-        params.size = 20;
+        params.size = 100;
         return await callFhirApi(buildUrl('/baseR4/Immunization', params));
       }
       case 'end_chat':
