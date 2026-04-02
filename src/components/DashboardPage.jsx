@@ -733,9 +733,7 @@ function DashboardPage() {
             </div>
             <div className="dash-banner-contact">
               <span>📅 DOB: {pt.dob}</span>
-              <span className="dash-meta-sep">·</span>
               <span>📞 {pt.phone}</span>
-              <span className="dash-meta-sep">·</span>
               <span>✉ {pt.email}</span>
             </div>
           </div>
