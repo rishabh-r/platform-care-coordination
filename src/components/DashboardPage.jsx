@@ -231,6 +231,26 @@ function parseEncountersFromFhir(bundle) {
   return encounters.length ? encounters.slice(0, 10) : null
 }
 
+function parseCareTeamFromEoC(bundle) {
+  if (!bundle?.entry?.length) return null
+  const team = []
+  for (const e of bundle.entry) {
+    const r = e.resource
+    if (r.resourceType !== 'EpisodeOfCare') continue
+    const careManager = r.careManager
+    if (!careManager) continue
+    const name = careManager.display || 'Care Manager'
+    const initials = name.split(' ').filter(w => w.length > 0).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    const program = r.type?.[0]?.coding?.[0]?.display || r.type?.[0]?.text || 'Care Program'
+    const status = r.status || 'active'
+    const periodStart = r.period?.start || ''
+    if (!team.some(t => t.name === name)) {
+      team.push({ name, initials, role: 'Care Coordinator', program, status, periodStart })
+    }
+  }
+  return team.length ? team : null
+}
+
 function parsePatientFromResource(resource, patientId) {
   if (!resource) return null
   console.log('[Dashboard] FHIR Patient resource:', JSON.stringify(resource, null, 2))
@@ -403,10 +423,10 @@ function DashboardPage() {
   const [medsData, setMedsData] = useState(null)
   const [encData, setEncData] = useState(null)
   const [missedAppts, setMissedAppts] = useState(null)
+  const [careTeamData, setCareTeamData] = useState(null)
   const [showAllMeds, setShowAllMeds] = useState(false)
   const [showAllAppts, setShowAllAppts] = useState(false)
   const [isReviewed, setIsReviewed] = useState(false)
-  const [showReviewAlert, setShowReviewAlert] = useState(false)
   const [selectedActions, setSelectedActions] = useState([])
   const [approvedActions, setApprovedActions] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -447,11 +467,12 @@ function DashboardPage() {
 
       if (loadStepRef.current) loadStepRef.current(1)
 
-      // Fetch MedicationRequests + Encounters directly from FHIR
+      // Fetch MedicationRequests + Encounters + EpisodeOfCare directly from FHIR
       const fhirDirectPromise = Promise.all([
         callFhirApi(buildUrl('/baseR4/MedicationRequest', { patient: patientId, page: 0 })).catch(e => { console.warn('[Dashboard] Meds fetch failed:', e); return null }),
-        callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null })
-      ]).then(([medBundle, encBundle]) => {
+        callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null }),
+        callFhirApi(buildUrl('/baseR4/EpisodeOfCare', { patient: patientId, status: 'active', page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] EpisodeOfCare fetch failed:', e); return null })
+      ]).then(([medBundle, encBundle, eocBundle]) => {
         const parsedMeds = parseMedsFromFhir(medBundle)
         if (parsedMeds?.length) {
           console.log('[Dashboard] Parsed', parsedMeds.length, 'medications from FHIR')
@@ -461,6 +482,11 @@ function DashboardPage() {
         if (parsedEnc?.length) {
           console.log('[Dashboard] Parsed', parsedEnc.length, 'encounters from FHIR')
           setEncData(parsedEnc)
+        }
+        const parsedTeam = parseCareTeamFromEoC(eocBundle)
+        if (parsedTeam?.length) {
+          console.log('[Dashboard] Parsed', parsedTeam.length, 'care team members from EpisodeOfCare')
+          setCareTeamData(parsedTeam)
         }
       })
 
@@ -612,24 +638,10 @@ function DashboardPage() {
         </div>
         <button
           className={`dash-review-btn ${isReviewed ? 'reviewed' : ''}`}
-          onClick={() => {
-            setIsReviewed(prev => !prev)
-            setShowReviewAlert(true)
-            setTimeout(() => setShowReviewAlert(false), 1000)
-          }}
+          onClick={() => setIsReviewed(prev => !prev)}
         >
           {isReviewed ? '✓ Reviewed' : '✓ Mark as Reviewed'}
         </button>
-        {showReviewAlert && (
-          <div style={{
-            position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
-            background: '#10b981', color: '#fff', padding: '12px 24px',
-            borderRadius: '8px', fontWeight: 600, fontSize: '14px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)', animation: 'fadeIn 0.2s ease'
-          }}>
-            Marked for Review
-          </div>
-        )}
       </div>
 
       {/* ── Main Content ── */}
@@ -913,17 +925,16 @@ function DashboardPage() {
           <div className="dash-card">
             <div className="dash-card-head">
               <h3>👥 Care Team</h3>
-              <p>{d.careTeam.length} MEMBERS INVOLVED</p>
+              <p>{(careTeamData || d.careTeam).length} MEMBERS INVOLVED</p>
             </div>
-            {d.careTeam.map((c, i) => (
+            {(careTeamData || d.careTeam).map((c, i) => (
               <div key={i} className="dash-team-row">
-                <div className={`dash-team-avatar ${c.primary ? 'primary' : ''}`}>{c.initials}</div>
+                <div className="dash-team-avatar">{c.initials}</div>
                 <div className="dash-team-info">
-                  <div className="dash-team-name">
-                    {c.name} {c.primary && <span className="dash-pill pill-primary">Primary</span>}
-                  </div>
-                  <p>{c.role}</p>
-                  {c.dept && <p className="dash-team-dept">{c.dept}</p>}
+                  <div className="dash-team-name">{c.name}</div>
+                  <p>{c.role || 'Care Coordinator'}</p>
+                  {c.program && <p className="dash-team-dept">{c.program}</p>}
+                  {c.dept && !c.program && <p className="dash-team-dept">{c.dept}</p>}
                 </div>
                 <div className="dash-team-actions">
                   <button title="Call">
