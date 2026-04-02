@@ -103,8 +103,9 @@
 }
 .dash-banner-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .dash-banner-name-row h2 { font-size: 20px; font-weight: 700; margin: 0; }
-.dash-banner-meta { font-size: 13px; color: #64748B; margin: 4px 0; }
-.dash-banner-contact { display: flex; gap: 24px; font-size: 12px; color: #64748B; margin-top: 4px; }
+.dash-banner-meta { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #64748B; margin: 4px 0; flex-wrap: wrap; }
+.dash-meta-sep { color: #CBD5E1; margin: 0 4px; }
+.dash-banner-contact { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B; margin-top: 4px; flex-wrap: wrap; }
 .dash-review-btn {
   padding: 9px 18px; border-radius: 8px; border: 1px solid #E2E8F0;
   background: white; font-size: 13px; font-weight: 500; color: #475569;

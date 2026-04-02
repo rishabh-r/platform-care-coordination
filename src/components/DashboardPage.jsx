@@ -722,12 +722,20 @@ function DashboardPage() {
               <span className="dash-pill pill-red">High Priority</span>
               <span className="dash-pill pill-red-outline">⚠ Care Gap</span>
             </div>
-            <p className="dash-banner-meta">
-              {pt.age} yrs · {pt.gender} · MRN: {pt.mrn} · Programs: Diabetes, Hypertension
-            </p>
+            <div className="dash-banner-meta">
+              <span>{pt.age} yrs</span>
+              <span className="dash-meta-sep">·</span>
+              <span>{pt.gender}</span>
+              <span className="dash-meta-sep">·</span>
+              <span>MRN: {pt.mrn}</span>
+              <span className="dash-meta-sep">·</span>
+              <span>Programs: Diabetes, Hypertension</span>
+            </div>
             <div className="dash-banner-contact">
               <span>📅 DOB: {pt.dob}</span>
+              <span className="dash-meta-sep">·</span>
               <span>📞 {pt.phone}</span>
+              <span className="dash-meta-sep">·</span>
               <span>✉ {pt.email}</span>
             </div>
           </div>
