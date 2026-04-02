@@ -406,6 +406,7 @@ function DashboardPage() {
   const [showAllMeds, setShowAllMeds] = useState(false)
   const [showAllAppts, setShowAllAppts] = useState(false)
   const [isReviewed, setIsReviewed] = useState(false)
+  const [showReviewAlert, setShowReviewAlert] = useState(false)
   const [selectedActions, setSelectedActions] = useState([])
   const [approvedActions, setApprovedActions] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -611,10 +612,24 @@ function DashboardPage() {
         </div>
         <button
           className={`dash-review-btn ${isReviewed ? 'reviewed' : ''}`}
-          onClick={() => setIsReviewed(prev => !prev)}
+          onClick={() => {
+            setIsReviewed(prev => !prev)
+            setShowReviewAlert(true)
+            setTimeout(() => setShowReviewAlert(false), 1000)
+          }}
         >
           {isReviewed ? '✓ Reviewed' : '✓ Mark as Reviewed'}
         </button>
+        {showReviewAlert && (
+          <div style={{
+            position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
+            background: '#10b981', color: '#fff', padding: '12px 24px',
+            borderRadius: '8px', fontWeight: 600, fontSize: '14px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)', animation: 'fadeIn 0.2s ease'
+          }}>
+            Marked for Review
+          </div>
+        )}
       </div>
 
       {/* ── Main Content ── */}
