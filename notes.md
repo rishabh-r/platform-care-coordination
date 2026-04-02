@@ -481,3 +481,59 @@ The dashboard sends the care gap text to AI with a system prompt that extracts:
 - **Always push code changes to GitHub** — Vercel is connected to the GitHub repo and auto-deploys on push
 - Backend pagination is non-standard (page step = 10 fixed, not page × size) — we use `size=100` to avoid overlap issues
 - **Shell is PowerShell** — heredoc (`<<EOF`) does NOT work; use simple `-m "message"` for git commits
+
+---
+
+## Dashboard Dynamic Sections (April 2, 2026)
+
+### Changes Made to DashboardPage.jsx
+
+#### 1. Mark as Reviewed Alert — TRIED & REVERTED
+- Added a green toast "Marked for Review" for 1 second on click → user didn't like it → reverted back to simple toggle
+
+#### 2. Care Team — Made Dynamic (DONE)
+- **Before**: Static `MOCK_DATA.careTeam` with 3 hardcoded members (Dr. Michael Chen, Emily Davis, Jane Smith)
+- **After**: Fetches active EpisodeOfCare records from `/baseR4/EpisodeOfCare?patient={id}&status=active`, extracts `careManager` from each episode
+- **Parser**: `parseCareTeamFromEoC(bundle)` — extracts care manager name, initials, role ("Care Coordinator"), program name. Deduplicates by name
+- **Fallback**: Falls back to `MOCK_DATA.careTeam` if API returns nothing
+- **Shows**: Only care coordinators/managers from EpisodeOfCare, NOT practitioners/doctors
+- **For Patient 1**: Rebecca Torres, Maria Santos, David Park, Jennifer Walsh — each with their care program name
+
+#### 3. Vitals — Made Dynamic (DONE)
+- **Before**: Static `MOCK_DATA.vitals` with 3 hardcoded entries (Blood Pressure, Heart Rate, Blood Glucose)
+- **After**: Fetches all observations from `/baseR4/Observation/search?patient={id}&page=0&size=100`, groups by LOINC code, picks latest reading per type
+- **Parser**: `parseVitalsFromFhir(bundle)` — groups observations by code, picks latest by date, maps normal ranges, classifies as normal/elevated/low, calculates status bar percentage
+- **Normal ranges map**: `OBSERVATION_NORMAL_RANGES` constant with ranges for HbA1c (4.0-5.6%), Creatinine (0.6-1.3), Glucose (70-99), Potassium (3.5-5.0), Triglycerides (<150), LDL (<130), Total Cholesterol (125-200), Hemoglobin (13.0-17.5), WBC (4.5-11.0), Platelets (150-400)
+- **Fallback**: Falls back to `MOCK_DATA.vitals` if API returns nothing
+- **Section title**: "Vitals" (not "Latest Observations" — user preference)
+- **Shows**: Each observation card with value, unit, normal range, color-coded status bar, and date of latest reading
+- **For Patient 1**: 7 observation types — HbA1c 9.2%, Creatinine 1.4, Glucose 165, Potassium 4.5, Triglycerides, LDL 158, Cholesterol Total 235
+
+#### 4. FHIR Fetches in loadDashboard — Updated
+The `fhirDirectPromise` now fetches 4 resources in parallel:
+1. MedicationRequest (was already there)
+2. Encounter (was already there)
+3. EpisodeOfCare — NEW (for Care Team)
+4. Observation — NEW (for Vitals)
+
+---
+
+## System Prompt Changes (April 2, 2026)
+
+### Conditions Display — 15 at a time (Conditions Only)
+- If >15 active conditions, show first 15, ask "Would you like to see more?", continue from same data (no new API call)
+- Other APIs: show all results at once
+- User tested with 21 conditions — bot showed all 21 at once (soft guideline, not strict)
+
+### Clinical Deterioration Gaps — Fixed Lazy Bot Behavior
+- **Problem**: Bot was skipping the observation API call during care gap analysis. Instead of fetching actual lab values, it summarized conditions and said "specific lab data would be needed"
+- **Old instruction**: "Refer to Section 4 (Deterioration Patterns)" — too vague, bot ignored it
+- **New instruction**: Clear step-by-step:
+  1. Determine relevant observations from active conditions
+  2. Look up LOINC codes from knowledge base
+  3. Call search_patient_observations for each LOINC code
+  4. Check values against OBSERVATION_RANGES
+  5. Show only abnormal values with name, value, unit, date, status, normal range, trend
+  6. Skip normal observations
+  7. If nothing abnormal: "No clinical deterioration gaps detected."
+- **Approach**: Clear but not aggressive — balanced so bot doesn't struggle with edge cases
