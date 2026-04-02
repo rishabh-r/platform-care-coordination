@@ -880,7 +880,6 @@ function DashboardPage() {
                       <div className={`dash-vital-bar ${v.status}`}><div style={{ width: `${v.pct}%` }}></div></div>
                     </div>
                     <div className="dash-vital-normal">Normal<br /><b>{v.normal}</b></div>
-                    {v.date && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', textAlign: 'right' }}>{v.date}</div>}
                   </div>
                 )
               })}
