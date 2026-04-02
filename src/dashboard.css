@@ -15,7 +15,7 @@
   display: flex; align-items: center; justify-content: center;
 }
 .dash-loading-box { text-align: center; color: white; animation: fadeInUp .5s ease-out; }
-.dash-loading-logo { height: 48px; margin-bottom: 32px; filter: brightness(0) invert(1); }
+.dash-loading-logo { height: 56px; margin-bottom: 32px; background: white; padding: 4px 10px; border-radius: 8px; object-fit: contain; }
 .dash-loading-spinner-ring { display: inline-block; position: relative; width: 56px; height: 56px; margin-bottom: 24px; }
 .dash-loading-spinner-ring div {
   box-sizing: border-box; display: block; position: absolute;
@@ -41,7 +41,7 @@
   color: white; position: sticky; top: 0; z-index: 500;
 }
 .dash-nav-left { display: flex; align-items: center; gap: 14px; }
-.dash-nav-logo { height: 32px; filter: brightness(0) invert(1); }
+.dash-nav-logo { height: 36px; background: white; padding: 3px 6px; border-radius: 6px; object-fit: contain; }
 .dash-nav-title { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
 .dash-nav-links { display: flex; gap: 32px; }
 .dash-nav-link { font-size: 12px; font-weight: 600; letter-spacing: .8px; color: rgba(255,255,255,.5); cursor: pointer; transition: color .2s; }
@@ -155,7 +155,7 @@
 .dash-card-head > div { display: flex; align-items: flex-start; justify-content: space-between; }
 
 /* ── Alerts Row ── */
-.dash-alerts-row { display: grid; grid-template-columns: 1fr 200px; gap: 20px; min-width: 0; }
+.dash-alerts-row { display: grid; grid-template-columns: 1fr 260px; gap: 20px; min-width: 0; }
 .dash-alerts-row > .dash-card { min-width: 0; overflow: hidden; }
 .dash-alert-list { display: flex; flex-direction: column; gap: 10px; }
 .dash-alert-item {
@@ -195,12 +195,12 @@
 .dash-risk-card { display: flex; flex-direction: column; }
 .dash-risk-card .dash-card-head { display: flex; align-items: center; justify-content: space-between; }
 .dash-risk-row {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; gap: 10px;
   padding: 14px 0; border-bottom: 1px solid #F1F5F9;
 }
 .dash-risk-row:last-child { border-bottom: none; }
-.dash-risk-name { font-size: 12px; font-weight: 600; color: #475569; letter-spacing: .5px; }
-.dash-risk-val { font-size: 18px; font-weight: 700; color: #1E293B; }
+.dash-risk-name { font-size: 12px; font-weight: 600; color: #475569; letter-spacing: .5px; flex: 1; min-width: 0; }
+.dash-risk-val { font-size: 18px; font-weight: 700; color: #1E293B; white-space: nowrap; }
 
 /* ── Tabs ── */
 .dash-tabs { display: flex; gap: 0; background: white; border-radius: 12px; border: 1px solid #E2E8F0; overflow: hidden; }
