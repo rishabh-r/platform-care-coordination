@@ -251,6 +251,35 @@ function parseCareTeamFromEoC(bundle) {
   return team.length ? team : null
 }
 
+const RISK_LABEL_MAP = { cvd: 'HYPERTENSION', diabetes: 'DIABETES', cancer: 'CANCER' }
+
+async function fetchRiskPrediction(patientId) {
+  try {
+    const res = await fetch('https://fhirassist.rsystems.com:5050/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patient_id: patientId })
+    })
+    const html = await res.text()
+    const match = html.match(/var\s+D\s*=\s*(\{[\s\S]*?\});/)
+    if (!match) return null
+    const data = JSON.parse(match[1])
+    const risks = []
+    for (const [key, val] of Object.entries(data)) {
+      const level = (val.risk_level || 'low').toLowerCase()
+      risks.push({
+        name: RISK_LABEL_MAP[key] || key.toUpperCase(),
+        value: val.risk_percentage != null ? val.risk_percentage.toFixed(1) + '%' : '—',
+        level: level === 'moderate' ? 'mod' : level
+      })
+    }
+    return risks.length ? risks : null
+  } catch (e) {
+    console.warn('[Dashboard] Risk prediction fetch failed:', e)
+    return null
+  }
+}
+
 const OBSERVATION_NORMAL_RANGES = {
   '4548-4':  { name: 'HEMOGLOBIN A1C', unit: '%', low: 4.0, high: 5.6, normal: '4.0-5.6' },
   '2160-0':  { name: 'CREATININE', unit: 'mg/dL', low: 0.6, high: 1.3, normal: '0.6-1.3' },
@@ -475,6 +504,7 @@ function DashboardPage() {
   const [missedAppts, setMissedAppts] = useState(null)
   const [careTeamData, setCareTeamData] = useState(null)
   const [vitalsData, setVitalsData] = useState(null)
+  const [riskData, setRiskData] = useState(null)
   const [showAllMeds, setShowAllMeds] = useState(false)
   const [showAllAppts, setShowAllAppts] = useState(false)
   const [isReviewed, setIsReviewed] = useState(false)
@@ -544,6 +574,13 @@ function DashboardPage() {
         if (parsedVitals?.length) {
           console.log('[Dashboard] Parsed', parsedVitals.length, 'latest observations for vitals')
           setVitalsData(parsedVitals)
+        }
+      })
+
+      fetchRiskPrediction(patientId).then(risks => {
+        if (risks?.length) {
+          console.log('[Dashboard] Parsed', risks.length, 'risk predictions')
+          setRiskData(risks)
         }
       })
 
@@ -748,11 +785,11 @@ function DashboardPage() {
                 <h3>Risk Insights</h3>
                 <span className="dash-pill pill-ai">✦ AI Powered</span>
               </div>
-              {d.riskInsights.map((r, i) => (
+              {(riskData || d.riskInsights).map((r, i) => (
                 <div key={i} className="dash-risk-row">
                   <span className="dash-risk-name">{r.name}</span>
                   <span className="dash-risk-val">{r.value}</span>
-                  <span className={`dash-pill pill-${r.level}`}>{r.level.toUpperCase()}</span>
+                  <span className={`dash-pill pill-${r.level}`}>{r.level === 'mod' ? 'MODERATE' : r.level.toUpperCase()}</span>
                 </div>
               ))}
             </div>
