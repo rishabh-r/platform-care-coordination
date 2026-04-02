@@ -581,8 +581,49 @@ The `fhirDirectPromise` now fetches 4 resources in parallel:
 18. `696c542` — Update notes.md
 19. `86eb38b` — Remove date from vitals cards
 20. `0061faf` — Fix completed pill color to green
+21. `2b4b7e9` — Update notes.md
+22. `26ef543` — Make Risk Insights dynamic from predict API
+
+---
+
+## Risk Prediction API (April 2, 2026)
+
+### API Details
+- **Endpoint**: `POST https://fhirassist.rsystems.com:5050/api/predict`
+- **Body**: `{"patient_id": "<uuid>"}`
+- **Header**: `Content-Type: application/json`
+- **Response**: HTML page with risk data embedded as `var D={...}` in a `<script>` tag
+- **No JSON endpoint available** — must parse from HTML
+- **No auth required** (no Bearer token)
+
+### Response Data Structure
+The `var D` object contains risk categories as keys (e.g., `cvd`, `diabetes`, `cancer`), each with:
+- `risk_level`: "High" / "Moderate" / "Low"
+- `risk_percentage`: number (e.g., 82.5)
+- `risk_drivers`: array of strings explaining why risk is elevated
+- `protective_factors`: array of strings for positive factors
+
+### Implementation in DashboardPage.jsx
+- **Function**: `fetchRiskPrediction(patientId)` — POSTs to predict API, parses `var D={...}` from HTML via regex, maps to `{ name, value, level }` format
+- **Label mapping**: `RISK_LABEL_MAP` — `cvd` → "HYPERTENSION", `diabetes` → "DIABETES", `cancer` → "CANCER"
+- **Level mapping**: API returns "High"/"Moderate"/"Low" → mapped to CSS classes `high`/`mod`/`low`
+- **State**: `riskData` — falls back to `MOCK_DATA.riskInsights` if API fails
+- **Called in**: `loadDashboard()` alongside other FHIR fetches (runs in parallel)
+- **For Patient 1**: Hypertension 63.4% (HIGH), Diabetes 82.5% (HIGH), Cancer 12.7% (LOW)
+
+### Updated Dashboard Dynamic Sections Status
+| Section | Status | Data Source |
+|---------|--------|------------|
+| Patient Banner | Dynamic | `/baseR4/Patient/{id}` |
+| Alerts & Trends | Dynamic | AI analysis of care gap text |
+| AI Actions | Dynamic | AI analysis of care gap text |
+| Vitals | Dynamic | `/baseR4/Observation/search` |
+| Medications | Dynamic | `/baseR4/MedicationRequest` |
+| Appointments & Encounters | Dynamic | `/baseR4/Encounter` + AI missed appointments |
+| Care Team | Dynamic | `/baseR4/EpisodeOfCare` — care managers |
+| Risk Insights | **Dynamic** | `POST /api/predict` — risk prediction API |
+| Clinical Notes | Static | `MOCK_DATA.clinicalNotes` |
 
 ### Pending Work
-- **Patient 2**: Female, CHF, 25 encounters — not yet started (waiting for Patient 1 testing to complete)
-- **Risk Insights**: Still static mock data — could be made dynamic in future
-- **Clinical Notes**: Still static mock data — could be made dynamic in future
+- **Patient 2**: Female, CHF, 25 encounters — not yet started
+- **Clinical Notes**: Still static mock data — only remaining static section
