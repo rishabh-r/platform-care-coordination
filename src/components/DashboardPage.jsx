@@ -251,6 +251,56 @@ function parseCareTeamFromEoC(bundle) {
   return team.length ? team : null
 }
 
+const OBSERVATION_NORMAL_RANGES = {
+  '4548-4':  { name: 'HEMOGLOBIN A1C', unit: '%', low: 4.0, high: 5.6, normal: '4.0-5.6' },
+  '2160-0':  { name: 'CREATININE', unit: 'mg/dL', low: 0.6, high: 1.3, normal: '0.6-1.3' },
+  '2345-7':  { name: 'GLUCOSE', unit: 'mg/dL', low: 70, high: 99, normal: '70-99' },
+  '2823-3':  { name: 'POTASSIUM', unit: 'mEq/L', low: 3.5, high: 5.0, normal: '3.5-5.0' },
+  '1644-4':  { name: 'TRIGLYCERIDES', unit: 'mg/dL', low: 0, high: 150, normal: '<150' },
+  '2090-9':  { name: 'CHOLESTEROL LDL', unit: 'mg/dL', low: 0, high: 130, normal: '<130' },
+  '2093-3':  { name: 'CHOLESTEROL TOTAL', unit: 'mg/dL', low: 125, high: 200, normal: '125-200' },
+  '718-7':   { name: 'HEMOGLOBIN', unit: 'g/dL', low: 13.0, high: 17.5, normal: '13.0-17.5' },
+  '785-6':   { name: 'WBC', unit: '10*3/uL', low: 4.5, high: 11.0, normal: '4.5-11.0' },
+  '777-3':   { name: 'PLATELETS', unit: '10*3/uL', low: 150, high: 400, normal: '150-400' },
+}
+
+function parseVitalsFromFhir(bundle) {
+  if (!bundle?.entry?.length) return null
+  const latestByCode = {}
+  for (const e of bundle.entry) {
+    const r = e.resource
+    if (r.resourceType !== 'Observation') continue
+    const code = r.code?.coding?.[0]?.code || ''
+    const display = r.code?.coding?.[0]?.display || ''
+    const value = r.valueQuantity?.value ?? r.valueString ?? ''
+    const unit = r.valueQuantity?.unit || r.valueQuantity?.code || ''
+    const date = r.effectiveDateTime || r.issued || ''
+    if (!code || value === '') continue
+    if (!latestByCode[code] || date > latestByCode[code].date) {
+      latestByCode[code] = { code, display, value, unit, date }
+    }
+  }
+  const vitals = []
+  for (const [code, obs] of Object.entries(latestByCode)) {
+    const range = OBSERVATION_NORMAL_RANGES[code]
+    const name = range?.name || obs.display.toUpperCase()
+    const unit = range?.unit || obs.unit
+    const normal = range?.normal || '—'
+    const numVal = parseFloat(obs.value)
+    let status = 'normal'
+    let pct = 50
+    if (range && !isNaN(numVal)) {
+      if (numVal < range.low) { status = 'low'; pct = 20 }
+      else if (numVal > range.high) { status = 'elevated'; pct = 80 }
+      else { pct = Math.round(((numVal - range.low) / (range.high - range.low)) * 60 + 20) }
+    }
+    const d = new Date(obs.date)
+    const dateStr = !isNaN(d) ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
+    vitals.push({ name, value: String(obs.value), unit, normal, status, pct, date: dateStr })
+  }
+  return vitals.length ? vitals : null
+}
+
 function parsePatientFromResource(resource, patientId) {
   if (!resource) return null
   console.log('[Dashboard] FHIR Patient resource:', JSON.stringify(resource, null, 2))
@@ -424,6 +474,7 @@ function DashboardPage() {
   const [encData, setEncData] = useState(null)
   const [missedAppts, setMissedAppts] = useState(null)
   const [careTeamData, setCareTeamData] = useState(null)
+  const [vitalsData, setVitalsData] = useState(null)
   const [showAllMeds, setShowAllMeds] = useState(false)
   const [showAllAppts, setShowAllAppts] = useState(false)
   const [isReviewed, setIsReviewed] = useState(false)
@@ -467,12 +518,13 @@ function DashboardPage() {
 
       if (loadStepRef.current) loadStepRef.current(1)
 
-      // Fetch MedicationRequests + Encounters + EpisodeOfCare directly from FHIR
+      // Fetch MedicationRequests + Encounters + EpisodeOfCare + Observations directly from FHIR
       const fhirDirectPromise = Promise.all([
         callFhirApi(buildUrl('/baseR4/MedicationRequest', { patient: patientId, page: 0 })).catch(e => { console.warn('[Dashboard] Meds fetch failed:', e); return null }),
         callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null }),
-        callFhirApi(buildUrl('/baseR4/EpisodeOfCare', { patient: patientId, status: 'active', page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] EpisodeOfCare fetch failed:', e); return null })
-      ]).then(([medBundle, encBundle, eocBundle]) => {
+        callFhirApi(buildUrl('/baseR4/EpisodeOfCare', { patient: patientId, status: 'active', page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] EpisodeOfCare fetch failed:', e); return null }),
+        callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Observations fetch failed:', e); return null })
+      ]).then(([medBundle, encBundle, eocBundle, obsBundle]) => {
         const parsedMeds = parseMedsFromFhir(medBundle)
         if (parsedMeds?.length) {
           console.log('[Dashboard] Parsed', parsedMeds.length, 'medications from FHIR')
@@ -487,6 +539,11 @@ function DashboardPage() {
         if (parsedTeam?.length) {
           console.log('[Dashboard] Parsed', parsedTeam.length, 'care team members from EpisodeOfCare')
           setCareTeamData(parsedTeam)
+        }
+        const parsedVitals = parseVitalsFromFhir(obsBundle)
+        if (parsedVitals?.length) {
+          console.log('[Dashboard] Parsed', parsedVitals.length, 'latest observations for vitals')
+          setVitalsData(parsedVitals)
         }
       })
 
@@ -805,24 +862,28 @@ function DashboardPage() {
             </div>
           )}
 
-          {/* Vitals */}
+          {/* Vitals / Latest Observations */}
           <div id="vitals-section" className="dash-card">
             <div className="dash-card-head">
-              <h3>Vitals</h3>
-              <p>Last updated: Today, 9:30 AM</p>
+              <h3>Latest Observations</h3>
+              <p>{vitalsData ? `${vitalsData.length} observation types` : 'Last updated: Today, 9:30 AM'}</p>
             </div>
             <div className="dash-vitals-grid">
-              {d.vitals.map((v, i) => (
-                <div key={i} className={`dash-vital ${v.status}`}>
-                  <div className="dash-vital-icon">{VITAL_ICONS[v.name]}</div>
-                  <div className="dash-vital-data">
-                    <span className="dash-vital-label">{v.name}</span>
-                    <span className={`dash-vital-value ${v.status}`}>{v.value} <small>{v.unit}</small></span>
-                    <div className={`dash-vital-bar ${v.status}`}><div style={{ width: `${v.pct}%` }}></div></div>
+              {(vitalsData || d.vitals).map((v, i) => {
+                const defaultIcon = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                return (
+                  <div key={i} className={`dash-vital ${v.status}`}>
+                    <div className="dash-vital-icon">{VITAL_ICONS[v.name] || defaultIcon}</div>
+                    <div className="dash-vital-data">
+                      <span className="dash-vital-label">{v.name}</span>
+                      <span className={`dash-vital-value ${v.status}`}>{v.value} <small>{v.unit}</small></span>
+                      <div className={`dash-vital-bar ${v.status}`}><div style={{ width: `${v.pct}%` }}></div></div>
+                    </div>
+                    <div className="dash-vital-normal">Normal<br /><b>{v.normal}</b></div>
+                    {v.date && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', textAlign: 'right' }}>{v.date}</div>}
                   </div>
-                  <div className="dash-vital-normal">Normal<br /><b>{v.normal}</b></div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
