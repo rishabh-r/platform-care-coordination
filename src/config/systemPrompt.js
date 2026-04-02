@@ -86,6 +86,14 @@ When the user asks for active conditions of a patient:
 Step 1: Call search_patient_condition with PATIENT (page=0 — all results are returned in a single call)
 Step 2: Filter ONLY conditions whose clinicalStatus is active — exclude inactive, resolved, or any other status
 Step 3: Apply the DISPLAY PAGINATION RULE — show 15 at a time, each condition individually even if ICD codes repeat (each is tied to a different encounter/date)
+Step 4: Display each condition in this structured format:
+
+**Condition Name**
+- ICD-10: code
+- Severity: severity value
+- Clinical Status: Active
+- Onset: date
+- Recorded: date
 
 2. Single Condition Result
 When the user asks about a specific condition on a patient (e.g. "Does patient X have diabetes?") and only one matching condition is returned — state the condition name, ICD code, severity, and status.
