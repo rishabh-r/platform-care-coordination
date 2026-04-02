@@ -515,6 +515,7 @@ function DashboardPage() {
   const [coordinatorNotes, setCoordinatorNotes] = useState('')
   const [approveAlert, setApproveAlert] = useState(false)
   const [noteFilter, setNoteFilter] = useState('all')
+  const [activeTab, setActiveTab] = useState('actions')
   const loadStepRef = useRef(null)
 
   const rawUser = localStorage.getItem('cb_user') || 'User'
@@ -798,17 +799,17 @@ function DashboardPage() {
 
           {/* Tabs */}
           <div className="dash-tabs">
-            <button className="dash-tab active">
+            <button className={`dash-tab ${activeTab === 'actions' ? 'active' : ''}`} onClick={() => setActiveTab('actions')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               AI Actions
             </button>
-            <button className="dash-tab" disabled>📈 Clinical Trends</button>
-            <button className="dash-tab" disabled>📋 Task Queue</button>
-            <button className="dash-tab" disabled>📤 Patient Outreach</button>
+            <button className={`dash-tab ${activeTab === 'trends' ? 'active' : ''}`} disabled>📈 Clinical Trends</button>
+            <button className={`dash-tab ${activeTab === 'queue' ? 'active' : ''}`} disabled>📋 Task Queue</button>
+            <button className={`dash-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}>📤 Patient Outreach</button>
           </div>
 
           {/* AI Actions */}
-          <div className="dash-card dash-actions-section">
+          {activeTab === 'actions' && <><div className="dash-card dash-actions-section">
             <div className="dash-actions-head">
               <div>
                 <h3>AI-Recommended Actions</h3>
@@ -895,6 +896,47 @@ function DashboardPage() {
                 <div className="dash-modal-footer">
                   <button className="dash-modal-cancel" onClick={() => setShowModal(false)}>✕ Cancel</button>
                   <button className="dash-modal-confirm" onClick={handleApprove}>✓ Confirm &amp; Create Tasks</button>
+                </div>
+              </div>
+            </div>
+          )}
+          </>}
+
+          {/* Patient Outreach */}
+          {activeTab === 'outreach' && (
+            <div className="dash-card" style={{ padding: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📞</div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Phone Call</h4>
+                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Direct phone outreach to discuss care gaps</p>
+                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>📞 Initiate Call</button>
+                </div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>💬</div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>SMS Message</h4>
+                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Send text reminder for medication refill</p>
+                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>💬 Send SMS</button>
+                </div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📧</div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Email Portal</h4>
+                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Send educational materials via portal</p>
+                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>📧 Send Email</button>
+                </div>
+              </div>
+
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>Outreach Communication Template</h3>
+                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Customize message for patient contact</p>
+                <p style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px', color: '#1e293b' }}>MESSAGE</p>
+                <textarea
+                  style={{ width: '100%', minHeight: '140px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', fontSize: '13px', fontFamily: 'inherit', color: '#334155', resize: 'vertical', lineHeight: '1.6' }}
+                  defaultValue={`Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
+                />
+                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                  <button style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>📤 Send to Patient</button>
+                  <button style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>📋 Save as Template</button>
                 </div>
               </div>
             </div>
