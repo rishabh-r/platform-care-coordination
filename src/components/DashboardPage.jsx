@@ -865,7 +865,7 @@ function DashboardPage() {
           {/* Vitals / Latest Observations */}
           <div id="vitals-section" className="dash-card">
             <div className="dash-card-head">
-              <h3>Latest Observations</h3>
+              <h3>Vitals</h3>
               <p>{vitalsData ? `${vitalsData.length} observation types` : 'Last updated: Today, 9:30 AM'}</p>
             </div>
             <div className="dash-vitals-grid">
