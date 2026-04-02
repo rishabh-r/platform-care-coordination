@@ -520,20 +520,18 @@ The `fhirDirectPromise` now fetches 4 resources in parallel:
 
 ## System Prompt Changes (April 2, 2026)
 
-### Conditions Display — 15 at a time (Conditions Only)
-- If >15 active conditions, show first 15, ask "Would you like to see more?", continue from same data (no new API call)
-- Other APIs: show all results at once
-- User tested with 21 conditions — bot showed all 21 at once (soft guideline, not strict)
+### Conditions Display — 15 at a time — TRIED & REMOVED
+- Tried showing conditions 15 at a time from single API call — bot was inconsistent (showed 10, then 2, then 9 instead of 15+6)
+- **Removed** — conditions now show all results at once like every other API
 
-### Clinical Deterioration Gaps — Fixed Lazy Bot Behavior
-- **Problem**: Bot was skipping the observation API call during care gap analysis. Instead of fetching actual lab values, it summarized conditions and said "specific lab data would be needed"
-- **Old instruction**: "Refer to Section 4 (Deterioration Patterns)" — too vague, bot ignored it
-- **New instruction**: Clear step-by-step:
-  1. Determine relevant observations from active conditions
-  2. Look up LOINC codes from knowledge base
-  3. Call search_patient_observations for each LOINC code
-  4. Check values against OBSERVATION_RANGES
-  5. Show only abnormal values with name, value, unit, date, status, normal range, trend
-  6. Skip normal observations
-  7. If nothing abnormal: "No clinical deterioration gaps detected."
-- **Approach**: Clear but not aggressive — balanced so bot doesn't struggle with edge cases
+### Clinical Deterioration Gaps — Step-by-step Instruction — TRIED & REVERTED
+- **Problem**: Bot was skipping the observation API call during care gap analysis, giving vague summary instead of actual values
+- Tried replacing "Refer to Section 4" with explicit step-by-step instructions (determine observations → call API → check ranges → show abnormal)
+- **Reverted by user request** — user wants to handle this themselves
+- **Current state**: Back to original "Refer to Section 4" instruction, but with user's simplification: removed "based on their active conditions" phrase to avoid the bot being too narrow in which observations it fetches
+
+### User's Manual Prompt Edits (pushed to GitHub)
+- Simplified Step 1 in "Recent/Latest Observations": removed "clinically relevant to the patient based on their active conditions" → just "automatically determine the key observations"
+- Simplified Step 1 in "Deterioration Patterns": removed "(same approach as Section 3 above)" cross-reference
+- Simplified Clinical Deterioration Gaps: removed "for this patient based on their active conditions" → just "fetch all clinically relevant observations"
+- **Rationale**: The "based on active conditions" phrasing was causing the bot to be too restrictive or skip observation fetching entirely
