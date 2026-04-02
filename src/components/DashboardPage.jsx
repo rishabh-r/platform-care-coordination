@@ -255,15 +255,16 @@ const RISK_LABEL_MAP = { cvd: 'HYPERTENSION', diabetes: 'DIABETES', cancer: 'CAN
 
 async function fetchRiskPrediction(patientId) {
   try {
-    const res = await fetch('https://fhirassist.rsystems.com:5050/api/predict', {
+    const token = localStorage.getItem('cb_token')
+    const res = await fetch('https://fhirassist.rsystems.com:5050/api/predictHealthRisk', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ patient_id: patientId })
     })
-    const html = await res.text()
-    const match = html.match(/var\s+D\s*=\s*(\{[\s\S]*?\});/)
-    if (!match) return null
-    const data = JSON.parse(match[1])
+    const data = await res.json()
     const risks = []
     for (const [key, val] of Object.entries(data)) {
       const level = (val.risk_level || 'low').toLowerCase()
