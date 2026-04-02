@@ -15,7 +15,7 @@
   display: flex; align-items: center; justify-content: center;
 }
 .dash-loading-box { text-align: center; color: white; animation: fadeInUp .5s ease-out; }
-.dash-loading-logo { height: 56px; margin-bottom: 32px; background: white; padding: 4px 10px; border-radius: 8px; object-fit: contain; }
+.dash-loading-logo { height: 60px; margin-bottom: 32px; object-fit: contain; }
 .dash-loading-spinner-ring { display: inline-block; position: relative; width: 56px; height: 56px; margin-bottom: 24px; }
 .dash-loading-spinner-ring div {
   box-sizing: border-box; display: block; position: absolute;
@@ -41,7 +41,7 @@
   color: white; position: sticky; top: 0; z-index: 500;
 }
 .dash-nav-left { display: flex; align-items: center; gap: 14px; }
-.dash-nav-logo { height: 36px; background: white; padding: 3px 6px; border-radius: 6px; object-fit: contain; }
+.dash-nav-logo { height: 40px; object-fit: contain; }
 .dash-nav-title { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
 .dash-nav-links { display: flex; gap: 32px; }
 .dash-nav-link { font-size: 12px; font-weight: 600; letter-spacing: .8px; color: rgba(255,255,255,.5); cursor: pointer; transition: color .2s; }
