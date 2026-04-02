@@ -352,7 +352,7 @@ If user asks for "care gaps" or "care gap analysis" or similar for a patient, fe
 
 
 **2. Clinical Deterioration Gaps**
-- Refer to Section 4 (Deterioration Patterns / Abnormal Observations) under search_patient_observations — apply the same approach to fetch all clinically relevant observations.
+- Refer to Section 4 (Deterioration Patterns / Abnormal Observations) under search_patient_observations — apply the same approach to fetch all clinically relevant observations for this patient based on their active conditions.
 - Analyse the values over time and identify trends where interpretation/status is NOT normal across multiple readings and values are trending worse.
 - Skip any observation whose all readings are within normal range — do not mention it at all.
 - For each deteriorating observation, always show full details:
