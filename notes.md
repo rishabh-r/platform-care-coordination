@@ -278,8 +278,8 @@ Person, Person_name, Person_Address, Person_Language, Person_Telecom, Extensions
 ---
 
 ## System Prompt Key Features (src/config/systemPrompt.js)
-- Response patterns for all 14 APIs — NO pagination (all results returned in single call with size=100)
-- All "would you like to see more?" pagination prompts REMOVED — bot now displays ALL results from the single API response
+- Response patterns for all 14 APIs — NO API pagination (all results returned in single call with size=100)
+- **Display Pagination Rule**: show 15 results at a time from the same API response (no new API call). If <=15 results, show all at once. LLM treats this as a soft guideline — tested with 21 conditions and it showed all 21 at once which is fine
 - Explicit instruction to display every entry individually even if ICD/LOINC codes repeat (each is tied to different encounter/date)
 - Care gap analysis (missed follow-ups, clinical deterioration, medication non-adherence)
 - Clinical summary (fetches all APIs simultaneously)
@@ -465,7 +465,7 @@ The dashboard sends the care gap text to AI with a system prompt that extracts:
   1. Join observation table with Measurement_Master to get `loinc_code` and `label`
   2. Populate `resource.code.coding[0]` with `{ system: "http://loinc.org", code: "<loinc_code>", display: "<label>" }`
   3. Support filtering by the `code` query parameter using the LOINC code
-- **Status**: Reported to backend team, awaiting fix
+- **Status**: FIXED by backend team — `code` field now populated in API response
 
 ---
 
