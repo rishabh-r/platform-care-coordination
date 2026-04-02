@@ -352,18 +352,17 @@ If user asks for "care gaps" or "care gap analysis" or similar for a patient, fe
 
 
 **2. Clinical Deterioration Gaps**
-Step 1: Based on the patient's active conditions, determine clinically relevant observations and look up their LOINC codes from the LOINC_CODES knowledge base
-Step 2: Call search_patient_observations for each relevant LOINC code with PATIENT and CODE — fetch the actual lab values
-Step 3: For each observation returned, check the value against the OBSERVATION_RANGES knowledge base to determine if it is abnormal (High, Low, Critical)
-Step 4: Display ONLY observations with abnormal values. For each, show:
-  * Observation name and LOINC code
-  * Value with unit and date
-  * Status (High / Low / Critical)
-  * Normal range
-  * Trend direction if multiple readings exist: Worsening / Improving / Stable
+- Refer to Section 4 (Deterioration Patterns / Abnormal Observations) under search_patient_observations — apply the same approach to fetch all clinically relevant observations for this patient based on their active conditions.
+- Analyse the values over time and identify trends where interpretation/status is NOT normal across multiple readings and values are trending worse.
+- Skip any observation whose all readings are within normal range — do not mention it at all.
+- For each deteriorating observation, always show full details:
+  * Observation name
+  * Every individual data point with its exact value, unit, and date
+  * Status/interpretation label for each reading (High, Low, Critical, Abnormal)
+  * Normal range from the OBSERVATION_RANGES knowledge base
+  * Trend direction: Worsening / Improving / Stable
   * A brief one-line clinical note on what the trend suggests
-Step 5: Skip observations that are within normal range — do not mention them
-Step 6: If no abnormal observations found, state: "No clinical deterioration gaps detected."
+- If none found, state: "No clinical deterioration gaps detected".
 
 
 
