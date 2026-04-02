@@ -278,7 +278,9 @@ Person, Person_name, Person_Address, Person_Language, Person_Telecom, Extensions
 ---
 
 ## System Prompt Key Features (src/config/systemPrompt.js)
-- Response patterns for all 14 APIs with pagination
+- Response patterns for all 14 APIs — NO pagination (all results returned in single call with size=100)
+- All "would you like to see more?" pagination prompts REMOVED — bot now displays ALL results from the single API response
+- Explicit instruction to display every entry individually even if ICD/LOINC codes repeat (each is tied to different encounter/date)
 - Care gap analysis (missed follow-ups, clinical deterioration, medication non-adherence)
 - Clinical summary (fetches all APIs simultaneously)
 - Discharge summary
