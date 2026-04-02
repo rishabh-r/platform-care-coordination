@@ -131,7 +131,7 @@
 .pill-active { background: #DCFCE7; color: #16A34A; }
 .pill-primary { background: #DBEAFE; color: #2563EB; font-size: 10px; }
 .pill-upcoming { background: #DCFCE7; color: #16A34A; }
-.pill-completed { background: #FEE2E2; color: #DC2626; }
+.pill-completed { background: #DCFCE7; color: #16A34A; }
 .pill-telehealth { background: #DBEAFE; color: #2563EB; }
 .pill-note-clinical { background: #DBEAFE; color: #2563EB; }
 .pill-note-coordination { background: #FEF3C7; color: #D97706; }
