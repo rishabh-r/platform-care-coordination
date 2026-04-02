@@ -535,3 +535,54 @@ The `fhirDirectPromise` now fetches 4 resources in parallel:
 - Simplified Step 1 in "Deterioration Patterns": removed "(same approach as Section 3 above)" cross-reference
 - Simplified Clinical Deterioration Gaps: removed "for this patient based on their active conditions" → just "fetch all clinically relevant observations"
 - **Rationale**: The "based on active conditions" phrasing was causing the bot to be too restrictive or skip observation fetching entirely
+- **Result**: Clinical deterioration gaps now working correctly after user's simplifications
+
+---
+
+## Additional Dashboard Fixes (April 2, 2026 — Late Session)
+
+### Vitals Date Removed
+- Removed the date display (e.g., "Oct 15, 2025") from each vitals/observation card — user didn't want it shown
+
+### Completed Pill Color Fix
+- `.pill-completed` in `dashboard.css` was red (`#FEE2E2` / `#DC2626`) — changed to green (`#DCFCE7` / `#16A34A`) to match the "Active" pill style in medications
+
+### Current Dashboard Dynamic Sections Status
+| Section | Status | Data Source |
+|---------|--------|------------|
+| Patient Banner | Dynamic | `/baseR4/Patient/{id}` |
+| Alerts & Trends | Dynamic | AI analysis of care gap text |
+| AI Actions | Dynamic | AI analysis of care gap text |
+| Vitals | **Dynamic** | `/baseR4/Observation/search` — latest reading per LOINC code |
+| Medications | Dynamic | `/baseR4/MedicationRequest` |
+| Appointments & Encounters | Dynamic | `/baseR4/Encounter` + AI-extracted missed appointments |
+| Care Team | **Dynamic** | `/baseR4/EpisodeOfCare` — care managers only |
+| Risk Insights | Static | `MOCK_DATA.riskInsights` |
+| Clinical Notes | Static | `MOCK_DATA.clinicalNotes` |
+
+### Git Commits (this session, chronological)
+1. `c8c9e0f` — Update API page size from 20 to 100
+2. `b8beaf9` — Add notes.md with full project memory
+3. `6b58bc5` — Remove all pagination from system prompt
+4. `5bbd9b5` — Add 15-at-a-time display chunking (all APIs)
+5. `33d237b` — Revert structured condition format
+6. `da21da9` — Revert display pagination rule (all APIs)
+7. `8f423be` — Add 15-at-a-time for conditions only
+8. `16fff74` — Add review alert toast
+9. `c0705cb` — Revert review alert, make Care Team dynamic
+10. `bad8b43` — Make Vitals dynamic from Observation API
+11. `d7ebaad` — Rename Latest Observations to Vitals
+12. `5617d07` — Clarify clinical deterioration gaps (step-by-step)
+13. `5b3708b` — Update notes.md
+14. `d989b24` — Remove 15-at-a-time for conditions
+15. `e6cb9e3` — User's manual prompt simplifications
+16. `4561a17` — Revert clinical deterioration to original instruction
+17. `18f8f3d` — User's final prompt simplification
+18. `696c542` — Update notes.md
+19. `86eb38b` — Remove date from vitals cards
+20. `0061faf` — Fix completed pill color to green
+
+### Pending Work
+- **Patient 2**: Female, CHF, 25 encounters — not yet started (waiting for Patient 1 testing to complete)
+- **Risk Insights**: Still static mock data — could be made dynamic in future
+- **Clinical Notes**: Still static mock data — could be made dynamic in future
