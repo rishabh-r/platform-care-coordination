@@ -700,3 +700,69 @@ The `var D` object contains risk categories as keys (e.g., `cvd`, `diabetes`, `c
 - **Row vertical spacing**: Meta row `margin-top: 8px`, contact row `margin-top: 12px`
 - **User feedback**: "OK better but needs more UI tweaks" — will revisit later
 - **Commits**: `6e8d4d5`, `d699964`, `de68f1d`
+
+### Task Queue Tab — IMPLEMENTED (Dynamic)
+- **Commit**: `ce6f7bc` — "Implement Task Queue tab with status cards, task flow, and Figma-matching UI"
+- **Tab enabled**: Task Queue tab is now clickable (`activeTab === 'queue'`), joins AI Actions and Patient Outreach as active tabs. Clinical Trends remains disabled.
+
+**State Management:**
+- `taskQueue` — array of task objects `{ id, title, priority, priorityClass, status, dueDate, description, notes }`
+- `taskFilter` — `'pending'` | `'inprocess'` | `'completed'` (default: `'pending'`)
+- `taskCounts` — computed counts for each status
+- `filteredTasks` — tasks filtered by current `taskFilter`
+
+**Flow:**
+1. User selects actions in AI Actions tab → clicks "Approve Selected" → modal opens
+2. User adds optional coordinator notes → clicks "Confirm & Create Tasks"
+3. `handleApprove()` creates task objects from approved actions:
+   - Due date calculated from timeframe: "Within 24 hours" → +1 day, "Within 48 hours" → +2, "Within 1 week" → +7, default → +3
+   - Notes = coordinator notes (if entered) or AI rationale
+   - Deduplicates by title (won't create duplicate tasks)
+   - All new tasks start with `status: 'pending'`
+4. Tasks appear in Task Queue tab
+
+**Status Transitions:**
+- `updateTaskStatus(taskId, newStatus)` — updates a task's status
+- Pending → "Start Task" button → In Process
+- Pending → "Mark Complete" button → Completed
+- In Process → "Mark Complete" button → Completed
+- Completed → shows "✓ Completed" label (no further actions)
+
+**UI (matches Figma):**
+- **Summary cards**: 3 clickable cards (Pending/In Process/Completed) with status icons, labels, and colored count badges. Active card has purple border + light purple background
+- **Task cards**: Light blue background (`#F0F9FF`), blue border, containing:
+  - Title (bold)
+  - Priority pill + Status pill + Due date
+  - Description text
+  - NOTES section (white box with label + italic text)
+  - Action buttons (Start Task = green solid, Mark Complete = green outline)
+- **Empty state**: Dashed border box with helpful message when no tasks in selected filter
+
+**CSS classes added** (in `dashboard.css`):
+- `.tq-summary`, `.tq-summary-card`, `.tq-active`, `.tq-summary-icon`, `.tq-summary-label`, `.tq-badge`
+- `.tq-section-header`, `.tq-empty`
+- `.tq-task-card`, `.tq-task-header`, `.tq-task-meta`, `.tq-due`, `.tq-status-pill`
+- `.tq-task-desc`, `.tq-notes`, `.tq-notes-label`
+- `.tq-btn-start`, `.tq-btn-complete`, `.tq-completed-label`
+
+### Updated Dashboard Tab State
+| Tab | Status | Content |
+|-----|--------|---------|
+| AI Actions | Active/Clickable | Dynamic — AI-structured actions with approve workflow |
+| Clinical Trends | Disabled | Not implemented |
+| Task Queue | **Active/Clickable** | Dynamic — approved tasks with Pending/In Process/Completed flow |
+| Patient Outreach | Active/Clickable | Static — Phone/SMS/Email cards + message template |
+
+### All Git Commits (April 3 session, chronological)
+1. `a2dd340` — Add static Patient Outreach tab
+2. `beceef9` — Fix R Systems logo visibility and Risk Insights spacing
+3. `9817119` — Fix logo - remove white background, show colored logo directly on dark bg
+4. `452e645` — Reduce logo size and add spacing between logo and spinner
+5. `e64e606` — Revert loading logo to inline layout, shift navbar logo left
+6. `7a8c64d` — Shift loading screen logo left with margin-right spacing
+7. `7f7ceed` — Update notes.md with April 3 session
+8. `6e8d4d5` — Add proper spacing between patient banner meta items
+9. `d699964` — Increase separator dot size and spacing in patient banner
+10. `de68f1d` — Increase row spacing, spread contact items wider
+11. `57f2c2a` — Update notes.md with patient banner spacing changes
+12. `ce6f7bc` — Implement Task Queue tab
