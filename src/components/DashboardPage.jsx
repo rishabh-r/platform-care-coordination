@@ -516,6 +516,8 @@ function DashboardPage() {
   const [approveAlert, setApproveAlert] = useState(false)
   const [noteFilter, setNoteFilter] = useState('all')
   const [activeTab, setActiveTab] = useState('actions')
+  const [taskQueue, setTaskQueue] = useState([])
+  const [taskFilter, setTaskFilter] = useState('pending')
   const loadStepRef = useRef(null)
 
   const rawUser = localStorage.getItem('cb_user') || 'User'
@@ -634,11 +636,44 @@ function DashboardPage() {
   const handleApprove = () => {
     setShowModal(false)
     setApprovedActions(prev => [...new Set([...prev, ...selectedActions])])
+    const actions = aiActionsData || d.aiActions
+    const newTasks = selectedActions
+      .filter(i => !taskQueue.some(t => t.title === actions[i]?.title))
+      .map(i => {
+        const a = actions[i]
+        const due = new Date()
+        if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
+        else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
+        else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
+        else due.setDate(due.getDate() + 3)
+        return {
+          id: Date.now() + i,
+          title: a.title,
+          priority: a.priority,
+          priorityClass: a.priorityClass || priorityClass(a.priority),
+          status: 'pending',
+          dueDate: due.toISOString().slice(0, 10),
+          description: a.description,
+          notes: coordinatorNotes || a.rationale,
+        }
+      })
+    setTaskQueue(prev => [...prev, ...newTasks])
     setSelectedActions([])
     setCoordinatorNotes('')
     setApproveAlert(true)
     setTimeout(() => setApproveAlert(false), 2000)
   }
+
+  const updateTaskStatus = (taskId, newStatus) => {
+    setTaskQueue(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
+  }
+
+  const taskCounts = {
+    pending: taskQueue.filter(t => t.status === 'pending').length,
+    inprocess: taskQueue.filter(t => t.status === 'inprocess').length,
+    completed: taskQueue.filter(t => t.status === 'completed').length,
+  }
+  const filteredTasks = taskQueue.filter(t => t.status === taskFilter)
 
   const priorityClass = (p) => {
     if (!p) return 'medium'
@@ -810,7 +845,7 @@ function DashboardPage() {
               AI Actions
             </button>
             <button className={`dash-tab ${activeTab === 'trends' ? 'active' : ''}`} disabled>📈 Clinical Trends</button>
-            <button className={`dash-tab ${activeTab === 'queue' ? 'active' : ''}`} disabled>📋 Task Queue</button>
+            <button className={`dash-tab ${activeTab === 'queue' ? 'active' : ''}`} onClick={() => setActiveTab('queue')}>📋 Task Queue</button>
             <button className={`dash-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}>📤 Patient Outreach</button>
           </div>
 
@@ -945,6 +980,80 @@ function DashboardPage() {
                   <button style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>📋 Save as Template</button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Task Queue */}
+          {activeTab === 'queue' && (
+            <div className="dash-card" style={{ padding: '24px' }}>
+              <div className="tq-summary">
+                <div className={`tq-summary-card ${taskFilter === 'pending' ? 'tq-active' : ''}`} onClick={() => setTaskFilter('pending')}>
+                  <div className="tq-summary-icon tq-icon-pending">⏳</div>
+                  <div>
+                    <div className="tq-summary-label">Pending</div>
+                    <span className="tq-badge tq-badge-pending">{taskCounts.pending} Tasks</span>
+                  </div>
+                </div>
+                <div className={`tq-summary-card ${taskFilter === 'inprocess' ? 'tq-active' : ''}`} onClick={() => setTaskFilter('inprocess')}>
+                  <div className="tq-summary-icon tq-icon-inprocess">▶</div>
+                  <div>
+                    <div className="tq-summary-label">In Process</div>
+                    <span className="tq-badge tq-badge-inprocess">{taskCounts.inprocess} Tasks</span>
+                  </div>
+                </div>
+                <div className={`tq-summary-card ${taskFilter === 'completed' ? 'tq-active' : ''}`} onClick={() => setTaskFilter('completed')}>
+                  <div className="tq-summary-icon tq-icon-completed">✓</div>
+                  <div>
+                    <div className="tq-summary-label">Completed</div>
+                    <span className="tq-badge tq-badge-completed">{taskCounts.completed} Tasks</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="tq-section-header">
+                <h3>⏳ {taskFilter === 'pending' ? 'Pending' : taskFilter === 'inprocess' ? 'In Process' : 'Completed'} Tasks</h3>
+                <p>{taskFilter === 'pending' ? 'Tasks awaiting action' : taskFilter === 'inprocess' ? 'Tasks currently being worked on' : 'Tasks that have been finished'}</p>
+              </div>
+
+              {filteredTasks.length === 0 && (
+                <div className="tq-empty">
+                  <p>{taskFilter === 'pending' ? 'No pending tasks. Approve actions from the AI Actions tab to create tasks.' : taskFilter === 'inprocess' ? 'No tasks in process.' : 'No completed tasks yet.'}</p>
+                </div>
+              )}
+
+              {filteredTasks.map(task => (
+                <div key={task.id} className="tq-task-card">
+                  <div className="tq-task-header">
+                    <h4>{task.title}</h4>
+                  </div>
+                  <div className="tq-task-meta">
+                    <span className={`dash-pill pill-${task.priorityClass}`}>{task.priority}</span>
+                    <span className={`dash-pill tq-status-pill tq-status-${task.status}`}>
+                      {task.status === 'pending' ? 'Pending' : task.status === 'inprocess' ? 'In Process' : 'Completed'}
+                    </span>
+                    <span className="tq-due">📅 DUE: {task.dueDate}</span>
+                  </div>
+                  <p className="tq-task-desc">{task.description}</p>
+                  <div className="tq-notes">
+                    <span className="tq-notes-label">NOTES:</span>
+                    <p>{task.notes}</p>
+                  </div>
+                  <div className="tq-task-actions">
+                    {task.status === 'pending' && (
+                      <>
+                        <button className="tq-btn-start" onClick={() => updateTaskStatus(task.id, 'inprocess')}>▶ Start Task</button>
+                        <button className="tq-btn-complete" onClick={() => updateTaskStatus(task.id, 'completed')}>✓ Mark Complete</button>
+                      </>
+                    )}
+                    {task.status === 'inprocess' && (
+                      <button className="tq-btn-complete" onClick={() => updateTaskStatus(task.id, 'completed')}>✓ Mark Complete</button>
+                    )}
+                    {task.status === 'completed' && (
+                      <span className="tq-completed-label">✓ Completed</span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
