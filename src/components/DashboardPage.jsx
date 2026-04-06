@@ -753,8 +753,9 @@ function DashboardPage() {
   }
 
   const allNotes = [...(clinicalNotesData || d.clinicalNotes), ...addedNotes]
+  const adminNotes = addedNotes.filter(n => n.type === 'Admin')
   const filteredNotes = noteFilter === 'all' ? allNotes
-    : noteFilter === 'admin' ? addedNotes
+    : noteFilter === 'admin' ? adminNotes
     : allNotes.filter(n => n.type.toLowerCase() === noteFilter)
 
   const handleAddNote = () => {
@@ -1308,7 +1309,7 @@ function DashboardPage() {
                 { key: 'all', label: `All (${allNotes.length})` },
                 { key: 'clinical', label: `Clinic (${allNotes.filter(n => n.type === 'Clinical').length})` },
                 { key: 'coordination', label: `Care (${allNotes.filter(n => n.type === 'Coordination').length})` },
-                { key: 'admin', label: `Admin (${addedNotes.length})` },
+                { key: 'admin', label: `Admin (${adminNotes.length})` },
               ].map(f => (
                 <button key={f.key} className={`dash-note-filter ${noteFilter === f.key ? 'active' : ''}`} onClick={() => setNoteFilter(f.key)}>
                   {f.label}
@@ -1352,7 +1353,7 @@ function DashboardPage() {
                   <input className="cn-input" type="text" placeholder="e.g. Primary Care Physician" value={newNote.role} onChange={e => setNewNote(p => ({ ...p, role: e.target.value }))} />
                   <p className="dash-modal-label">Note Type</p>
                   <div className="cn-type-select">
-                    {['Clinical', 'Coordination'].map(t => (
+                    {['Clinical', 'Coordination', 'Admin'].map(t => (
                       <button key={t} className={`cn-type-btn ${newNote.type === t ? 'active' : ''}`} onClick={() => setNewNote(p => ({ ...p, type: t }))}>{t}</button>
                     ))}
                   </div>
