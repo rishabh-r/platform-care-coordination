@@ -766,3 +766,84 @@ The `var D` object contains risk categories as keys (e.g., `cvd`, `diabetes`, `c
 10. `de68f1d` — Increase row spacing, spread contact items wider
 11. `57f2c2a` — Update notes.md with patient banner spacing changes
 12. `ce6f7bc` — Implement Task Queue tab
+13. `34c8648` — Update notes.md with Task Queue details
+14. `03b102b` — Make Clinical Notes dynamic from Encounter API
+15. `d76b48b` — Add Admin note type
+
+---
+
+## Clinical Notes — IMPLEMENTED (Dynamic) — April 6, 2026
+
+### Overview
+The Clinical Notes section in the right sidebar is now fully dynamic. It extracts clinical notes from the Encounter API, resolves practitioner names, and supports adding new notes via a form.
+
+### Data Flow
+1. Encounters already fetched in `loadDashboard()` via `/baseR4/Encounter?patient={id}`
+2. `parseClinicalNotesFromEncounters(encBundle, careManagerIds)` function:
+   - Iterates all encounter entries, extracts `extension` where `url === "clinicalNotes"`
+   - Groups by practitioner ID → picks the **latest** note per practitioner (one note per practitioner)
+   - Fetches each unique practitioner from `/baseR4/Practitioner?_id={id}&page=0&size=1` to get name, prefix, specialty
+   - Classifies note type: if practitioner ID is in `careManagerIds` (from EpisodeOfCare) or specialty matches /coordinator|care manager|nurse/ → **"Coordination"**, else → **"Clinical"**
+   - Generates initials from practitioner name
+   - Formats date as "Mon DD, YYYY · HH:MM AM/PM"
+   - Sorts by date descending (latest first)
+3. `careManagerIds` extracted from EpisodeOfCare bundle: `eocBundle.entry[].resource.careManager.reference` → stripped to UUID
+
+### State Variables
+- `clinicalNotesData` — parsed notes from encounters (array of note objects)
+- `addedNotes` — notes added locally via "Add Note" form
+- `showAddNoteModal` — boolean toggle for add note modal
+- `newNote` — `{ author, role, type, text }` form state
+- `viewingNote` — note object being viewed in View modal (null when closed)
+
+### Computed Values
+- `allNotes` — `[...clinicalNotesData, ...addedNotes]` (dynamic + locally added)
+- `adminNotes` — `addedNotes.filter(n => n.type === 'Admin')` (only Admin-typed added notes)
+- `filteredNotes` — filtered by `noteFilter`:
+  - `'all'` → all notes
+  - `'clinical'` → notes with type "Clinical"
+  - `'coordination'` → notes with type "Coordination"
+  - `'admin'` → only admin-typed added notes
+
+### Filter Tabs
+| Tab | Shows | Count Source |
+|-----|-------|-------------|
+| All | All notes (dynamic + added) | `allNotes.length` |
+| Clinic | Notes with type "Clinical" | `allNotes.filter(type=Clinical)` |
+| Care | Notes with type "Coordination" | `allNotes.filter(type=Coordination)` |
+| Admin | Only admin-typed added notes | `adminNotes.length` |
+
+### "Add Note" Modal
+- Opens via "+ Add Note" button
+- Form fields: Author Name, Role, Note Type (Clinical / Coordination / Admin), Note text
+- Note Type selector: 3 toggle buttons, "Admin" type notes only appear under Admin tab
+- On submit: creates note with current timestamp, adds to `addedNotes` state
+- CSS class: `.cn-modal` (max-width 520px)
+
+### "View" Modal
+- Opens when "View" link is clicked on any note
+- Shows: author avatar + name + role, type pill, full note text, timestamp
+- Close button in footer
+
+### Note Type Pills (CSS)
+- `.pill-note-clinical` — blue (`#DBEAFE` / `#2563EB`)
+- `.pill-note-coordination` — amber (`#FEF3C7` / `#D97706`)
+- `.pill-note-admin` — purple (`#F3E8FF` / `#7C3AED`)
+
+### CSS Classes Added
+- `.cn-modal`, `.cn-input`, `.cn-type-select`, `.cn-type-btn`, `.cn-view-meta`, `.cn-view-text`, `.cn-view-date`, `.pill-note-admin`
+
+### Updated Dashboard Dynamic Sections Status
+| Section | Status | Data Source |
+|---------|--------|------------|
+| Patient Banner | Dynamic | `/baseR4/Patient/{id}` |
+| Alerts & Trends | Dynamic | AI analysis of care gap text |
+| AI Actions | Dynamic | AI analysis of care gap text |
+| Vitals | Dynamic | `/baseR4/Observation/search` |
+| Medications | Dynamic | `/baseR4/MedicationRequest` |
+| Appointments & Encounters | Dynamic | `/baseR4/Encounter` + AI missed appointments |
+| Care Team | Dynamic | `/baseR4/EpisodeOfCare` — care managers |
+| Risk Insights | Dynamic | `POST /api/predict` — risk prediction API |
+| Clinical Notes | **Dynamic** | `/baseR4/Encounter` (clinicalNotes extension) + `/baseR4/Practitioner` (name resolution) + local "Add Note" |
+
+**All dashboard sections are now dynamic — no more static mock-only sections.**
