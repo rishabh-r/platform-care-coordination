@@ -460,6 +460,64 @@ const VITAL_ICONS = {
   'TEMPERATURE': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
 }
 
+async function parseClinicalNotesFromEncounters(encBundle, careManagerIds) {
+  if (!encBundle?.entry?.length) return null
+  const practitionerMap = {}
+  const notesByPractitioner = {}
+
+  for (const e of encBundle.entry) {
+    const r = e.resource
+    if (!r) continue
+    const noteExt = r.extension?.find(x => x.url === 'clinicalNotes')
+    if (!noteExt?.valueString) continue
+    const practRef = r.participant?.[0]?.individual?.reference
+    if (!practRef) continue
+    const practId = practRef.replace('Practitioner/', '')
+    const date = r.period?.start
+    if (!notesByPractitioner[practId] || new Date(date) > new Date(notesByPractitioner[practId].date)) {
+      notesByPractitioner[practId] = { text: noteExt.valueString, date, encClass: r.class?.code }
+    }
+    if (!practitionerMap[practId]) practitionerMap[practId] = null
+  }
+
+  const practIds = Object.keys(practitionerMap)
+  await Promise.all(practIds.map(async (id) => {
+    try {
+      const res = await callFhirApi(`${FHIR_BASE}/baseR4/Practitioner?_id=${id}&page=0&size=1`)
+      const pr = res?.entry?.[0]?.resource
+      if (pr) {
+        const given = pr.name?.[0]?.given?.join(' ') || ''
+        const family = pr.name?.[0]?.family || ''
+        const prefix = pr.name?.[0]?.prefix?.join(' ') || ''
+        const specialty = pr.qualification?.[0]?.code?.text || pr.qualification?.[0]?.code?.coding?.[0]?.display || ''
+        practitionerMap[id] = { name: `${prefix} ${given} ${family}`.trim(), specialty }
+      }
+    } catch (_) {}
+  }))
+
+  const careManagerIdSet = new Set(careManagerIds || [])
+  const notes = []
+  for (const [practId, note] of Object.entries(notesByPractitioner)) {
+    const pract = practitionerMap[practId] || { name: 'Unknown', specialty: '' }
+    const isCareCoordinator = careManagerIdSet.has(practId) || /coordinator|care manager|nurse/i.test(pract.specialty)
+    const nameParts = pract.name.replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.)\s*/i, '').trim().split(/\s+/)
+    const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
+    const dt = new Date(note.date)
+    const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    notes.push({
+      author: pract.name || 'Unknown',
+      initials,
+      role: isCareCoordinator ? 'Care Coordinator' : (pract.specialty || 'Physician'),
+      type: isCareCoordinator ? 'Coordination' : 'Clinical',
+      text: note.text,
+      date: dateStr,
+      rawDate: dt,
+    })
+  }
+  notes.sort((a, b) => b.rawDate - a.rawDate)
+  return notes
+}
+
 function LoadingScreen({ stepRef }) {
   const [step, setStep] = useState(0)
   const steps = ['Fetching Patient Data...', 'Analyzing Clinical Trends...', 'Generating AI Insights...']
@@ -518,6 +576,11 @@ function DashboardPage() {
   const [activeTab, setActiveTab] = useState('actions')
   const [taskQueue, setTaskQueue] = useState([])
   const [taskFilter, setTaskFilter] = useState('pending')
+  const [clinicalNotesData, setClinicalNotesData] = useState(null)
+  const [addedNotes, setAddedNotes] = useState([])
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false)
+  const [newNote, setNewNote] = useState({ author: '', role: '', type: 'Clinical', text: '' })
+  const [viewingNote, setViewingNote] = useState(null)
   const loadStepRef = useRef(null)
 
   const rawUser = localStorage.getItem('cb_user') || 'User'
@@ -558,7 +621,7 @@ function DashboardPage() {
         callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null }),
         callFhirApi(buildUrl('/baseR4/EpisodeOfCare', { patient: patientId, status: 'active', page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] EpisodeOfCare fetch failed:', e); return null }),
         callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Observations fetch failed:', e); return null })
-      ]).then(([medBundle, encBundle, eocBundle, obsBundle]) => {
+      ]).then(async ([medBundle, encBundle, eocBundle, obsBundle]) => {
         const parsedMeds = parseMedsFromFhir(medBundle)
         if (parsedMeds?.length) {
           console.log('[Dashboard] Parsed', parsedMeds.length, 'medications from FHIR')
@@ -578,6 +641,12 @@ function DashboardPage() {
         if (parsedVitals?.length) {
           console.log('[Dashboard] Parsed', parsedVitals.length, 'latest observations for vitals')
           setVitalsData(parsedVitals)
+        }
+        const careManagerIds = eocBundle?.entry?.map(e => e.resource?.careManager?.reference?.replace('Practitioner/', '')).filter(Boolean) || []
+        const parsedNotes = await parseClinicalNotesFromEncounters(encBundle, careManagerIds)
+        if (parsedNotes?.length) {
+          console.log('[Dashboard] Parsed', parsedNotes.length, 'clinical notes from encounters')
+          setClinicalNotesData(parsedNotes)
         }
       })
 
@@ -683,8 +752,30 @@ function DashboardPage() {
     return 'medium'
   }
 
-  const filteredNotes = noteFilter === 'all' ? d.clinicalNotes
-    : d.clinicalNotes.filter(n => n.type.toLowerCase() === noteFilter)
+  const allNotes = [...(clinicalNotesData || d.clinicalNotes), ...addedNotes]
+  const filteredNotes = noteFilter === 'all' ? allNotes
+    : noteFilter === 'admin' ? addedNotes
+    : allNotes.filter(n => n.type.toLowerCase() === noteFilter)
+
+  const handleAddNote = () => {
+    if (!newNote.author.trim() || !newNote.text.trim()) return
+    const nameParts = newNote.author.trim().split(/\s+/)
+    const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    setAddedNotes(prev => [{
+      author: newNote.author.trim(),
+      initials,
+      role: newNote.role.trim() || 'Staff',
+      type: newNote.type,
+      text: newNote.text.trim(),
+      date: dateStr,
+      rawDate: now,
+      isAdmin: true,
+    }, ...prev])
+    setNewNote({ author: '', role: '', type: 'Clinical', text: '' })
+    setShowAddNoteModal(false)
+  }
 
   const dynAlerts = alertsData || d.alerts.map(a => ({ title: a.title, detail: a.detail, severity: a.severity.toUpperCase() }))
   const dynTrends = trendsData || [
@@ -1208,14 +1299,19 @@ function DashboardPage() {
             <div className="dash-card-head">
               <div>
                 <h3>Clinical Notes</h3>
-                <p>{d.clinicalNotes.length} TOTAL ENTRIES</p>
+                <p>{allNotes.length} TOTAL ENTRIES</p>
               </div>
-              <button className="dash-add-note-btn">+ Add Note</button>
+              <button className="dash-add-note-btn" onClick={() => setShowAddNoteModal(true)}>+ Add Note</button>
             </div>
             <div className="dash-note-filters">
-              {['all', 'clinical', 'coordination'].map(f => (
-                <button key={f} className={`dash-note-filter ${noteFilter === f ? 'active' : ''}`} onClick={() => setNoteFilter(f)}>
-                  {f === 'all' ? `All (${d.clinicalNotes.length})` : f === 'clinical' ? `Clinic (${d.clinicalNotes.filter(n => n.type === 'Clinical').length})` : `Care (${d.clinicalNotes.filter(n => n.type === 'Coordination').length})`}
+              {[
+                { key: 'all', label: `All (${allNotes.length})` },
+                { key: 'clinical', label: `Clinic (${allNotes.filter(n => n.type === 'Clinical').length})` },
+                { key: 'coordination', label: `Care (${allNotes.filter(n => n.type === 'Coordination').length})` },
+                { key: 'admin', label: `Admin (${addedNotes.length})` },
+              ].map(f => (
+                <button key={f.key} className={`dash-note-filter ${noteFilter === f.key ? 'active' : ''}`} onClick={() => setNoteFilter(f.key)}>
+                  {f.label}
                 </button>
               ))}
             </div>
@@ -1229,7 +1325,7 @@ function DashboardPage() {
                   </div>
                   <div className="dash-note-tags">
                     <span className={`dash-pill pill-note-${n.type.toLowerCase()}`}>{n.type}</span>
-                    <span className="dash-note-view">View</span>
+                    <span className="dash-note-view" onClick={() => setViewingNote(n)}>View</span>
                   </div>
                 </div>
                 <p className="dash-note-text">{n.text}</p>
@@ -1237,6 +1333,69 @@ function DashboardPage() {
               </div>
             ))}
           </div>
+
+          {/* Add Note Modal */}
+          {showAddNoteModal && (
+            <div className="dash-modal-overlay" onClick={() => setShowAddNoteModal(false)}>
+              <div className="dash-modal cn-modal" onClick={e => e.stopPropagation()}>
+                <div className="dash-modal-header">
+                  <div>
+                    <h3>Add Clinical Note</h3>
+                    <p>Create a new note for this patient</p>
+                  </div>
+                  <button className="dash-modal-close" onClick={() => setShowAddNoteModal(false)}>✕</button>
+                </div>
+                <div className="dash-modal-body">
+                  <p className="dash-modal-label">Author Name</p>
+                  <input className="cn-input" type="text" placeholder="e.g. Dr. Michael Chen" value={newNote.author} onChange={e => setNewNote(p => ({ ...p, author: e.target.value }))} />
+                  <p className="dash-modal-label">Role</p>
+                  <input className="cn-input" type="text" placeholder="e.g. Primary Care Physician" value={newNote.role} onChange={e => setNewNote(p => ({ ...p, role: e.target.value }))} />
+                  <p className="dash-modal-label">Note Type</p>
+                  <div className="cn-type-select">
+                    {['Clinical', 'Coordination'].map(t => (
+                      <button key={t} className={`cn-type-btn ${newNote.type === t ? 'active' : ''}`} onClick={() => setNewNote(p => ({ ...p, type: t }))}>{t}</button>
+                    ))}
+                  </div>
+                  <p className="dash-modal-label">Note</p>
+                  <textarea className="dash-modal-textarea" placeholder="Write the clinical note here..." value={newNote.text} onChange={e => setNewNote(p => ({ ...p, text: e.target.value }))} />
+                </div>
+                <div className="dash-modal-footer">
+                  <button className="dash-modal-cancel" onClick={() => setShowAddNoteModal(false)}>✕ Cancel</button>
+                  <button className="dash-modal-confirm" onClick={handleAddNote} disabled={!newNote.author.trim() || !newNote.text.trim()}>✓ Add Note</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* View Note Modal */}
+          {viewingNote && (
+            <div className="dash-modal-overlay" onClick={() => setViewingNote(null)}>
+              <div className="dash-modal cn-modal" onClick={e => e.stopPropagation()}>
+                <div className="dash-modal-header">
+                  <div>
+                    <h3>Clinical Note</h3>
+                    <p>by {viewingNote.author}</p>
+                  </div>
+                  <button className="dash-modal-close" onClick={() => setViewingNote(null)}>✕</button>
+                </div>
+                <div className="dash-modal-body">
+                  <div className="cn-view-meta">
+                    <div className="dash-note-avatar" style={{ width: 40, height: 40, fontSize: 14 }}>{viewingNote.initials}</div>
+                    <div>
+                      <strong>{viewingNote.author}</strong>
+                      <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>{viewingNote.role}</p>
+                    </div>
+                    <span className={`dash-pill pill-note-${viewingNote.type.toLowerCase()}`}>{viewingNote.type}</span>
+                  </div>
+                  <p className="cn-view-text">{viewingNote.text}</p>
+                  <p className="cn-view-date">⏰ {viewingNote.date}</p>
+                </div>
+                <div className="dash-modal-footer">
+                  <button className="dash-modal-confirm" onClick={() => setViewingNote(null)}>Close</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

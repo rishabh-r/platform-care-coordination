@@ -454,6 +454,23 @@
 .pill-missed { background: #FEE2E2 !important; color: #DC2626 !important; font-weight: 600; }
 .dash-appt-row.missed { border-left: 3px solid #EF4444; background: #FFF5F5; }
 
+/* ── Clinical Notes Modal ── */
+.cn-modal { max-width: 520px; }
+.cn-input {
+  width: 100%; padding: 10px 14px; border: 1px solid #E2E8F0; border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: #1E293B; margin-bottom: 12px;
+}
+.cn-input:focus { outline: none; border-color: #818CF8; }
+.cn-type-select { display: flex; gap: 8px; margin-bottom: 12px; }
+.cn-type-btn {
+  padding: 6px 16px; border-radius: 8px; border: 1px solid #E2E8F0;
+  background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: #475569;
+}
+.cn-type-btn.active { background: #6366F1; color: white; border-color: #6366F1; }
+.cn-view-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.cn-view-text { font-size: 14px; color: #334155; line-height: 1.7; margin: 0 0 12px; }
+.cn-view-date { font-size: 12px; color: #94A3B8; margin: 0; }
+
 /* ── Task Queue ── */
 .tq-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
 .tq-summary-card {
