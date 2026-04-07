@@ -156,9 +156,10 @@
 .dash-card-head p { font-size: 12px; color: #94A3B8; margin: 0; }
 .dash-card-head > div { display: flex; align-items: flex-start; justify-content: space-between; }
 
-/* ── Alerts Row ── */
-.dash-alerts-row { display: grid; grid-template-columns: 1fr 300px; gap: 20px; min-width: 0; }
-.dash-alerts-row > .dash-card { min-width: 0; overflow: hidden; }
+/* ── Alerts + Risk Combined ── */
+.dash-alerts-inner { display: grid; grid-template-columns: 1fr 260px; gap: 0; min-width: 0; }
+.dash-alerts-left { min-width: 0; }
+.dash-alerts-right { border-left: 1px solid #E2E8F0; padding-left: 0; display: flex; flex-direction: column; }
 .dash-alert-list { display: flex; flex-direction: column; gap: 10px; }
 .dash-alert-item {
   display: flex; align-items: center; gap: 12px;
@@ -193,16 +194,7 @@
 .val-red { color: #DC2626; }
 .val-orange { color: #EA580C; }
 
-/* ── Risk Insights ── */
-.dash-risk-card { display: flex; flex-direction: column; }
-.dash-risk-card .dash-card-head { display: flex; align-items: center; justify-content: space-between; }
-.dash-risk-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 0; border-bottom: 1px solid #F1F5F9;
-}
-.dash-risk-row:last-child { border-bottom: none; }
-.dash-risk-name { font-size: 12px; font-weight: 600; color: #475569; letter-spacing: .5px; flex: 1; min-width: 0; }
-.dash-risk-val { font-size: 18px; font-weight: 700; color: #1E293B; white-space: nowrap; }
+/* ── Risk Insights (inside alerts card) ── */
 
 /* ── Tabs ── */
 .dash-tabs { display: flex; gap: 0; background: white; border-radius: 12px; border: 1px solid #E2E8F0; overflow: hidden; }
@@ -605,7 +597,8 @@
   .dash-subheader { padding: 12px 16px; }
   .dash-banner { margin: 12px 16px 0; padding: 16px; flex-direction: column; gap: 12px; align-items: flex-start; }
   .dash-grid { padding: 12px 16px 32px; }
-  .dash-alerts-row { grid-template-columns: 1fr; }
+  .dash-alerts-inner { grid-template-columns: 1fr; }
+  .dash-alerts-right { border-left: none; border-top: 1px solid #E2E8F0; padding-left: 0; padding-top: 12px; }
   .dash-vitals-grid { grid-template-columns: 1fr; }
   .dash-tabs { flex-wrap: wrap; }
   .dash-quick-pills { display: none; }

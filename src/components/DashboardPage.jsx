@@ -984,65 +984,66 @@ function DashboardPage() {
       <div className="dash-grid">
         {/* ─ Left / Main Column ─ */}
         <div className="dash-col-main">
-          {/* Alerts + Risk row */}
-          <div className="dash-alerts-row">
-            <div className="dash-card dash-alerts-card">
-              <div className="dash-card-head">
-                <h3>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  Alert Triggers &amp; Risk Drivers
-                </h3>
-                <p>AI-detected issues requiring immediate attention</p>
-              </div>
-              <div className="dash-alert-list">
-                {dynAlerts.map((a, i) => (
-                  <div key={i} className="dash-alert-item">
-                    <span className="dash-alert-icon">{ALERT_ICONS[a.title] || '⚠'}</span>
-                    <div className="dash-alert-body">
-                      <strong>{a.title}</strong>
-                      <p>{a.detail}</p>
-                    </div>
-                    <span className={`dash-pill pill-${a.severity.toLowerCase()}`}>{a.severity}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="dash-trends-bar">
-                <div className="dash-trends-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" width="16" height="16"><path d="M23 6l-9.5 9.5-5-5L1 18"/></svg>
-                  DETERIORATING CLINICAL TRENDS
+          {/* Alerts + Risk combined card */}
+          <div className="dash-card dash-alerts-card">
+            <div className="dash-alerts-inner">
+              <div className="dash-alerts-left">
+                <div className="dash-card-head">
+                  <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Alert Triggers &amp; Risk Drivers
+                  </h3>
+                  <p>AI-detected issues requiring immediate attention</p>
                 </div>
-                <div className="dash-trends-scroll">
-                  {dynTrends.map((t, i) => (
-                    <div key={i} className={`dash-trend-chip ${t.status}`}>
-                      <span className="dash-trend-lbl">{t.label}</span>
-                      <b>{t.value}</b>
+                <div className="dash-alert-list">
+                  {dynAlerts.map((a, i) => (
+                    <div key={i} className="dash-alert-item">
+                      <span className="dash-alert-icon">{ALERT_ICONS[a.title] || '⚠'}</span>
+                      <div className="dash-alert-body">
+                        <strong>{a.title}</strong>
+                        <p>{a.detail}</p>
+                      </div>
+                      <span className={`dash-pill pill-${a.severity.toLowerCase()}`}>{a.severity}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-
-            <div className="dash-card dash-risk-card">
-              <div className="ri-head">
-                <span className="ri-title">Risk Insights</span>
-                <span className="ri-ai">
-                  <svg viewBox="0 0 512 480.24" fill="currentColor" width="12" height="12"><path d="M512 220.6c-163.88 61.72-149.02 38.94-206.92 208.29-57.91-169.35-43.06-146.57-206.92-208.26 163.86-61.72 149.01-38.95 206.92-208.3C362.98 181.68 348.12 158.91 512 220.6zM193.38 382.9c-76.59 28.86-69.65 18.21-96.71 97.34C69.63 401.11 76.59 411.76 0 382.9c76.59-28.81 69.63-18.15 96.67-97.31 27.06 79.16 20.12 68.5 96.71 97.31zm8.2-316.66c-52.13 19.66-47.41 12.38-65.81 66.28-18.43-53.86-13.69-46.62-65.84-66.28C122.08 46.63 117.34 53.87 135.77 0c18.4 53.87 13.68 46.63 65.81 66.24z"/></svg>
-                  AI Powered
-                </span>
-              </div>
-              <div className="ri-list">
-                {(riskData || d.riskInsights).map((r, i) => (
-                  <div key={i} className={`ri-row ri-row-${r.level}`} onClick={() => r.drivers && setViewingRisk(r)} role="button" tabIndex={0}>
-                    {r.icon && <div className={`ri-icon ri-icon-${r.level}`}><img src={r.icon} alt="" width="20" height="20" /></div>}
-                    <div className="ri-info">
-                      <div className="ri-name">{r.name}</div>
-                      <div className="ri-pct">{r.value}</div>
-                    </div>
-                    <span className={`ri-badge ri-badge-${r.level}`}>{r.level === 'mod' ? 'MODERATE' : (r.levelLabel || r.level).toUpperCase()}</span>
+                <div className="dash-trends-bar">
+                  <div className="dash-trends-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" width="16" height="16"><path d="M23 6l-9.5 9.5-5-5L1 18"/></svg>
+                    DETERIORATING CLINICAL TRENDS
                   </div>
-                ))}
+                  <div className="dash-trends-scroll">
+                    {dynTrends.map((t, i) => (
+                      <div key={i} className={`dash-trend-chip ${t.status}`}>
+                        <span className="dash-trend-lbl">{t.label}</span>
+                        <b>{t.value}</b>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <p className="ri-hint">Tap a tile to see detailed insights</p>
+              <div className="dash-alerts-right">
+                <div className="ri-head">
+                  <span className="ri-title">Risk Insights</span>
+                  <span className="ri-ai">
+                    <svg viewBox="0 0 512 480.24" fill="currentColor" width="10" height="10"><path d="M512 220.6c-163.88 61.72-149.02 38.94-206.92 208.29-57.91-169.35-43.06-146.57-206.92-208.26 163.86-61.72 149.01-38.95 206.92-208.3C362.98 181.68 348.12 158.91 512 220.6zM193.38 382.9c-76.59 28.86-69.65 18.21-96.71 97.34C69.63 401.11 76.59 411.76 0 382.9c76.59-28.81 69.63-18.15 96.67-97.31 27.06 79.16 20.12 68.5 96.71 97.31zm8.2-316.66c-52.13 19.66-47.41 12.38-65.81 66.28-18.43-53.86-13.69-46.62-65.84-66.28C122.08 46.63 117.34 53.87 135.77 0c18.4 53.87 13.68 46.63 65.81 66.24z"/></svg>
+                    AI Powered
+                  </span>
+                </div>
+                <div className="ri-list">
+                  {(riskData || d.riskInsights).map((r, i) => (
+                    <div key={i} className={`ri-row ri-row-${r.level}`} onClick={() => r.drivers && setViewingRisk(r)} role="button" tabIndex={0}>
+                      {r.icon && <div className={`ri-icon ri-icon-${r.level}`}><img src={r.icon} alt="" width="18" height="18" /></div>}
+                      <div className="ri-info">
+                        <div className="ri-name">{r.name}</div>
+                        <div className="ri-pct">{r.value}</div>
+                      </div>
+                      <span className={`ri-badge ri-badge-${r.level}`}>{r.level === 'mod' ? 'MODERATE' : (r.levelLabel || r.level).toUpperCase()}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="ri-hint">Tap a tile to see detailed insights</p>
+              </div>
             </div>
           </div>
 
