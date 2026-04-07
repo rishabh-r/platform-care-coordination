@@ -46,7 +46,23 @@ V4511=Renal dialysis status, V560=Renal dialysis encounter,
 2853=Anemia d/t antineo chemo, 28749=Sec thrombocytopenia NEC, 28800=Neutropenia NOS,
 52801=Mucositis d/t antineo rx,
 1123=Cutaneous candidiasis, 1170=Rhinosporidiosis, 1190=Pulmonary TB NOS-unspec,
-1200=Schistosoma haematobium, 1800=Malig neo endocervix, 5733=Hepatitis NOS, 78630=Hemoptysis NOS
+1200=Schistosoma haematobium, 1800=Malig neo endocervix, 5733=Hepatitis NOS, 78630=Hemoptysis NOS,
+I10=Essential hypertension, I110=Hypertensive heart disease with HF,
+I4891=Atrial fibrillation, I48.91=Atrial fibrillation unspecified, I48.0=Paroxysmal atrial fibrillation,
+I501=Left heart failure, I5020=Systolic hrt failure NOS, I5021=Acute systolic hrt failure,
+I5022=Chr systolic hrt failure, I5023=Ac on chr syst hrt fail,
+I5030=Diastolc hrt failure NOS, I5031=Ac diastolic hrt failure,
+I5032=Chr diastolic hrt fail, I5033=Ac on chr diast hrt fail,
+I50814=CHF NOS, I50.9=Heart failure unspecified,
+42821=Ac systolic hrt failure, 42832=Chr diastolc hrt failure, 42833=Ac on chr diast hrt fail,
+4281=Left heart failure, 42820=Systolic hrt failure NOS, 42831=Ac diastolc hrt failure,
+4289=Heart failure NOS, 40201=Mal hyp ht dis w ht fail,
+2722=Mixed hyperlipidemia, 7820=Edema, 78605=Shortness of breath,
+N18.3=Chronic kidney disease stage 3, N18.9=CKD unspecified,
+E11.9=T2DM without complications, E11.65=T2DM with hyperglycemia,
+E782=Mixed hyperlipidemia, E784=Hyperlipidemia NEC/NOS,
+J810=Acute pulmonary edema, J90=Pleural effusion,
+R600=Localized edema, R0602=Shortness of breath
 `;
 
 export const DRUG_CODES = `
@@ -76,7 +92,8 @@ ACIC400, ACIC800I, AMIK500I, BEND90I, CARM100I, COTRMX, CYCLO500I, DEFIB_IV, DOX
 FILG300, FLUCON150, GRAN1I, IFOS_IV, MELPH_IV, ONDAN4I, ONDAN8, PLERIX, POLAT140I,
 PRED5, PRED25, RASBU_IV, RITUX500I, TPN_IV,
 ACETY_IV, ETHAMB400, GLYCO_INH, ISONH300, MOXIFL400, PYRAZIN500, PYRIDOX50, RIFAMP450, STREPT_IM, TRANEX_IV,
-INSR
+INSR,
+ENTR49, ENTR97, SACV49, SACV97
 `;
 
 export const PROCEDURE_CODES = `
@@ -103,7 +120,9 @@ SPECIFIC CPT CODES:
 76770=Renal Ultrasound bilateral kidneys, 80053=Comprehensive Metabolic Panel,
 82947=Blood glucose quantitative stat, 90935=Haemodialysis with physician evaluation,
 90937=Repeat Haemodialysis evaluation, 92960=DC Cardioversion,
-93306=Echocardiography transthoracic TTE, 93451=Right Heart Catheterisation,
+93000=ECG routine 12-lead, 93010=ECG interpretation and report,
+93303=Transthoracic echocardiography complete, 93306=Echocardiography Doppler TTE,
+93451=Right Heart Catheterisation,
 93503=Swan-Ganz haemodynamic monitoring, 93620=EP Study with programmed stimulation,
 94002=Ventilation management CPAP BiPAP, 96360=IV Hydration infusion first hour,
 96365=IV Therapeutic infusion, 97597=Wound debridement open wound first 20 sq cm,

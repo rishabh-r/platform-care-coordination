@@ -252,9 +252,112 @@ Person, Person_name, Person_Address, Person_Language, Person_Telecom, Extensions
 
 ---
 
-## Patient 2 — PENDING (not yet created)
-- **Plan**: Female, CHF (Congestive Heart Failure), 25 encounters
-- **Status**: Waiting for Patient 1 testing to complete first
+## Patient 2 — Sarah Elizabeth Cooper
+
+- **Patient UUID**: `a3e838d7-a0dc-41af-859b-113c9dc93ea9`
+- **DOB**: 20-Feb-1955
+- **Gender**: Female
+- **Marital Status**: Married
+- **Language**: English
+- **Primary Disease**: Congestive Heart Failure (CHF) with AFib, HTN, CKD
+- **Primary Practitioner**: Dr. Anita Patel (UUID in practitioner sheet, Cardiology)
+- **Managing Organization**: Raleigh Heart & Vascular Center (UUID in organization sheet)
+- **Time Span**: March 2023 — March 2026 (3 years)
+- **Encounters**: 25 total (6 IMP + 17 AMB + 2 cancelled no-shows)
+- **Excel background**: All Patient 2 rows have **yellow background** (`#FFFF99`)
+
+### Clinical Story
+- Mar 2023: Initial CHF diagnosis (LVEF 38%), started Furosemide + Lisinopril
+- Jun 2023: First acute decompensation (IMP), IV diuretics, 3-day admission
+- Sep 2023: AFib detected, started Warfarin, discontinued Aspirin
+- Oct 2023: AFib with RVR (HR 142), cardioversion (IMP)
+- Feb 2024: Missed appointment (CARE GAP — no-show)
+- May 2024: CHF exacerbation — patient self-discontinued Furosemide (CARE GAP — medication non-adherence)
+- Jun 2024: Post-discharge, restarted Furosemide, added Spironolactone + KCl
+- Aug 2024: CKD Stage 3 diagnosed (cardiorenal syndrome), Creatinine 1.5
+- Oct 2024: Fluid overload with pleural effusions (IMP), Digoxin added
+- Dec 2024: Missed appointment (CARE GAP — no-show)
+- Feb 2025: Severe CHF exacerbation, ICU admission (LVEF 25%), IV Milrinone
+- Mar 2025: Switched Lisinopril → Entresto (Sacubitril-Valsartan)
+- Jul 2025: Elective cardiac catheterization — moderate non-obstructive CAD, no intervention
+- Oct 2025: Clinically improved, NYHA Class II, cardiac rehab completing
+- Mar 2026: Latest visit — stable, LVEF 38%, NT-proBNP 380 (near normal)
+
+### Conditions (ICD-10 codes, condition_code_id from Condition_Master)
+- 4473 — CHF NOS (I50814)
+- 4477 — Chr systolic hrt failure (I5022)
+- 4481 — Chr diastolic hrt fail (I5032)
+- 4476 — Acute systolic hrt failure (I5021)
+- 4478 — Ac on chr syst hrt fail (I5023)
+- 4462 — Atrial fibrillation (I4891)
+- 14618 — Paroxysmal AFib (I48.0)
+- 4304 — Hypertension NOS (I10)
+- 14590 — CKD stage 3 (N18.3)
+- 14617 — T2DM without complications (E11.9)
+- 5273 — Acute lung edema (J810)
+- 12123 — Edema (R600)
+- 5149 — Pleural effusion (J90)
+- 2745 — Mixed hyperlipidemia (E782)
+
+### Observations (9 unique types including vitals)
+| observation_code_id | Label | LOINC | Unit | In Knowledge Base |
+|---|---|---|---|---|
+| 1 | Heart Rate | 8867-4 | /min | ✓ |
+| 2 | Systolic Blood Pressure | 8480-6 | mmHg | ✓ |
+| 3 | Diastolic Blood Pressure | 8462-4 | mmHg | ✓ |
+| 4 | Body Temperature | 8310-5 | degC | ✓ |
+| 10 | Glucose | 2345-7 | mg/dL | ✓ |
+| 11 | Creatinine | 2160-0 | mg/dL | ✓ |
+| 17 | NT-proBNP | 33762-6 | pg/mL | ✓ |
+| 24 | Potassium | 2823-3 | mEq/L | ✓ |
+| 25 | Sodium | 2951-2 | mEq/L | ✓ |
+
+Total: 147 observations across 23 non-cancelled encounters.
+
+### Procedures (CPT codes)
+93000, 93010, 93303, 93306, 99222, 99223, 99254, 99291 — all in knowledge base.
+12 procedures across 6 inpatient encounters (max 2 per encounter).
+
+### Medications (medication_code_master IDs)
+New: 249=Furosemide 40mg, 250=Metoprolol Succinate ER 25mg, 251=Digoxin 0.125mg, 252=Spironolactone 25mg
+Existing reused: 3=Aspirin 81mg, 4=Lisinopril 10mg, 24=Sacubitril-Valsartan 97-103mg, 26=Warfarin 5mg, 155=KCl 20mEq
+
+### Care Gaps Simulated
+- **Medication non-adherence**: Furosemide self-discontinued (status=stopped, note contains "Care gap — patient self-discontinued furosemide due to frequent urination")
+- **Missed appointments**: Encounter 9 (Feb 2024) and Encounter 16 (Dec 2024) both status=cancelled with "No-show" clinical notes
+
+### Episodes of Care (4 programs)
+- CHF Disease Management Program (active) — Care Coordinator: Lisa Martinez, RN
+- Atrial Fibrillation Monitoring Program (active) — Care Coordinator: Angela Johnson, RN
+- Chronic Kidney Disease Monitoring (active) — Care Coordinator: Patricia Williams, RN
+- Cardiac Rehabilitation Program (finished) — Care Coordinator: Karen Anderson, RN
+
+### Other Data
+- **Allergies**: 3 (Iodine contrast dye, Shellfish, NSAID intolerance)
+- **Diagnostic Reports**: 5 (Echo, CMP, ECG, Cardiac Cath, NT-proBNP Trend)
+- **Service Requests**: 5 (Echo, Pulmonology consult, Nephrology consult, Cardiac cath, Cardiac rehab)
+- **Immunizations**: 6 (Influenza x3, Pneumococcal PCV20, COVID-19 booster, Td)
+- **Document References**: 6 (5 discharge summaries + 1 cardiac cath procedure note)
+
+### Testing Prompts for Patient 2
+1. "Search for patient Sarah Cooper"
+2. "What are the active conditions for this patient?"
+3. "Show me all inpatient admissions for this patient"
+4. "What is the latest NT-proBNP for this patient?"
+5. "Show recent observations for this patient"
+6. "List all medications for this patient"
+7. "Perform a care gap analysis for this patient"
+8. "Show appointments for this patient"
+9. "Does this patient have any allergies?"
+10. "What vaccines has this patient received?"
+11. "Show episodes of care for this patient"
+12. "Who are the care coordinators for this patient?"
+13. "Show diagnostic reports for this patient"
+14. "Find Dr. Patel"
+15. "Give me a full clinical summary of this patient"
+16. "Show me the NT-proBNP trend as a chart"
+17. "Show blood pressure trends for this patient"
+18. "Show heart rate trends for this patient"
 
 ---
 
@@ -265,15 +368,17 @@ Person, Person_name, Person_Address, Person_Language, Person_Telecom, Extensions
 - `cleanup_sheets.py` — Deleted old patient-specific sheets
 - `check_codes.py` — Verified FK code mappings
 - `check_old_sheets.py` — Analyzed old sheets before deletion
+- `fix_units.py` — Added missing expected_unit values to Measurement_Master (335 units filled)
+- `generate_patient2.py` — Patient 2 (Sarah Cooper) CHF data, all 24 sheets with yellow background
 
 ---
 
 ## Knowledge Bases (src/config/knowledgeBases.js)
-- **CONDITION_CODES** — ICD-9 codes (all Patient 1 codes included)
-- **LOINC_CODES** — 68 LOINC codes with units (all Patient 1 observations included)
-- **DRUG_CODES** — Drug formulary codes including INSR (all Patient 1 drugs covered)
-- **PROCEDURE_CODES** — CPT code ranges + specific codes including 11042 (all Patient 1 procedures included)
-- **OBSERVATION_RANGES** — Normal ranges with Low/Normal/High classifications
+- **CONDITION_CODES** — ICD-9 + ICD-10 codes (all Patient 1 and Patient 2 codes included)
+- **LOINC_CODES** — 68 LOINC codes with units (all Patient 1 and Patient 2 observations included)
+- **DRUG_CODES** — Drug formulary codes including INSR, ENTR49/97, SACV49/97 (all Patient 1 and Patient 2 drugs covered)
+- **PROCEDURE_CODES** — CPT code ranges + specific codes including 93000, 93010, 93303 (all Patient 1 and Patient 2 procedures included)
+- **OBSERVATION_RANGES** — Normal ranges with Low/Normal/High classifications (includes BP, HR, temp, glucose, NTproBNP, sodium, potassium, creatinine)
 
 ---
 
@@ -625,8 +730,8 @@ The `var D` object contains risk categories as keys (e.g., `cvd`, `diabetes`, `c
 | Clinical Notes | Static | `MOCK_DATA.clinicalNotes` |
 
 ### Pending Work
-- **Patient 2**: Female, CHF, 25 encounters — not yet started
-- **Clinical Notes**: Still static mock data — only remaining static section
+- **Patient 2**: COMPLETED (see Patient 2 section above)
+- **Clinical Notes**: COMPLETED (see Clinical Notes section below)
 
 ---
 
@@ -847,3 +952,33 @@ The Clinical Notes section in the right sidebar is now fully dynamic. It extract
 | Clinical Notes | **Dynamic** | `/baseR4/Encounter` (clinicalNotes extension) + `/baseR4/Practitioner` (name resolution) + local "Add Note" |
 
 **All dashboard sections are now dynamic — no more static mock-only sections.**
+
+---
+
+## Session: April 6, 2026 — Patient 2 Data Generation
+
+### Measurement Master — Unit Fix
+- Found 574 out of 742 rows in `Measurement_Master` were missing `expected_unit` values
+- Created `fix_units.py` script with a dictionary mapping ~67 LOINC codes to their standard units and reference ranges
+- After running: 335 additional units were populated; remaining rows are less common LOINC codes
+- Also verified that vital signs (Heart Rate, BP systolic/diastolic, Body Temp, Glucose) are present in `Measurement_Master` with correct LOINC codes
+
+### Condition Master — ICD-9 → ICD-10 Migration
+- Master table was migrated from ICD-9 to ICD-10 codes since last session
+- All Patient 2 conditions use ICD-10 codes from the updated `Condition_Master`
+- Patient 1 conditions still reference ICD-9 codes in the data (no change)
+
+### Knowledge Base Updates
+- **CONDITION_CODES**: ICD-10 codes for Patient 2 merged INTO the existing `CONDITION_CODES` section (not separate). Both ICD-9 (Patient 1) and ICD-10 (Patient 2) codes coexist in format `CODE=Description`
+- **DRUG_CODES**: Added ENTR49, ENTR97, SACV49, SACV97 (Sacubitril-Valsartan formulations)
+- **PROCEDURE_CODES**: Added 93000 (ECG), 93010 (ECG interp), 93303 (Echo TTE), 93306 (Echo Doppler TTE)
+
+### chatbase_data.xlsx — Patient 2 Sheets
+All 24 sheets were appended with Patient 2 data (yellow background `#FFFF99`):
+- patient, encounter, condition, observation, procedure, medicationRequest, appointment
+- allergy, diagnosticReport, serviceRequest, immunization, documentReference, episodeOfCare
+- organization, practitioner
+- Master tables updated: medication_code_master (4 new entries), Condition_Master (verified), Measurement_Master (units fixed), Procedure_Master (verified)
+
+### Files to NEVER commit (updated)
+`chatbase_data.xlsx`, `generate_*.py`, `check_*.py`, `cleanup_sheets.py`, `fix_units.py`, `~$chatbase_data.xlsx`, `.env`
