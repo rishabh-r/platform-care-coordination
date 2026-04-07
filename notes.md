@@ -1093,6 +1093,16 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 
 **All 4 dashboard tabs are now fully implemented.**
 
+### Clinical Trends — Period Toggle Changed
+- Removed 30 Day / 6 Month toggle buttons
+- Replaced with single **"12 Month View"** toggle button
+- **Default**: Shows ALL observation data (full 3-year history)
+- **Click "12 Month View"**: Filters to past 12 months only
+- **Click again**: Toggles back to showing all data
+- State default changed from `'6m'` to `'all'`
+- Cutoff logic: `'12m'` = `new Date().setFullYear(new Date().getFullYear() - 1)`, `'all'` = no filter (all points shown)
+
 ### Git Commits (April 7 session)
 1. `41872c8` — Show 4 vitals by default with Show All toggle
 2. `ce15890` — Implement Clinical Trends tab with dynamic charts, 30d/6m toggle, and patient-specific bottom stats
+3. `4157587` — Replace 30d/6m toggle with 12 Month View toggle, default shows all trends
