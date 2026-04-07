@@ -659,7 +659,7 @@ function DashboardPage() {
   const [clinicalNotesData, setClinicalNotesData] = useState(null)
   const [allObsData, setAllObsData] = useState(null)
   const [trendTab, setTrendTab] = useState(null)
-  const [trendPeriod, setTrendPeriod] = useState('6m')
+  const [trendPeriod, setTrendPeriod] = useState('all')
   const [addedNotes, setAddedNotes] = useState([])
   const [showAddNoteModal, setShowAddNoteModal] = useState(false)
   const [newNote, setNewNote] = useState({ author: '', role: '', type: 'Clinical', text: '' })
@@ -1175,8 +1175,7 @@ function DashboardPage() {
                   <p className="ct-subtitle">Vitals Trends</p>
                 </div>
                 <div className="ct-period-toggle">
-                  <button className={trendPeriod === '30d' ? 'active' : ''} onClick={() => setTrendPeriod('30d')}>30 Day View</button>
-                  <button className={trendPeriod === '6m' ? 'active' : ''} onClick={() => setTrendPeriod('6m')}>6 Month View</button>
+                  <button className={trendPeriod === '12m' ? 'active' : ''} onClick={() => setTrendPeriod(trendPeriod === '12m' ? 'all' : '12m')}>12 Month View</button>
                 </div>
               </div>
 
@@ -1194,15 +1193,14 @@ function DashboardPage() {
                   const cfg = activeCfg
                   if (!allObsData || !cfg) return <p style={{ textAlign: 'center', color: '#94A3B8', padding: '40px 0' }}>No observation data available</p>
 
-                  const cutoff = new Date()
-                  cutoff.setDate(cutoff.getDate() - (trendPeriod === '30d' ? 30 : 180))
+                  const cutoff = trendPeriod === '12m' ? new Date(new Date().setFullYear(new Date().getFullYear() - 1)) : null
 
                   const datasets = []
                   const allDates = new Set()
                   cfg.codes.forEach((code, idx) => {
                     const obs = allObsData[code]
                     if (!obs) return
-                    const filtered = obs.points.filter(p => p.date >= cutoff)
+                    const filtered = cutoff ? obs.points.filter(p => p.date >= cutoff) : obs.points
                     filtered.forEach(p => allDates.add(p.date.toISOString().slice(0, 10)))
                     datasets.push({
                       label: OBSERVATION_NORMAL_RANGES[code]?.name || obs.display,
