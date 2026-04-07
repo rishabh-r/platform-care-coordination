@@ -255,27 +255,38 @@ function parseCareTeamFromEoC(bundle) {
   return team.length ? team : null
 }
 
-const RISK_LABEL_MAP = { cvd: 'HYPERTENSION', diabetes: 'DIABETES', cancer: 'CANCER' }
+const RISK_LABEL_MAP = { cvd: 'Hypertension', diabetes: 'Diabetes', cancer: 'Cancer' }
+const RISK_ICON_MAP = {
+  cvd: 'https://fhirassist.rsystems.com:5050/src/tileIcons/hipertension.svg',
+  diabetes: 'https://fhirassist.rsystems.com:5050/src/tileIcons/diabteis.svg',
+  cancer: 'https://fhirassist.rsystems.com:5050/src/tileIcons/cancer.svg',
+}
 
 async function fetchRiskPrediction(patientId) {
   try {
     const token = localStorage.getItem('cb_token')
-    const res = await fetch('https://fhirassist.rsystems.com:5050/api/predictHealthRisk', {
+    const res = await fetch('https://fhirassist.rsystems.com:5050/api/predict', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ patient_id: patientId })
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ uuid: patientId })
     })
-    const data = await res.json()
+    const html = await res.text()
+    const match = html.match(/var\s+D\s*=\s*(\{[\s\S]*?\});/)
+    if (!match) return null
+    const data = JSON.parse(match[1])
     const risks = []
     for (const [key, val] of Object.entries(data)) {
       const level = (val.risk_level || 'low').toLowerCase()
       risks.push({
+        key,
         name: RISK_LABEL_MAP[key] || key.toUpperCase(),
+        icon: RISK_ICON_MAP[key] || '',
         value: val.risk_percentage != null ? val.risk_percentage.toFixed(1) + '%' : '—',
-        level: level === 'moderate' ? 'mod' : level
+        percentage: val.risk_percentage || 0,
+        level: level === 'moderate' ? 'mod' : level,
+        levelLabel: val.risk_level || 'Low',
+        drivers: val.risk_drivers || [],
+        protective: val.protective_factors || [],
       })
     }
     return risks.length ? risks : null
@@ -643,6 +654,7 @@ function DashboardPage() {
   const [careTeamData, setCareTeamData] = useState(null)
   const [vitalsData, setVitalsData] = useState(null)
   const [riskData, setRiskData] = useState(null)
+  const [viewingRisk, setViewingRisk] = useState(null)
   const [showAllVitals, setShowAllVitals] = useState(false)
   const [showAllMeds, setShowAllMeds] = useState(false)
   const [showAllAppts, setShowAllAppts] = useState(false)
@@ -1004,17 +1016,26 @@ function DashboardPage() {
             </div>
 
             <div className="dash-card dash-risk-card">
-              <div className="dash-card-head">
-                <h3>Risk Insights</h3>
-                <span className="dash-pill pill-ai">✦ AI Powered</span>
+              <div className="ri-head">
+                <span className="ri-title">Risk Insights</span>
+                <span className="ri-ai">
+                  <svg viewBox="0 0 512 480.24" fill="currentColor" width="12" height="12"><path d="M512 220.6c-163.88 61.72-149.02 38.94-206.92 208.29-57.91-169.35-43.06-146.57-206.92-208.26 163.86-61.72 149.01-38.95 206.92-208.3C362.98 181.68 348.12 158.91 512 220.6zM193.38 382.9c-76.59 28.86-69.65 18.21-96.71 97.34C69.63 401.11 76.59 411.76 0 382.9c76.59-28.81 69.63-18.15 96.67-97.31 27.06 79.16 20.12 68.5 96.71 97.31zm8.2-316.66c-52.13 19.66-47.41 12.38-65.81 66.28-18.43-53.86-13.69-46.62-65.84-66.28C122.08 46.63 117.34 53.87 135.77 0c18.4 53.87 13.68 46.63 65.81 66.24z"/></svg>
+                  AI Powered
+                </span>
               </div>
-              {(riskData || d.riskInsights).map((r, i) => (
-                <div key={i} className="dash-risk-row">
-                  <span className="dash-risk-name">{r.name}</span>
-                  <span className="dash-risk-val">{r.value}</span>
-                  <span className={`dash-pill pill-${r.level}`}>{r.level === 'mod' ? 'MODERATE' : r.level.toUpperCase()}</span>
-                </div>
-              ))}
+              <div className="ri-list">
+                {(riskData || d.riskInsights).map((r, i) => (
+                  <div key={i} className={`ri-row ri-row-${r.level}`} onClick={() => r.drivers && setViewingRisk(r)} role="button" tabIndex={0}>
+                    {r.icon && <div className={`ri-icon ri-icon-${r.level}`}><img src={r.icon} alt="" width="20" height="20" /></div>}
+                    <div className="ri-info">
+                      <div className="ri-name">{r.name}</div>
+                      <div className="ri-pct">{r.value}</div>
+                    </div>
+                    <span className={`ri-badge ri-badge-${r.level}`}>{r.level === 'mod' ? 'MODERATE' : (r.levelLabel || r.level).toUpperCase()}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="ri-hint">Tap a tile to see detailed insights</p>
             </div>
           </div>
 
@@ -1615,6 +1636,38 @@ function DashboardPage() {
                 <div className="dash-modal-footer">
                   <button className="dash-modal-cancel" onClick={() => setShowAddNoteModal(false)}>✕ Cancel</button>
                   <button className="dash-modal-confirm" onClick={handleAddNote} disabled={!newNote.author.trim() || !newNote.text.trim()}>✓ Add Note</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Risk Detail Modal */}
+          {viewingRisk && (
+            <div className="dash-modal-overlay" onClick={() => setViewingRisk(null)}>
+              <div className="dash-modal ri-modal" onClick={e => e.stopPropagation()}>
+                <div className="dash-modal-header">
+                  <h3>{viewingRisk.name} Risk</h3>
+                  <button className="dash-modal-close" onClick={() => setViewingRisk(null)}>×</button>
+                </div>
+                <div className="dash-modal-body" style={{ padding: '20px' }}>
+                  <p className="ri-modal-title">
+                    {viewingRisk.name} Risk: <span className={`ri-modal-hl ri-hl-${viewingRisk.level}`}>{viewingRisk.value} ({viewingRisk.levelLabel})</span>
+                  </p>
+                  <p className="ri-modal-sub">Why this risk is {(viewingRisk.levelLabel || '').toLowerCase()}:</p>
+                  <div style={{ marginTop: '12px' }}>
+                    <p className="ri-modal-sh">Risk Drivers</p>
+                    <ul className="ri-modal-ul">
+                      {viewingRisk.drivers?.length ? viewingRisk.drivers.map((d, i) => <li key={i}>{d}</li>) : <li>None identified</li>}
+                    </ul>
+                  </div>
+                  {viewingRisk.protective?.length > 0 && (
+                    <div style={{ marginTop: '14px' }}>
+                      <p className="ri-modal-sh" style={{ color: '#16A34A' }}>Protective Factors</p>
+                      <ul className="ri-modal-ul" style={{ color: '#16A34A' }}>
+                        {viewingRisk.protective.map((p, i) => <li key={i}>{p}</li>)}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

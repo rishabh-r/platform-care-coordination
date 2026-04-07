@@ -539,6 +539,38 @@
 .tq-btn-complete:hover { background: #F0FDF4; }
 .tq-completed-label { font-size: 13px; font-weight: 600; color: #16A34A; }
 
+/* ── Risk Insights Widget ── */
+.ri-head { display: flex; align-items: center; gap: 8px; padding: 16px 18px 0; }
+.ri-title { font-size: 15px; font-weight: 600; color: #1f2937; }
+.ri-ai { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; background: linear-gradient(135deg, #ede9fe, #e0e7ff); border: 1px solid #c7d2fe; border-radius: 14px; font-size: 10px; font-weight: 600; color: #4338ca; letter-spacing: 0.3px; }
+.ri-list { display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 8px; }
+.ri-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid #eef0f2; background: #fafbfc; cursor: pointer; transition: all 0.15s; }
+.ri-row:hover { background: #f0f4ff; border-color: #c7d2fe; box-shadow: 0 2px 8px rgba(67, 56, 202, 0.08); }
+.ri-row:active { transform: scale(0.985); }
+.ri-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ri-icon-high { background: #fef2f2; }
+.ri-icon-mod { background: #fefce8; }
+.ri-icon-low { background: #f0fdf4; }
+.ri-icon img { width: 20px; height: 20px; object-fit: contain; }
+.ri-info { flex: 1; min-width: 0; }
+.ri-name { font-size: 13px; font-weight: 600; color: #374151; }
+.ri-pct { font-size: 18px; font-weight: 700; color: #0068B3; line-height: 1.2; }
+.ri-badge { padding: 3px 10px; font-size: 10px; font-weight: 700; border-radius: 9999px; color: #fff; letter-spacing: 0.3px; flex-shrink: 0; text-transform: uppercase; }
+.ri-badge-high { background: #ef4444; }
+.ri-badge-mod { background: #eab308; }
+.ri-badge-low { background: #22c55e; }
+.ri-hint { font-size: 11px; color: #9ca3af; text-align: center; padding: 4px 18px 14px; font-weight: 500; }
+.ri-modal { max-width: 480px; }
+.ri-modal-title { font-size: 16px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
+.ri-modal-hl { font-weight: 700; }
+.ri-hl-high { color: #ef4444; }
+.ri-hl-mod { color: #eab308; }
+.ri-hl-low { color: #22c55e; }
+.ri-modal-sub { font-size: 13px; font-weight: 600; color: #374151; margin-top: 8px; }
+.ri-modal-sh { font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px; }
+.ri-modal-ul { list-style: disc; padding-left: 18px; font-size: 13px; color: #4b5563; line-height: 1.6; }
+.ri-modal-ul li { margin-bottom: 3px; }
+
 /* ── Clinical Trends ── */
 .ct-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
 .ct-title { font-size: 18px; font-weight: 600; color: #1E293B; }
