@@ -283,7 +283,7 @@ async function fetchRiskPrediction(patientId) {
     const risks = []
     for (const [key, val] of Object.entries(data)) {
       const level = (val.risk_level || 'low').toLowerCase()
-      risks.push({
+      const riskObj = {
         key,
         name: RISK_LABEL_MAP[key] || key.toUpperCase(),
         icon: RISK_ICON_MAP[key] || '',
@@ -293,7 +293,9 @@ async function fetchRiskPrediction(patientId) {
         levelLabel: val.risk_level || 'Low',
         drivers: val.risk_drivers || [],
         protective: val.protective_factors || [],
-      })
+      }
+      console.log(`[Risk] ${key}: drivers=${riskObj.drivers.length}, protective=${riskObj.protective.length}`, riskObj.protective)
+      risks.push(riskObj)
     }
     return risks.length ? risks : null
   } catch (e) {
