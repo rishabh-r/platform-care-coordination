@@ -539,6 +539,27 @@
 .tq-btn-complete:hover { background: #F0FDF4; }
 .tq-completed-label { font-size: 13px; font-weight: 600; color: #16A34A; }
 
+/* ── Clinical Trends ── */
+.ct-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.ct-title { font-size: 18px; font-weight: 600; color: #1E293B; }
+.ct-subtitle { font-size: 14px; color: #64748B; margin-top: 2px; }
+.ct-period-toggle { display: flex; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; }
+.ct-period-toggle button { padding: 7px 16px; font-size: 12px; font-weight: 600; border: none; background: #fff; color: #64748B; cursor: pointer; transition: all 0.15s; }
+.ct-period-toggle button.active { background: #1E293B; color: #fff; }
+.ct-tabs { display: flex; gap: 0; margin-bottom: 20px; }
+.ct-tab { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 600; border: none; background: #F8FAFC; color: #64748B; cursor: pointer; transition: all 0.15s; border-bottom: 2px solid transparent; }
+.ct-tab:first-child { border-radius: 8px 0 0 0; }
+.ct-tab:last-child { border-radius: 0 8px 0 0; }
+.ct-tab.active { background: #3B82F6; color: #fff; border-radius: 20px; }
+.ct-chart-area { min-height: 280px; margin-bottom: 12px; }
+.ct-legend-info { text-align: center; padding: 8px 0 16px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.ct-legend-item { font-size: 12px; color: #64748B; font-weight: 500; }
+.ct-bottom-stats { display: flex; gap: 32px; padding: 20px 0 0; border-top: 1px solid #E2E8F0; flex-wrap: wrap; }
+.ct-stat { display: flex; align-items: center; gap: 10px; }
+.ct-stat-icon { font-size: 20px; }
+.ct-stat-label { font-size: 11px; font-weight: 600; color: #94A3B8; letter-spacing: 0.5px; text-transform: uppercase; }
+.ct-stat-value { font-size: 15px; font-weight: 700; color: #1E293B; }
+
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .dash-grid { grid-template-columns: 1fr; }

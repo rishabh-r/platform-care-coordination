@@ -3,7 +3,11 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { callFhirApi, buildUrl } from '../services/fhir'
 import { FHIR_BASE } from '../config/constants'
 import { formatDisplayName } from '../utils'
+import { Line } from 'react-chartjs-2'
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js'
 import '../dashboard.css'
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
 const ALERT_ICONS = { 'Clinical Deterioration': '⚠', 'Medication Non-Adherence': '💊', 'Missed Follow-Up Appointments': '📅' }
 
@@ -292,6 +296,81 @@ const OBSERVATION_NORMAL_RANGES = {
   '718-7':   { name: 'HEMOGLOBIN', unit: 'g/dL', low: 13.0, high: 17.5, normal: '13.0-17.5' },
   '785-6':   { name: 'WBC', unit: '10*3/uL', low: 4.5, high: 11.0, normal: '4.5-11.0' },
   '777-3':   { name: 'PLATELETS', unit: '10*3/uL', low: 150, high: 400, normal: '150-400' },
+  '8867-4':  { name: 'HEART RATE', unit: 'bpm', low: 60, high: 100, normal: '60-100' },
+  '8480-6':  { name: 'SYSTOLIC BP', unit: 'mmHg', low: 90, high: 120, normal: '<120' },
+  '8462-4':  { name: 'DIASTOLIC BP', unit: 'mmHg', low: 60, high: 80, normal: '<80' },
+  '8310-5':  { name: 'BODY TEMPERATURE', unit: '°C', low: 36.1, high: 37.2, normal: '36.1-37.2' },
+  '33762-6': { name: 'NT-proBNP', unit: 'pg/mL', low: 0, high: 125, normal: '<125' },
+  '2951-2':  { name: 'SODIUM', unit: 'mEq/L', low: 136, high: 145, normal: '136-145' },
+}
+
+const ALL_OBS_GROUPS = [
+  { key: 'bp', label: 'BP', codes: ['8480-6', '8462-4'], colors: ['#EF4444', '#3B82F6'], targets: [120, 80], targetLabels: ['Systolic (Target: 120)', 'Diastolic (Target: 80)'] },
+  { key: 'glucose', label: 'Glucose', codes: ['2345-7'], colors: ['#8B5CF6'], targets: [130], targetLabels: ['Target Range: 70-130 mg/dL'], fill: true },
+  { key: 'heartrate', label: 'Heart Rate', codes: ['8867-4'], colors: ['#F59E0B'], targets: null, targetLabels: ['Normal Range: 60-100 bpm'] },
+  { key: 'hba1c', label: 'HbA1c', codes: ['4548-4'], colors: ['#22C55E'], targets: [7.0], targetLabels: ['Target: < 7.0%'] },
+  { key: 'creatinine', label: 'Creatinine', codes: ['2160-0'], colors: ['#EF4444'], targets: [1.3], targetLabels: ['Upper Limit: 1.3 mg/dL'] },
+  { key: 'ntprobnp', label: 'NT-proBNP', codes: ['33762-6'], colors: ['#EC4899'], targets: [125], targetLabels: ['Upper Limit: 125 pg/mL'] },
+  { key: 'potassium', label: 'Potassium', codes: ['2823-3'], colors: ['#F59E0B'], targets: null, targetLabels: ['Normal Range: 3.5-5.0 mEq/L'] },
+  { key: 'ldl', label: 'LDL', codes: ['2090-9'], colors: ['#3B82F6'], targets: [100], targetLabels: ['Target: < 100 mg/dL'] },
+  { key: 'cholesterol', label: 'Cholesterol', codes: ['2093-3'], colors: ['#6366F1'], targets: [200], targetLabels: ['Upper Limit: 200 mg/dL'] },
+  { key: 'triglycerides', label: 'Triglycerides', codes: ['1644-4'], colors: ['#F97316'], targets: [150], targetLabels: ['Upper Limit: 150 mg/dL'] },
+  { key: 'sodium', label: 'Sodium', codes: ['2951-2'], colors: ['#14B8A6'], targets: null, targetLabels: ['Normal Range: 136-145 mEq/L'] },
+  { key: 'bodytemp', label: 'Body Temp', codes: ['8310-5'], colors: ['#EF4444'], targets: null, targetLabels: ['Normal Range: 36.1-37.2 °C'] },
+  { key: 'hemoglobin', label: 'Hemoglobin', codes: ['718-7'], colors: ['#DC2626'], targets: null, targetLabels: ['Normal Range: 13.0-17.5 g/dL'] },
+  { key: 'wbc', label: 'WBC', codes: ['785-6'], colors: ['#8B5CF6'], targets: null, targetLabels: ['Normal Range: 4.5-11.0 10*3/uL'] },
+  { key: 'platelets', label: 'Platelets', codes: ['777-3'], colors: ['#F59E0B'], targets: null, targetLabels: ['Normal Range: 150-400 10*3/uL'] },
+]
+
+const LAB_COLORS = ['#3B82F6', '#22C55E', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#6366F1']
+
+function buildDynamicTrendTabs(obsData) {
+  if (!obsData) return []
+  const available = ALL_OBS_GROUPS
+    .map(g => {
+      const totalPoints = g.codes.reduce((sum, code) => sum + (obsData[code]?.points?.length || 0), 0)
+      return { ...g, totalPoints }
+    })
+    .filter(g => g.totalPoints > 0)
+    .sort((a, b) => b.totalPoints - a.totalPoints)
+  if (!available.length) return []
+  const tabs = available.slice(0, 3)
+  const remaining = available.slice(3)
+  if (remaining.length > 0) {
+    tabs.push({
+      key: 'lab',
+      label: 'Lab Results',
+      codes: remaining.flatMap(r => r.codes),
+      colors: LAB_COLORS.slice(0, remaining.flatMap(r => r.codes).length),
+      targets: null,
+      targetLabels: remaining.map(r => {
+        const range = OBSERVATION_NORMAL_RANGES[r.codes[0]]
+        return range ? `${r.label} (${range.normal} ${range.unit})` : r.label
+      }),
+    })
+  }
+  return tabs
+}
+
+function parseAllObservationsForTrends(bundle) {
+  if (!bundle?.entry?.length) return null
+  const byCode = {}
+  for (const e of bundle.entry) {
+    const r = e.resource
+    if (r.resourceType !== 'Observation') continue
+    const code = r.code?.coding?.[0]?.code || ''
+    const display = r.code?.coding?.[0]?.display || ''
+    const value = r.valueQuantity?.value ?? parseFloat(r.valueString)
+    const unit = r.valueQuantity?.unit || r.valueQuantity?.code || ''
+    const date = r.effectiveDateTime || r.issued || ''
+    if (!code || isNaN(value)) continue
+    if (!byCode[code]) byCode[code] = { display, unit, points: [] }
+    byCode[code].points.push({ date: new Date(date), value })
+  }
+  for (const c of Object.values(byCode)) {
+    c.points.sort((a, b) => a.date - b.date)
+  }
+  return Object.keys(byCode).length ? byCode : null
 }
 
 function parseVitalsFromFhir(bundle) {
@@ -578,6 +657,9 @@ function DashboardPage() {
   const [taskQueue, setTaskQueue] = useState([])
   const [taskFilter, setTaskFilter] = useState('pending')
   const [clinicalNotesData, setClinicalNotesData] = useState(null)
+  const [allObsData, setAllObsData] = useState(null)
+  const [trendTab, setTrendTab] = useState(null)
+  const [trendPeriod, setTrendPeriod] = useState('6m')
   const [addedNotes, setAddedNotes] = useState([])
   const [showAddNoteModal, setShowAddNoteModal] = useState(false)
   const [newNote, setNewNote] = useState({ author: '', role: '', type: 'Clinical', text: '' })
@@ -642,6 +724,11 @@ function DashboardPage() {
         if (parsedVitals?.length) {
           console.log('[Dashboard] Parsed', parsedVitals.length, 'latest observations for vitals')
           setVitalsData(parsedVitals)
+        }
+        const allObs = parseAllObservationsForTrends(obsBundle)
+        if (allObs) {
+          console.log('[Dashboard] Parsed observation trends for', Object.keys(allObs).length, 'types')
+          setAllObsData(allObs)
         }
         const careManagerIds = eocBundle?.entry?.map(e => e.resource?.careManager?.reference?.replace('Practitioner/', '')).filter(Boolean) || []
         const parsedNotes = await parseClinicalNotesFromEncounters(encBundle, careManagerIds)
@@ -937,7 +1024,7 @@ function DashboardPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               AI Actions
             </button>
-            <button className={`dash-tab ${activeTab === 'trends' ? 'active' : ''}`} disabled>📈 Clinical Trends</button>
+            <button className={`dash-tab ${activeTab === 'trends' ? 'active' : ''}`} onClick={() => setActiveTab('trends')}>📈 Clinical Trends</button>
             <button className={`dash-tab ${activeTab === 'queue' ? 'active' : ''}`} onClick={() => setActiveTab('queue')}>📋 Task Queue</button>
             <button className={`dash-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}>📤 Patient Outreach</button>
           </div>
@@ -1043,7 +1130,7 @@ function DashboardPage() {
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
                   <div style={{ fontSize: '24px', marginBottom: '8px' }}>📞</div>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Phone Call</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Direct phone outreach to discuss care gaps</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Call to discuss care plan</p>
                   <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>📞 Initiate Call</button>
                 </div>
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
@@ -1075,6 +1162,159 @@ function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Clinical Trends */}
+          {activeTab === 'trends' && (() => {
+            const dynamicTabs = buildDynamicTrendTabs(allObsData)
+            const activeCfg = dynamicTabs.find(t => t.key === trendTab) || dynamicTabs[0]
+            return (
+            <div className="dash-card" style={{ padding: '24px' }}>
+              <div className="ct-header">
+                <div>
+                  <h3 className="ct-title">Longitudinal Clinical Health</h3>
+                  <p className="ct-subtitle">Vitals Trends</p>
+                </div>
+                <div className="ct-period-toggle">
+                  <button className={trendPeriod === '30d' ? 'active' : ''} onClick={() => setTrendPeriod('30d')}>30 Day View</button>
+                  <button className={trendPeriod === '6m' ? 'active' : ''} onClick={() => setTrendPeriod('6m')}>6 Month View</button>
+                </div>
+              </div>
+
+              {!dynamicTabs.length ? (
+                <p style={{ textAlign: 'center', color: '#94A3B8', padding: '40px 0' }}>No observation data available</p>
+              ) : (<>
+              <div className="ct-tabs">
+                {dynamicTabs.map(tab => (
+                  <button key={tab.key} className={`ct-tab ${activeCfg?.key === tab.key ? 'active' : ''}`} onClick={() => setTrendTab(tab.key)}>{tab.label}</button>
+                ))}
+              </div>
+
+              <div className="ct-chart-area">
+                {(() => {
+                  const cfg = activeCfg
+                  if (!allObsData || !cfg) return <p style={{ textAlign: 'center', color: '#94A3B8', padding: '40px 0' }}>No observation data available</p>
+
+                  const cutoff = new Date()
+                  cutoff.setDate(cutoff.getDate() - (trendPeriod === '30d' ? 30 : 180))
+
+                  const datasets = []
+                  const allDates = new Set()
+                  cfg.codes.forEach((code, idx) => {
+                    const obs = allObsData[code]
+                    if (!obs) return
+                    const filtered = obs.points.filter(p => p.date >= cutoff)
+                    filtered.forEach(p => allDates.add(p.date.toISOString().slice(0, 10)))
+                    datasets.push({
+                      label: OBSERVATION_NORMAL_RANGES[code]?.name || obs.display,
+                      data: filtered.map(p => ({ x: p.date.toISOString().slice(0, 10), y: p.value })),
+                      borderColor: cfg.colors[idx % cfg.colors.length],
+                      backgroundColor: cfg.fill ? (cfg.colors[idx % cfg.colors.length]) + '20' : 'transparent',
+                      fill: !!cfg.fill,
+                      tension: 0.3,
+                      pointRadius: 5,
+                      pointHoverRadius: 7,
+                      borderWidth: 2,
+                    })
+                  })
+
+                  if (!datasets.length || !allDates.size) return <p style={{ textAlign: 'center', color: '#94A3B8', padding: '40px 0' }}>No data for selected period</p>
+
+                  const labels = [...allDates].sort()
+                  datasets.forEach(ds => {
+                    const mapped = labels.map(lbl => {
+                      const pt = ds.data.find(d => d.x === lbl)
+                      return pt ? pt.y : null
+                    })
+                    ds.data = mapped
+                  })
+
+                  if (cfg.targets) {
+                    cfg.targets.forEach((t, idx) => {
+                      if (t != null) {
+                        datasets.push({
+                          label: 'Target' + (cfg.targets.length > 1 ? ` (${t})` : ''),
+                          data: labels.map(() => t),
+                          borderColor: cfg.colors[idx % cfg.colors.length] || '#94A3B8',
+                          borderDash: [6, 4],
+                          borderWidth: 1.5,
+                          pointRadius: 0,
+                          fill: false,
+                        })
+                      }
+                    })
+                  }
+
+                  const options = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    spanGaps: true,
+                    plugins: {
+                      legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { size: 11 } } },
+                      tooltip: {
+                        backgroundColor: '#fff', titleColor: '#1E293B', bodyColor: '#475569', borderColor: '#E2E8F0', borderWidth: 1,
+                        padding: 12, cornerRadius: 8, titleFont: { weight: '600' },
+                        callbacks: {
+                          title: (items) => { const d = new Date(labels[items[0].dataIndex]); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+                          label: (ctx) => {
+                            if (ctx.raw == null) return null
+                            return `${ctx.dataset.label}: ${ctx.raw}`
+                          }
+                        }
+                      },
+                    },
+                    scales: {
+                      x: { grid: { display: false }, ticks: { font: { size: 11 }, maxTicksLimit: 8, callback: (_, i) => { const d = new Date(labels[i]); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) } } },
+                      y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 } }, beginAtZero: false },
+                    },
+                  }
+
+                  return <div style={{ height: '300px' }}><Line data={{ labels, datasets }} options={options} /></div>
+                })()}
+              </div>
+
+              <div className="ct-legend-info">
+                {activeCfg?.targetLabels?.map((lbl, i) => <span key={i} className="ct-legend-item">{lbl}</span>) || null}
+              </div>
+              </>)}
+
+              <div className="ct-bottom-stats">
+                {(() => {
+                  if (!allObsData) return null
+                  const stats = []
+                  const topCodes = Object.entries(allObsData)
+                    .filter(([, v]) => v.points.length >= 2)
+                    .sort((a, b) => b[1].points.length - a[1].points.length)
+                    .slice(0, 3)
+
+                  for (const [code, obs] of topCodes) {
+                    const pts = obs.points
+                    const range = OBSERVATION_NORMAL_RANGES[code]
+                    const name = range?.name || obs.display
+                    const unit = range?.unit || obs.unit || ''
+                    const first = pts[0].value, last = pts[pts.length - 1].value
+                    const pctChange = (((last - first) / first) * 100).toFixed(0)
+                    const isAbnormal = range && (last > range.high || last < range.low)
+                    stats.push({
+                      icon: isAbnormal ? '⚠️' : '📊',
+                      label: `${name} TREND`,
+                      value: `${pctChange > 0 ? '+' : ''}${pctChange}% (Latest: ${last} ${unit})`,
+                    })
+                  }
+                  return stats.map((s, i) => (
+                    <div key={i} className="ct-stat">
+                      <span className="ct-stat-icon">{s.icon}</span>
+                      <div>
+                        <p className="ct-stat-label">{s.label}</p>
+                        <p className="ct-stat-value">{s.value}</p>
+                      </div>
+                    </div>
+                  ))
+                })()}
+              </div>
+            </div>
+            )
+          })()}
 
           {/* Task Queue */}
           {activeTab === 'queue' && (
