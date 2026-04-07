@@ -1024,5 +1024,75 @@ Only 3 practitioners appear in encounters: Chen (most), Brooks (3), Wong (2).
 | 44e239b0 | Williams | Patricia | Care Coordinator |
 | 9ea70bec | Anderson | Karen | Care Coordinator |
 
+### Clinical Trends Tab — IMPLEMENTED (Dynamic) — April 7, 2026
+
+**Overview**: The Clinical Trends tab is now fully dynamic. It auto-detects which observations the patient has, picks the top 3 by data point count as individual chart tabs, and combines remaining observations into a 4th "Lab Results" tab.
+
+**Dependencies Added**:
+- `react-chartjs-2` — React wrapper for Chart.js (Chart.js 4.x was already installed)
+- Chart.js modules registered: `CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler`
+
+**Key Implementation Details**:
+
+1. **`parseAllObservationsForTrends(bundle)`** — New parser that extracts ALL observations (not just latest per type), groups by LOINC code, stores all data points with dates for trend plotting.
+
+2. **`ALL_OBS_GROUPS`** — Defines 15 known observation groups with chart config:
+   - Each group has: `key`, `label`, `codes[]`, `colors[]`, `targets[]`, `targetLabels[]`, optional `fill`
+   - Groups: BP (systolic+diastolic), Glucose, Heart Rate, HbA1c, Creatinine, NT-proBNP, Potassium, LDL, Cholesterol, Triglycerides, Sodium, Body Temp, Hemoglobin, WBC, Platelets
+
+3. **`buildDynamicTrendTabs(obsData)`** — Dynamically generates tabs:
+   - Scans `ALL_OBS_GROUPS` to find which groups have data points in `obsData`
+   - Sorts by total data point count (most data = first tab)
+   - Takes top 3 as individual tabs
+   - Remaining groups combined into a 4th "Lab Results" tab
+   - Returns array of tab configs (not a static object)
+
+4. **Chart Rendering** (Chart.js `Line` component):
+   - 30 Day / 6 Month period toggle filters data by cutoff date
+   - Data series with colors, target/reference lines (dashed)
+   - Tooltips show date + value
+   - `spanGaps: true` for continuous lines when dates don't align
+   - Height: 300px
+
+5. **Bottom Stats** — Dynamically computed from top 3 observation types (by data count):
+   - Shows percentage change (first → last reading)
+   - Latest value with units
+   - Warning icon if latest value is abnormal (outside normal range)
+   - Patient-specific — adapts to whatever observations the patient has
+
+**Patient-Specific Tab Examples**:
+- **Patient 1 (Diabetes)**: Glucose, HbA1c, Creatinine as tabs 1-3; LDL, Cholesterol, Potassium, Triglycerides in Lab Results
+- **Patient 2 (CHF)**: BP, Heart Rate, NT-proBNP as tabs 1-3; Creatinine, Glucose, Potassium, Sodium in Lab Results
+
+**State Variables Added**:
+- `allObsData` — All observations grouped by LOINC code with all time points
+- `trendTab` — Currently selected chart tab key (null = auto-select first)
+- `trendPeriod` — `'30d'` or `'6m'`
+
+**CSS Classes Added** (in `dashboard.css`):
+- `.ct-header`, `.ct-title`, `.ct-subtitle`
+- `.ct-period-toggle` + `.ct-period-toggle button.active`
+- `.ct-tabs`, `.ct-tab`, `.ct-tab.active`
+- `.ct-chart-area`
+- `.ct-legend-info`, `.ct-legend-item`
+- `.ct-bottom-stats`, `.ct-stat`, `.ct-stat-icon`, `.ct-stat-label`, `.ct-stat-value`
+
+**OBSERVATION_NORMAL_RANGES Extended**:
+Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-4), Body Temperature (8310-5), NT-proBNP (33762-6), Sodium (2951-2)
+
+### Patient Outreach — Text Shortened
+- "Direct phone outreach to discuss care gaps" → "Call to discuss care plan"
+
+### Updated Dashboard Tab State
+| Tab | Status | Content |
+|-----|--------|---------|
+| AI Actions | Active/Clickable | Dynamic — AI-structured actions with approve workflow |
+| Clinical Trends | **Active/Clickable** | Dynamic — Chart.js line charts with auto-detected observation tabs |
+| Task Queue | Active/Clickable | Dynamic — approved tasks with Pending/In Process/Completed flow |
+| Patient Outreach | Active/Clickable | Static — Phone/SMS/Email cards + message template |
+
+**All 4 dashboard tabs are now fully implemented.**
+
 ### Git Commits (April 7 session)
 1. `41872c8` — Show 4 vitals by default with Show All toggle
+2. `ce15890` — Implement Clinical Trends tab with dynamic charts, 30d/6m toggle, and patient-specific bottom stats
