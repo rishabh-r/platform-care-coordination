@@ -982,3 +982,47 @@ All 24 sheets were appended with Patient 2 data (yellow background `#FFFF99`):
 
 ### Files to NEVER commit (updated)
 `chatbase_data.xlsx`, `generate_*.py`, `check_*.py`, `cleanup_sheets.py`, `fix_units.py`, `~$chatbase_data.xlsx`, `.env`
+
+---
+
+## Session: April 7, 2026
+
+### Clinical Notes — "Unknown" Practitioner Issue (DATA FIX)
+- One of the 3 clinical notes showed "Unknown / Physician" instead of a practitioner name
+- Root cause: The practitioner ID `d4e9f6a3-0b5c-6d7e-1f8a-3c4d5e6f7a8b` (Lisa Wong, Wound Care) referenced in the encounter didn't match the actual practitioner ID in the database
+- Fix: Backend data fix — user confirmed it's now working after correcting the ID
+
+### Vitals — Show 4 with "Show All" Toggle
+- Previously all vitals were shown at once (could be 7+ for Patient 1)
+- Added `showAllVitals` state, shows only **4 vitals by default**
+- "▼ Show All (X more)" button appears when >4 vitals, same pattern as Current Medications and Appointments
+- "▲ Show Less" collapses back to 4
+- **Commit**: `41872c8` — "Show 4 vitals by default with Show All toggle for remaining"
+
+### Practitioner Data Reference (from Excel)
+**Patient 1 practitioners (non-yellow rows):**
+| ID (prefix) | Family | Given | Specialty |
+|---|---|---|---|
+| b2c7d4e1 | Chen | Sarah | Endocrinology |
+| c3d8c5f2 | Brooks | Michael | Internal Medicine |
+| d4e9f6a3 | Wong | Lisa | Wound Care |
+| e5f0a7b4 | Patel | David | Nephrology |
+| 596f43c8 | Torres | Rebecca | Diabetes Care Coordinator |
+| fc41e2aa | Rivera | Angela | Chronic Care Coordinator |
+| 8a120908 | Marshall | Kevin | Cardiovascular |
+| 779f3a81 | Hoffman | Patricia | Wound Care Coordinator |
+
+Only 3 practitioners appear in encounters: Chen (most), Brooks (3), Wong (2).
+
+**Patient 2 practitioners (yellow rows):**
+| ID (prefix) | Family | Given | Specialty |
+|---|---|---|---|
+| 4a6e566f | Patel | Anita | Cardiology |
+| b0044caa | Nguyen | David | Pulmonology |
+| 729629b8 | Martinez | Lisa | Care Coordinator |
+| 8c58388e | Johnson | Angela | Care Coordinator |
+| 44e239b0 | Williams | Patricia | Care Coordinator |
+| 9ea70bec | Anderson | Karen | Care Coordinator |
+
+### Git Commits (April 7 session)
+1. `41872c8` — Show 4 vitals by default with Show All toggle
