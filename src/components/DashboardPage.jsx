@@ -271,9 +271,15 @@ async function fetchRiskPrediction(patientId) {
       body: JSON.stringify({ uuid: patientId })
     })
     const html = await res.text()
-    const match = html.match(/var\s+D\s*=\s*(\{[\s\S]*?\});/)
-    if (!match) return null
-    const data = JSON.parse(match[1])
+    const startIdx = html.indexOf('var D=')
+    if (startIdx === -1) return null
+    const jsonStart = html.indexOf('{', startIdx)
+    let depth = 0, end = jsonStart
+    for (let i = jsonStart; i < html.length; i++) {
+      if (html[i] === '{') depth++
+      else if (html[i] === '}') { depth--; if (depth === 0) { end = i; break } }
+    }
+    const data = JSON.parse(html.slice(jsonStart, end + 1))
     const risks = []
     for (const [key, val] of Object.entries(data)) {
       const level = (val.risk_level || 'low').toLowerCase()
