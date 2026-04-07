@@ -564,6 +564,7 @@ function DashboardPage() {
   const [careTeamData, setCareTeamData] = useState(null)
   const [vitalsData, setVitalsData] = useState(null)
   const [riskData, setRiskData] = useState(null)
+  const [showAllVitals, setShowAllVitals] = useState(false)
   const [showAllMeds, setShowAllMeds] = useState(false)
   const [showAllAppts, setShowAllAppts] = useState(false)
   const [isReviewed, setIsReviewed] = useState(false)
@@ -1155,22 +1156,35 @@ function DashboardPage() {
               <h3>Vitals</h3>
               <p>{vitalsData ? `${vitalsData.length} observation types` : 'Last updated: Today, 9:30 AM'}</p>
             </div>
-            <div className="dash-vitals-grid">
-              {(vitalsData || d.vitals).map((v, i) => {
-                const defaultIcon = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                return (
-                  <div key={i} className={`dash-vital ${v.status}`}>
-                    <div className="dash-vital-icon">{VITAL_ICONS[v.name] || defaultIcon}</div>
-                    <div className="dash-vital-data">
-                      <span className="dash-vital-label">{v.name}</span>
-                      <span className={`dash-vital-value ${v.status}`}>{v.value} <small>{v.unit}</small></span>
-                      <div className={`dash-vital-bar ${v.status}`}><div style={{ width: `${v.pct}%` }}></div></div>
-                    </div>
-                    <div className="dash-vital-normal">Normal<br /><b>{v.normal}</b></div>
+            {(() => {
+              const allVitals = vitalsData || d.vitals
+              const visible = showAllVitals ? allVitals : allVitals.slice(0, 4)
+              return (
+                <>
+                  <div className="dash-vitals-grid">
+                    {visible.map((v, i) => {
+                      const defaultIcon = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      return (
+                        <div key={i} className={`dash-vital ${v.status}`}>
+                          <div className="dash-vital-icon">{VITAL_ICONS[v.name] || defaultIcon}</div>
+                          <div className="dash-vital-data">
+                            <span className="dash-vital-label">{v.name}</span>
+                            <span className={`dash-vital-value ${v.status}`}>{v.value} <small>{v.unit}</small></span>
+                            <div className={`dash-vital-bar ${v.status}`}><div style={{ width: `${v.pct}%` }}></div></div>
+                          </div>
+                          <div className="dash-vital-normal">Normal<br /><b>{v.normal}</b></div>
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
-            </div>
+                  {allVitals.length > 4 && (
+                    <button className="dash-show-more-btn" onClick={() => setShowAllVitals(v => !v)}>
+                      {showAllVitals ? '▲ Show Less' : `▼ Show All (${allVitals.length - 4} more)`}
+                    </button>
+                  )}
+                </>
+              )
+            })()}
           </div>
 
           {/* Medications */}
