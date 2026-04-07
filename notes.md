@@ -1146,7 +1146,10 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 4. Removed dual endpoint, using only `/api/predict`
 5. Fixed modal scroll for Diabetes protective factors (added `max-height: 80vh`, `overflow-y: auto`, `min-height: 0`)
 
-**Known Issue**: Diabetes protective factors still not showing — investigating.
+**Protective Factors Fix (RESOLVED)**:
+- Issue: Protective factors (e.g., "Non-Smoker" for Diabetes, "Age/CRE/Potassium normal" for Cancer) were not rendering in the risk detail modal despite being correctly parsed from the API response.
+- Root cause: The optional chaining conditional `viewingRisk.protective?.length > 0` was failing silently. Changing to `(viewingRisk.protective || []).length > 0` fixed the issue.
+- The modal scroll CSS was also updated: `.ri-modal .dash-modal-body { overflow-y: auto; max-height: 60vh; }` ensures long content (4 risk drivers + protective factors) is scrollable.
 
 ### Git Commits (April 7 session)
 1. `41872c8` — Show 4 vitals by default with Show All toggle
@@ -1156,3 +1159,20 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 5. `df57d27` — Fix Risk API parser - brace-depth counting for nested JSON
 6. `a16b487` — Fix Risk API - try predictHealthRisk JSON first, fallback to predict HTML
 7. `b16b538` — Use single /api/predict endpoint, fix risk modal scroll
+8. `718d631` — Fix protective factors not rendering in risk modal
+
+### All Dashboard Sections Status (as of April 7)
+| Section | Status | Data Source |
+|---|---|---|
+| Patient Banner | Dynamic | Patient API |
+| Alert Triggers & Risk Drivers | Dynamic | Care gap analysis (sessionStorage) |
+| Care Team | Dynamic | EpisodeOfCare API (care managers only) |
+| Vitals | Dynamic | Observation API (latest, 4 shown + Show All) |
+| Risk Insights | Dynamic | POST /api/predict (HTML parse, Bearer token) |
+| AI Actions | Dynamic | Care gap analysis |
+| Task Queue | Dynamic | Approved AI Actions (local state) |
+| Clinical Notes | Dynamic | Encounter API extensions + local Add Note |
+| Patient Outreach | Static | Template with dynamic patient name |
+| Clinical Trends | Dynamic | Observation API (time-series charts, 12m toggle) |
+| Appointments & Encounters | Dynamic | Encounter API |
+| Medications | Dynamic | MedicationRequest API |

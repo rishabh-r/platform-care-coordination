@@ -294,7 +294,6 @@ async function fetchRiskPrediction(patientId) {
         drivers: val.risk_drivers || [],
         protective: val.protective_factors || [],
       }
-      console.log(`[Risk] ${key}: drivers=${riskObj.drivers.length}, protective=${riskObj.protective.length}`, riskObj.protective)
       risks.push(riskObj)
     }
     return risks.length ? risks : null
@@ -1668,19 +1667,14 @@ function DashboardPage() {
                       {viewingRisk.drivers?.length ? viewingRisk.drivers.map((d, i) => <li key={i}>{d}</li>) : <li>None identified</li>}
                     </ul>
                   </div>
-                  {(() => {
-                    const pf = viewingRisk.protective || []
-                    console.log('[RiskModal] protective:', pf, 'length:', pf.length)
-                    if (pf.length === 0) return null
-                    return (
-                      <div style={{ marginTop: '14px' }}>
-                        <p className="ri-modal-sh" style={{ color: '#16A34A' }}>Protective Factors</p>
-                        <ul className="ri-modal-ul" style={{ color: '#16A34A' }}>
-                          {pf.map((p, i) => <li key={i}>{p}</li>)}
-                        </ul>
-                      </div>
-                    )
-                  })()}
+                  {(viewingRisk.protective || []).length > 0 && (
+                    <div style={{ marginTop: '14px' }}>
+                      <p className="ri-modal-sh" style={{ color: '#16A34A' }}>Protective Factors</p>
+                      <ul className="ri-modal-ul" style={{ color: '#16A34A' }}>
+                        {viewingRisk.protective.map((p, i) => <li key={i}>{p}</li>)}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
