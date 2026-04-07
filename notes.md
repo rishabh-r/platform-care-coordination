@@ -1151,6 +1151,28 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - Root cause: The optional chaining conditional `viewingRisk.protective?.length > 0` was failing silently. Changing to `(viewingRisk.protective || []).length > 0` fixed the issue.
 - The modal scroll CSS was also updated: `.ri-modal .dash-modal-body { overflow-y: auto; max-height: 60vh; }` ensures long content (4 risk drivers + protective factors) is scrollable.
 
+### Risk Insights UI Refinement & Layout Merge (April 7)
+
+**Layout Change**: Merged Risk Insights into the Alert Triggers & Risk Drivers card.
+- Previously: Two separate cards side-by-side in a `dash-alerts-row` grid (`1fr 300px`)
+- Now: **One card** with an internal 2-column grid (`dash-alerts-inner`: `1fr 260px`)
+  - Left column (`dash-alerts-left`): Alert items + Deteriorating Clinical Trends bar
+  - Right column (`dash-alerts-right`): Risk Insights tiles (icon, name, percentage, badge)
+  - Separated by a subtle vertical border (`border-left: 1px solid #E2E8F0`)
+  - Left column has `padding-right: 20px` for breathing room from the divider
+  - Mobile responsive: stacks vertically with horizontal border instead
+
+**CSS Changes** (`dashboard.css`):
+- Removed: `.dash-alerts-row` (old 2-column grid), `.dash-risk-card`, `.dash-risk-row`, `.dash-risk-name`, `.dash-risk-val`
+- Added: `.dash-alerts-inner`, `.dash-alerts-left`, `.dash-alerts-right`
+- Risk tile CSS (`.ri-*`) tightened for 260px column: title 14px, name 12px, pct 16px, badge 9px, icon 30px, AI badge 9px
+
+**JSX Changes** (`DashboardPage.jsx`):
+- Removed separate `<div className="dash-card dash-risk-card">` 
+- Added internal `dash-alerts-inner` wrapper with `dash-alerts-left` and `dash-alerts-right` divs inside single `dash-alerts-card`
+
+**Revert Point**: `1324635` (last commit before the merge)
+
 ### Git Commits (April 7 session)
 1. `41872c8` — Show 4 vitals by default with Show All toggle
 2. `ce15890` — Implement Clinical Trends tab with dynamic charts, 30d/6m toggle, and patient-specific bottom stats
@@ -1160,15 +1182,18 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 6. `a16b487` — Fix Risk API - try predictHealthRisk JSON first, fallback to predict HTML
 7. `b16b538` — Use single /api/predict endpoint, fix risk modal scroll
 8. `718d631` — Fix protective factors not rendering in risk modal
+9. `50274a1` — Clean up debug logs, fix protective factors rendering
+10. `1324635` — Improve Risk Insights UI - widen column to 300px, tighten spacing
+11. `752d9a1` — Merge Risk Insights into Alert Triggers card as internal right column
+12. `0f18aee` — Add right padding to alerts left column for divider spacing
 
 ### All Dashboard Sections Status (as of April 7)
 | Section | Status | Data Source |
 |---|---|---|
 | Patient Banner | Dynamic | Patient API |
-| Alert Triggers & Risk Drivers | Dynamic | Care gap analysis (sessionStorage) |
+| Alert Triggers & Risk Drivers + Risk Insights | Dynamic | Care gap analysis (sessionStorage) + POST /api/predict (HTML parse, Bearer token) — **merged into one card** |
 | Care Team | Dynamic | EpisodeOfCare API (care managers only) |
 | Vitals | Dynamic | Observation API (latest, 4 shown + Show All) |
-| Risk Insights | Dynamic | POST /api/predict (HTML parse, Bearer token) |
 | AI Actions | Dynamic | Care gap analysis |
 | Task Queue | Dynamic | Approved AI Actions (local state) |
 | Clinical Notes | Dynamic | Encounter API extensions + local Add Note |
