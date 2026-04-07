@@ -1102,7 +1102,57 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - State default changed from `'6m'` to `'all'`
 - Cutoff logic: `'12m'` = `new Date().setFullYear(new Date().getFullYear() - 1)`, `'all'` = no filter (all points shown)
 
+### Risk Insights — Upgraded with Clickable Tiles + Detail Modal — April 7, 2026
+
+**API Change**:
+- **Endpoint**: `POST https://fhirassist.rsystems.com:5050/api/predict`
+- **Body**: `{"uuid": "<patient_id>"}`
+- **Auth**: Bearer token (same login token from `localStorage`)
+- **Response**: HTML page with `var D={...}` embedded in `<script>` tag
+- **Old endpoint `predictHealthRisk`**: REMOVED (returns 405 METHOD NOT ALLOWED)
+- **Parser**: Brace-depth counting to extract nested JSON from HTML (regex `[\s\S]*?` fails on nested objects)
+
+**Data Extracted from `var D`**:
+- `risk_level`: "High" / "Moderate" / "Low"
+- `risk_percentage`: number (e.g., 82.1)
+- `risk_drivers`: array of strings (detailed explanations)
+- `protective_factors`: array of strings (positive factors)
+
+**UI Changes**:
+- **Tile design**: Each risk shows an icon (SVG from `fhirassist.rsystems.com:5050/src/tileIcons/`), name, percentage in blue (#0068B3), and colored badge (HIGH=red, MODERATE=yellow, LOW=green)
+- **Icons mapped**: `cvd` → hipertension.svg, `diabetes` → diabteis.svg, `cancer` → cancer.svg
+- **Clickable tiles**: Tap any tile → opens detail modal
+- **Detail modal**: Shows risk percentage + level (color-coded), "Why this risk is high/low" subtitle, Risk Drivers bullet list, Protective Factors (green, shown only when present)
+- **"Tap a tile to see detailed insights"** hint at bottom
+- **AI Powered badge**: Sparkle SVG icon + gradient purple badge
+
+**CSS Classes Added** (in `dashboard.css`):
+- `.ri-head`, `.ri-title`, `.ri-ai` — header with AI badge
+- `.ri-list`, `.ri-row`, `.ri-row:hover` — clickable tile rows
+- `.ri-icon`, `.ri-icon-high/mod/low` — colored icon backgrounds
+- `.ri-info`, `.ri-name`, `.ri-pct` — name + percentage
+- `.ri-badge`, `.ri-badge-high/mod/low` — level pills
+- `.ri-hint` — bottom hint text
+- `.ri-modal` — modal sizing (max-width 480px, max-height 80vh)
+- `.ri-modal-title`, `.ri-modal-hl`, `.ri-hl-high/mod/low` — modal title with colored highlight
+- `.ri-modal-sub`, `.ri-modal-sh`, `.ri-modal-ul` — modal sections
+
+**State Added**: `viewingRisk` — risk object being viewed in modal (null when closed)
+
+**Debugging History**:
+1. First attempt used regex `[\s\S]*?` to parse JSON — failed (non-greedy matched first `}` in nested JSON)
+2. Fixed with brace-depth counting parser
+3. Tried dual endpoint (`predictHealthRisk` JSON first, `predict` HTML fallback) — `predictHealthRisk` returned 405
+4. Removed dual endpoint, using only `/api/predict`
+5. Fixed modal scroll for Diabetes protective factors (added `max-height: 80vh`, `overflow-y: auto`, `min-height: 0`)
+
+**Known Issue**: Diabetes protective factors still not showing — investigating.
+
 ### Git Commits (April 7 session)
 1. `41872c8` — Show 4 vitals by default with Show All toggle
 2. `ce15890` — Implement Clinical Trends tab with dynamic charts, 30d/6m toggle, and patient-specific bottom stats
 3. `4157587` — Replace 30d/6m toggle with 12 Month View toggle, default shows all trends
+4. `775a95a` — Upgrade Risk Insights with clickable tiles, icons, detail modal
+5. `df57d27` — Fix Risk API parser - brace-depth counting for nested JSON
+6. `a16b487` — Fix Risk API - try predictHealthRisk JSON first, fallback to predict HTML
+7. `b16b538` — Use single /api/predict endpoint, fix risk modal scroll
