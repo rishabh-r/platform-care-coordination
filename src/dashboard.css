@@ -158,7 +158,7 @@
 
 /* ── Alerts + Risk Combined ── */
 .dash-alerts-inner { display: grid; grid-template-columns: 1fr 260px; gap: 0; min-width: 0; }
-.dash-alerts-left { min-width: 0; }
+.dash-alerts-left { min-width: 0; padding-right: 20px; }
 .dash-alerts-right { border-left: 1px solid #E2E8F0; padding-left: 0; display: flex; flex-direction: column; }
 .dash-alert-list { display: flex; flex-direction: column; gap: 10px; }
 .dash-alert-item {
