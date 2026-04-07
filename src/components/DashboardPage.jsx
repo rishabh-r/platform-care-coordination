@@ -265,21 +265,32 @@ const RISK_ICON_MAP = {
 async function fetchRiskPrediction(patientId) {
   try {
     const token = localStorage.getItem('cb_token')
-    const res = await fetch('https://fhirassist.rsystems.com:5050/api/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ uuid: patientId })
-    })
-    const html = await res.text()
-    const startIdx = html.indexOf('var D=')
-    if (startIdx === -1) return null
-    const jsonStart = html.indexOf('{', startIdx)
-    let depth = 0, end = jsonStart
-    for (let i = jsonStart; i < html.length; i++) {
-      if (html[i] === '{') depth++
-      else if (html[i] === '}') { depth--; if (depth === 0) { end = i; break } }
+    let data = null
+    try {
+      const jsonRes = await fetch('https://fhirassist.rsystems.com:5050/api/predictHealthRisk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ patient_id: patientId })
+      })
+      if (jsonRes.ok) data = await jsonRes.json()
+    } catch (_) { /* fall through to HTML endpoint */ }
+    if (!data) {
+      const htmlRes = await fetch('https://fhirassist.rsystems.com:5050/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ uuid: patientId })
+      })
+      const html = await htmlRes.text()
+      const startIdx = html.indexOf('var D=')
+      if (startIdx === -1) return null
+      const jsonStart = html.indexOf('{', startIdx)
+      let depth = 0, end = jsonStart
+      for (let i = jsonStart; i < html.length; i++) {
+        if (html[i] === '{') depth++
+        else if (html[i] === '}') { depth--; if (depth === 0) { end = i; break } }
+      }
+      data = JSON.parse(html.slice(jsonStart, end + 1))
     }
-    const data = JSON.parse(html.slice(jsonStart, end + 1))
     const risks = []
     for (const [key, val] of Object.entries(data)) {
       const level = (val.risk_level || 'low').toLowerCase()
