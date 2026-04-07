@@ -560,8 +560,8 @@
 .ri-badge-mod { background: #eab308; }
 .ri-badge-low { background: #22c55e; }
 .ri-hint { font-size: 11px; color: #9ca3af; text-align: center; padding: 4px 18px 14px; font-weight: 500; }
-.ri-modal { max-width: 480px; max-height: 80vh; }
-.ri-modal .dash-modal-body { overflow-y: auto; min-height: 0; flex: 1; }
+.ri-modal { max-width: 480px; }
+.ri-modal .dash-modal-body { overflow-y: auto; max-height: 60vh; }
 .ri-modal-title { font-size: 16px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
 .ri-modal-hl { font-weight: 700; }
 .ri-hl-high { color: #ef4444; }
