@@ -1309,3 +1309,17 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
   - Diabetes: 4 drivers + 1 protective factor (Non-Smoker) ✓
   - Cancer: 3 drivers + 3 protective factors ✓
 - Commit: `f444a95`
+
+### Risk Insights API Endpoint Change (CONFIRMED WORKING)
+- **Old**: `POST https://fhirassist.rsystems.com:5050/api/predict` with body `{"uuid": patientId}`
+- **New**: `GET https://fhirassist.rsystems.com:8081/api/v1/predict/risk-insights?patient_id=<id>` with Bearer Token
+- Same HTML response format with embedded `var D={...}` JSON — no parser changes needed
+- Response still contains risk data for cvd/diabetes/cancer with risk_level, risk_percentage, risk_drivers, protective_factors
+- **Note**: Protective factors for diabetes may or may not appear depending on the ML model's inference run (traditional ML, output varies). Our code handles both cases correctly (shows section if present, hides if empty)
+- Commit: `6511257`
+
+### Git Commit History (continued)
+23. `676ffcf` — Add Care Gaps silent override and smart scroll, update notes.md
+24. `f444a95` — Fix risk modal scroll - protective factors now visible
+25. `3440d8e` — Update notes.md with risk modal scroll fix details
+26. `6511257` — Update risk insights API from POST /5050 to GET /8081 with patient_id query param
