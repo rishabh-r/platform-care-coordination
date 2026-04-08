@@ -1217,3 +1217,64 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 
 ### Git Commit
 - `7dcd2cc` — Care Team: show only name and specialty, email icon opens mailto link
+
+---
+
+## Session Updates (April 8, 2026)
+
+### Protective Factors Fix (RESOLVED)
+- Protective factors (e.g., "Non-Smoker" for Diabetes) were not rendering in the Risk Insights detail modal
+- Root cause: `viewingRisk.protective?.length > 0` optional chaining was failing silently
+- Fix: Changed to `(viewingRisk.protective || []).length > 0`
+- Modal scroll CSS: `.ri-modal .dash-modal-body { overflow-y: auto; max-height: 60vh; }`
+
+### Risk Insights Layout Merge
+- **Merged Risk Insights into the Alert Triggers & Risk Drivers card** as an internal right column
+- Previously: Two separate cards side-by-side (`dash-alerts-row` grid `1fr 300px`)
+- Now: One card with internal 2-column grid (`dash-alerts-inner`: `1fr 260px`)
+  - Left: Alert items + Deteriorating Clinical Trends
+  - Right: Risk Insights tiles (icon, name, percentage, badge)
+  - Separated by vertical border (`border-left: 1px solid #E2E8F0`)
+  - Left column has `padding-right: 20px` for breathing room
+- Removed: `.dash-alerts-row`, `.dash-risk-card`, `.dash-risk-row`
+- Added: `.dash-alerts-inner`, `.dash-alerts-left`, `.dash-alerts-right`
+- Revert point: `1324635`
+
+### Chatbot Predefined Actions
+- **Added "Plot HbA1c Trends"** to the lightbulb dropdown (`PREDEFINED_ITEMS`)
+  - Uses `query` property: user sees "Plot HbA1c Trends", agent receives `"plot line chart for last 1 year trend for hba1c"`
+  - `handlePredefinedClick` updated to use `item.query || item.label` when calling `agentLoop`
+
+### Observations System Prompt Fix
+- **Problem**: Bot was making separate API calls per LOINC code. On the first attempt, it would pick just one observation type (e.g., Hemoglobin 718-7), get no 2025 data for it, and report "no observations found". On retry it worked.
+- **Fix**: Changed prompt to instruct bot to make a **SINGLE call** without CODE parameter (`search_patient_observations` with just PATIENT + DATE=gt2025-01-01). This returns ALL observation types in one response, matching how Postman works.
+- Bot then groups results by `code.coding[0].display` and presents as clinical summary
+- Also fixed: user's `SUBJECT` → `PATIENT` parameter name correction across observation sections
+
+### Reverted Changes (not kept)
+- Care Gaps silent override (`query: 'View Care Gaps in details'`) — reverted
+- Latest-only observations (show single latest value per type) — reverted
+- Smart scroll (allow scrolling up while bot responds) — reverted
+- Auto-retry observations (silently retry when bot returns no data) — reverted
+
+### Git Commits (April 8 session)
+1. `50274a1` — Clean up debug logs, fix protective factors rendering
+2. `1324635` — Improve Risk Insights UI - widen column to 300px, tighten spacing
+3. `752d9a1` — Merge Risk Insights into Alert Triggers card as internal right column
+4. `0f18aee` — Add right padding to alerts left column for divider spacing
+5. `8080988` — Update notes.md with layout merge details
+6. `9dd5ffd` — Add Plot HbA1c Trends to predefined actions dropdown
+7. `b1fe720` — (reverted) Latest-only observations
+8. `034794a` — (reverted) Revert observations
+9. `ce2f47e` — (reverted) Smart scroll
+10. `edff1c7` — (reverted) Care gaps override + latest-only obs
+11. `214fc94` — Revert care gaps, latest-only obs, smart scroll
+12. `3968ae9` — Remove DATE filter (then restored)
+13. `079c4b9` — Restore DATE filter with client-side filtering (then replaced)
+14. `817d53c` — (reverted) Hardcoded 9 LOINC codes
+15. `6e00976` — Restore original observations prompt
+16. `a99e908` — User's system prompt changes
+17. `203f171` — Fix observations - single API call without CODE
+18. `a65346e` — Fix SUBJECT back to PATIENT
+19. `fafdf89` — Restore PATIENT in section 3
+20. `c8fc2a7` — Fix SUBJECT to PATIENT in filtered observation section
