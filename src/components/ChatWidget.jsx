@@ -109,12 +109,8 @@ export default function ChatWidget({ displayName }) {
     return msg.id;
   }, []);
 
-  const OBS_FAIL_PATTERNS = /no\s+(recent\s+)?observat|no\s+observation\s+data/i;
-  const OBS_QUERY_PATTERNS = /observat|latest obs|recent obs|vitals|lab\s*(result|value)/i;
-
-  const agentLoop = useCallback(async (userMessage, _isRetry = false) => {
+  const agentLoop = useCallback(async (userMessage) => {
     const history = conversationHistoryRef.current;
-    const historyLenBefore = history.length;
     history.push({ role: 'user', content: userMessage });
 
     const sliced = history.slice(-20);
@@ -179,17 +175,6 @@ export default function ChatWidget({ displayName }) {
           setIsTyping(true);
         } else {
           const finalText = result.content || '';
-
-          if (!_isRetry && OBS_QUERY_PATTERNS.test(userMessage) && OBS_FAIL_PATTERNS.test(finalText)) {
-            if (streamingMsgId) {
-              setMessages(prev => prev.filter(m => m.id !== streamingMsgId));
-            }
-            conversationHistoryRef.current = history.slice(0, historyLenBefore);
-            streamingMsgId = null;
-            setIsTyping(true);
-            return agentLoop(userMessage, true);
-          }
-
           history.push({ role: 'assistant', content: finalText });
 
           const isCareGap = userMessage.toLowerCase().includes('care gap');
