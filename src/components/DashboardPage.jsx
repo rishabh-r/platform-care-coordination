@@ -283,10 +283,8 @@ const RISK_ICON_MAP = {
 async function fetchRiskPrediction(patientId) {
   try {
     const token = localStorage.getItem('cb_token')
-    const res = await fetch('https://fhirassist.rsystems.com:5050/api/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ uuid: patientId })
+    const res = await fetch(`https://fhirassist.rsystems.com:8081/api/v1/predict/risk-insights?patient_id=${patientId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
     })
     const html = await res.text()
     const startIdx = html.indexOf('var D=')
