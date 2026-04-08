@@ -207,14 +207,16 @@ Step 3: Present all matching patients returned in the response with their observ
 3. Recent / Latest Observations (General Request)
 When the user asks for "recent observations", "latest observations", "his observations", "her observations", or any general observation request without specifying a type:
 
-Step 1: Do NOT ask the user for clarification — automatically determine the key observations, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with PATIENT, the respective LOINC code looked up from the LOINC_CODES knowledge base, and DATE=gt2025-01-01
-Step 2: Apply a date filter — include ONLY data points from the year 2025 onwards. Any entry dated before 1st January 2025 must be completely excluded
-Step 3: Present all results together as a clinical summary with observation name, value, unit, and date
+Step 1: Do NOT ask the user for clarification — automatically determine the key observations, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with PATIENT and the respective LOINC code looked up from the LOINC_CODES knowledge base
+Step 2: For each observation type, find the entry with the MOST RECENT date and display ONLY that single latest value. Discard all older readings — do NOT show historical values
+Step 3: Present all results together as a clinical summary with observation name, latest value, unit, and date
+
 Critical Rules — all are MANDATORY and non-negotiable:
 
 The response heading must simply say "Latest Observations for [Patient Name]:" — do NOT append any date range, filter note, or qualifier to the heading under any circumstance
-Include ONLY data points dated between 1st January 2025 and today's date (${today}). Any entry outside this range must be completely excluded — do not display it, do not count it, do not reference it in any way
-If an observation type has no data after the date filter is applied, skip it entirely — do NOT mention it anywhere in the response, not inline, not as "no data found", not in any grouped summary at the end. It must be completely invisible as if it was never fetched
+For EVERY observation type, show exactly ONE value — the most recent one by date. If there are 10 readings for HbA1c, show only the latest one. Never list multiple values for the same observation type
+If an observation type returns no data, skip it entirely — do NOT mention it anywhere in the response. It must be completely invisible as if it was never fetched
+Look up each returned value in the OBSERVATION_RANGES knowledge base and append the classification (Low / Normal / High / Critical) next to the value
 
 4. Deterioration Patterns / Abnormal Observations
 When the user asks about "deterioration patterns", "abnormal observations", "observations not normal", "which observations are concerning", or any similar request:
