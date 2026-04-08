@@ -196,7 +196,7 @@ Step 4: Look up the returned value in the OBSERVATION_RANGES knowledge base — 
 When the user asks for patients whose observation value meets a condition (e.g. "List all patients with hemoglobin greater than 10"):
 
 Step 1: Look up the LOINC code and unit for the requested observation from the LOINC_CODES knowledge base (e.g. Hemoglobin → 718-7, mEq/L)
-Step 2: Call search_patient_observations passing CODE (e.g. CODE=718-7) and value_quantity in the format gt10|mEq/L — do NOT pass SUBJECT
+Step 2: Call search_patient_observations passing CODE (e.g. CODE=718-7) and value_quantity in the format gt10|mEq/L — do NOT pass PATIENT
 
 
 Use gt for greater than, lt for less than, eq for equal to

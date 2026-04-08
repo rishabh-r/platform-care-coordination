@@ -1201,3 +1201,19 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 | Clinical Trends | Dynamic | Observation API (time-series charts, 12m toggle) |
 | Appointments & Encounters | Dynamic | Encounter API |
 | Medications | Dynamic | MedicationRequest API |
+
+---
+
+## Care Team Updates (April 8, 2026)
+
+### Changes Made
+1. **Show only name and specialty** — Removed the "Care Coordinator" subtitle from each card. Now shows only the coordinator's name and their program/specialty (e.g., "Chronic Care Coordination", "Diabetes Disease Management Program").
+2. **Email icon opens Outlook** — Changed the email icon from a plain `<button>` to an `<a href="mailto:...">` link. Clicking it opens the user's default email client (Outlook) with the coordinator's email pre-filled in the "To" field.
+3. **Practitioner email fetching** — `parseCareTeamFromEoC` is now async. It extracts the `careManager.reference` (Practitioner UUID) from each EpisodeOfCare, fetches the Practitioner API to get the email from `telecom` (system=email), and stores it in the care team data.
+
+### Files Changed
+- `src/components/DashboardPage.jsx` — `parseCareTeamFromEoC` made async with practitioner email fetch; Care Team JSX simplified to name + program only; email button replaced with `mailto:` anchor link
+- `src/dashboard.css` — Added `.dash-team-email-link` style (matches existing button style)
+
+### Git Commit
+- `7dcd2cc` — Care Team: show only name and specialty, email icon opens mailto link
