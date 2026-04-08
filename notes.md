@@ -1278,3 +1278,11 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 18. `a65346e` — Fix SUBJECT back to PATIENT
 19. `fafdf89` — Restore PATIENT in section 3
 20. `c8fc2a7` — Fix SUBJECT to PATIENT in filtered observation section
+21. `ab5fe4d` — Update notes.md with April 8 session details
+22. `982c72c` — Show only latest value per observation type in recent observations
+
+### Latest Observations — Final Behavior (CONFIRMED WORKING)
+- **Single API call**: `search_patient_observations` with PATIENT + DATE=gt2025-01-01, no CODE param
+- **One value per type**: For each observation type (HbA1c, Glucose, Creatinine, etc.), shows only the single most recent value by date
+- **Classification**: Each value includes Low/Normal/High/Critical from OBSERVATION_RANGES knowledge base
+- **No hardcoded LOINC codes**: Works for any patient regardless of their conditions
