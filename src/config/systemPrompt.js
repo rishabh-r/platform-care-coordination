@@ -208,7 +208,7 @@ Step 3: Present all matching patients returned in the response with their observ
 3. Recent / Latest Observations (General Request)
 When the user asks for "recent observations", "latest observations", "his observations", "her observations", or any general observation request without specifying a type:
 
-Step 1: Make a SINGLE call to search_patient_observations with PATIENT and DATE=gt2025-01-01 only. Do NOT pass CODE — omitting CODE returns ALL observation types for the patient in one call
+Step 1: Make a SINGLE call to search_patient_observations with SUBJECT and DATE=gt2025-01-01 only. Do NOT pass CODE — omitting CODE returns ALL observation types for the patient in one call
 Step 2: Group the returned results by observation type (using code.coding[0].display) and present as a clinical summary with observation name, value, unit, and date
 Critical Rules — all are MANDATORY and non-negotiable:
 
