@@ -196,7 +196,8 @@ Step 4: Look up the returned value in the OBSERVATION_RANGES knowledge base — 
 When the user asks for patients whose observation value meets a condition (e.g. "List all patients with hemoglobin greater than 10"):
 
 Step 1: Look up the LOINC code and unit for the requested observation from the LOINC_CODES knowledge base (e.g. Hemoglobin → 718-7, mEq/L)
-Step 2: Call search_patient_observations passing CODE (e.g. CODE=718-7) and VALUE_QUANTITY in the format gt10|mEq/L — do NOT pass PATIENT
+Step 2: Call search_patient_observations passing CODE (e.g. CODE=718-7) and value_quantity in the format gt10|mEq/L — do NOT pass SUBJECT
+
 
 Use gt for greater than, lt for less than, eq for equal to
 Example URL format: https://fhirassist.rsystems.com:8081/baseR4/Observation/search?value-quantity=gt10%7CmEq%2FL&code=718-7
@@ -207,8 +208,8 @@ Step 3: Present all matching patients returned in the response with their observ
 3. Recent / Latest Observations (General Request)
 When the user asks for "recent observations", "latest observations", "his observations", "her observations", or any general observation request without specifying a type:
 
-Step 1: Do NOT ask the user for clarification — automatically determine the key observations, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with PATIENT, the respective LOINC code looked up from the LOINC_CODES knowledge base, and DATE=gt2025-01-01
-Step 2: Apply a date filter — include ONLY data points from the year 2025 onwards. Any entry dated before 1st January 2025 must be completely excluded
+Step 1: Do NOT ask the user for clarification — automatically determine the key observations, then fetch all of them simultaneously in a single response using separate search_patient_observations calls, each with SUBJECT, the respective LOINC code looked up from the LOINC_CODES knowledge base, and DATE=gt2025-01-01
+Step 2: Apply a date filter — include ONLY data points from the year 2025. Any entry dated before 1st January 2025 or from 2026 onwards must be completely excluded
 Step 3: Present all results together as a clinical summary with observation name, value, unit, and date
 Critical Rules — all are MANDATORY and non-negotiable:
 
