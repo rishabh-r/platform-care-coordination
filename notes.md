@@ -1299,3 +1299,13 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - If user scrolls back to bottom → auto-scroll resumes
 - When user sends a new message or clicks predefined action → `userScrolledUpRef` resets, auto-scroll resumes
 - `onScroll={handleMessagesScroll}` attached to messages area div
+
+### Risk Modal Scroll Fix (CONFIRMED WORKING)
+- **Problem**: Diabetes risk modal had long risk driver paragraphs; protective factors were cut off and not visible even after scrolling
+- **Root cause**: `.dash-modal` lacked `display: flex; flex-direction: column; overflow: hidden;` — inner body couldn't scroll within the modal's `max-height: 85vh`
+- **Fix**: Added flexbox layout to `.dash-modal` and removed the redundant `max-height: 60vh` from `.ri-modal .dash-modal-body`
+- **Result**: All 3 risk modals confirmed working:
+  - Hypertension: 4 drivers, no protective factors ✓
+  - Diabetes: 4 drivers + 1 protective factor (Non-Smoker) ✓
+  - Cancer: 3 drivers + 3 protective factors ✓
+- Commit: `f444a95`
