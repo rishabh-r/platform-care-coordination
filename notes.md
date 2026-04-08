@@ -1286,3 +1286,16 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - **One value per type**: For each observation type (HbA1c, Glucose, Creatinine, etc.), shows only the single most recent value by date
 - **Classification**: Each value includes Low/Normal/High/Critical from OBSERVATION_RANGES knowledge base
 - **No hardcoded LOINC codes**: Works for any patient regardless of their conditions
+
+### Care Gaps Silent Override (IMPLEMENTED)
+- "View Care Gaps" dropdown item now sends `"View Care Gaps in details"` to the agent internally
+- User sees "View Care Gaps" in chat, agent receives the detailed query
+- Uses `query` property on the predefined item: `{ label: 'View Care Gaps', action: 'caregaps', query: 'View Care Gaps in details' }`
+
+### Smart Scroll (IMPLEMENTED)
+- While bot is responding, user can scroll up to read previous messages without being forced to bottom
+- `userScrolledUpRef` tracks if user has scrolled more than 80px from bottom
+- If scrolled up → auto-scroll pauses
+- If user scrolls back to bottom → auto-scroll resumes
+- When user sends a new message or clicks predefined action → `userScrolledUpRef` resets, auto-scroll resumes
+- `onScroll={handleMessagesScroll}` attached to messages area div
