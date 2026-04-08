@@ -56,7 +56,7 @@ const PREDEFINED_ITEMS = [
   { label: 'View Latest Observations', action: 'lab' },
   { label: 'View Active Medications', action: 'medications' },
   { label: 'View Last 12 months encounters', action: 'encounters' },
-  { label: 'View Care Gaps', action: 'caregaps', query: 'View Care Gaps in details' },
+  { label: 'View Care Gaps', action: 'caregaps' },
   { label: 'Plot HbA1c Trends', query: 'plot line chart for last 1 year trend for hba1c' },
 ];
 
@@ -79,22 +79,13 @@ export default function ChatWidget({ displayName }) {
 
   const userInitial = displayName.charAt(0).toUpperCase();
 
-  const userScrolledUpRef = useRef(false);
-
   const scrollToBottom = useCallback(() => {
-    if (messagesAreaRef.current && !userScrolledUpRef.current) {
+    if (messagesAreaRef.current) {
       messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
     }
   }, []);
 
   useEffect(() => { scrollToBottom(); }, [messages, isTyping, scrollToBottom]);
-
-  const handleMessagesScroll = useCallback(() => {
-    const el = messagesAreaRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    userScrolledUpRef.current = distanceFromBottom > 80;
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = () => setShowDropdown(false);
@@ -216,7 +207,6 @@ export default function ChatWidget({ displayName }) {
     const text = inputValue.trim();
     if (!text || isBotResponding) return;
 
-    userScrolledUpRef.current = false;
     setInputValue('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setIsBotResponding(true);
@@ -254,7 +244,6 @@ export default function ChatWidget({ displayName }) {
 
   const handlePredefinedClick = useCallback(async (item) => {
     if (isBotResponding) return;
-    userScrolledUpRef.current = false;
     setShowDropdown(false);
     addMessage('user', item.label);
     if (item.action) pendingChipActionRef.current = item.action;
@@ -316,7 +305,7 @@ export default function ChatWidget({ displayName }) {
           </div>
         </div>
 
-        <div id="messages" className="messages-area" ref={messagesAreaRef} onScroll={handleMessagesScroll}>
+        <div id="messages" className="messages-area" ref={messagesAreaRef}>
           {showWelcome && messages.length === 0 && (
             <div className="welcome-card">
               <img src="/chatbot_image/chatbot.png" alt="CareBridge" />
