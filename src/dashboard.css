@@ -378,6 +378,7 @@
   background: white; border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0,0,0,.2);
   display: flex; flex-direction: column; overflow: hidden;
+  display: flex; flex-direction: column; overflow: hidden;
 }
 .dash-modal-header {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -560,7 +561,7 @@
 .ri-badge-low { background: #22c55e; }
 .ri-hint { font-size: 10px; color: #9ca3af; text-align: center; padding: 4px 16px 12px; font-weight: 500; }
 .ri-modal { max-width: 480px; }
-.ri-modal .dash-modal-body { overflow-y: auto; max-height: 60vh; }
+.ri-modal .dash-modal-body { overflow-y: auto; }
 .ri-modal-title { font-size: 16px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
 .ri-modal-hl { font-weight: 700; }
 .ri-hl-high { color: #ef4444; }
