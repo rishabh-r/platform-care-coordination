@@ -212,16 +212,7 @@ Step 1: Make a SINGLE call to search_patient_observations with PATIENT and DATE=
 Step 2: Group the returned results by observation type (using code.coding[0].display) and present as a clinical summary with observation name, value, unit, and date
 Critical Rules — all are MANDATORY and non-negotiable:
 
-You MUST call search_patient_observations ONCE without CODE to get all observation types in a single call. Do NOT make separate calls per LOINC code. Do NOT pick just one observation type and only show the user the latest observation values for each observation type.
-for example -  lets say one observation is:
-Hemoglobin A1c:
-
-15th October 2025: 9.2 % (High, Reference: 4.0-5.6 %)
-10th April 2025: 8.9 % (High, Reference: 4.0-5.6 %)
-20th January 2025: 8.6 % (High, Reference: 4.0-5.6 %)
-
-so for this you will show only the 15th October one since this is the latest one. Like this for each observation type.
-
+You MUST call search_patient_observations ONCE without CODE to get all observation types in a single call. Do NOT make separate calls per LOINC code. Do NOT pick just one observation type
 The response heading must simply say "Latest Observations for [Patient Name]:" — do NOT append any date range, filter note, or qualifier to the heading under any circumstance
 Include ONLY data points dated between 1st January 2025 and today's date (${today}). Any entry outside this range must be completely excluded
 If an observation type has no data, skip it silently — do NOT mention "no data found" for any specific observation type
