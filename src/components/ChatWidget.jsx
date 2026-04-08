@@ -57,6 +57,7 @@ const PREDEFINED_ITEMS = [
   { label: 'View Active Medications', action: 'medications' },
   { label: 'View Last 12 months encounters', action: 'encounters' },
   { label: 'View Care Gaps', action: 'caregaps' },
+  { label: 'Plot HbA1c Trends', query: 'plot line chart for last 1 year trend for hba1c' },
 ];
 
 export default function ChatWidget({ displayName }) {
@@ -247,7 +248,7 @@ export default function ChatWidget({ displayName }) {
     addMessage('user', item.label);
     if (item.action) pendingChipActionRef.current = item.action;
     setIsBotResponding(true);
-    await agentLoop(item.label);
+    await agentLoop(item.query || item.label);
     setIsBotResponding(false);
     if (inputRef.current) inputRef.current.focus();
   }, [isBotResponding, addMessage, agentLoop]);
