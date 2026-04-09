@@ -358,14 +358,22 @@ const ALL_OBS_GROUPS = [
 
 const LAB_COLORS = ['#3B82F6', '#22C55E', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#6366F1']
 
-function buildDynamicTrendTabs(obsData) {
+function buildDynamicTrendTabs(obsData, deterioratingTrends) {
   if (!obsData) return []
+  const detLabels = (deterioratingTrends || []).map(t => t.label.toUpperCase().replace(/\s+TREND$/, '').trim())
   const available = ALL_OBS_GROUPS
     .map(g => {
       const totalPoints = g.codes.reduce((sum, code) => sum + (obsData[code]?.points?.length || 0), 0)
       return { ...g, totalPoints }
     })
-    .filter(g => g.totalPoints > 0)
+    .filter(g => {
+      if (g.totalPoints === 0) return false
+      if (!detLabels.length) return true
+      const gLabel = g.label.toUpperCase()
+      const gKey = g.key.toUpperCase()
+      const gCodeNames = g.codes.map(c => (OBSERVATION_NORMAL_RANGES[c]?.name || '').toUpperCase())
+      return detLabels.some(dl => gLabel.includes(dl) || dl.includes(gLabel) || gKey.includes(dl) || dl.includes(gKey) || gCodeNames.some(cn => cn.includes(dl) || dl.includes(cn)))
+    })
     .sort((a, b) => b.totalPoints - a.totalPoints)
   return available
 }
@@ -1210,7 +1218,7 @@ function DashboardPage() {
 
           {/* Clinical Trends */}
           {activeTab === 'trends' && (() => {
-            const dynamicTabs = buildDynamicTrendTabs(allObsData)
+            const dynamicTabs = buildDynamicTrendTabs(allObsData, dynTrends)
             const activeCfg = dynamicTabs.find(t => t.key === trendTab) || dynamicTabs[0]
             return (
             <div className="dash-card" style={{ padding: '24px' }}>
