@@ -1146,13 +1146,6 @@ function DashboardPage() {
                       )
                     })}
                   </div>
-                  <p className="dash-modal-label">Coordinator Notes (Optional)</p>
-                  <textarea
-                    className="dash-modal-textarea"
-                    placeholder="Add any additional context or special instructions for task execution..."
-                    value={coordinatorNotes}
-                    onChange={e => setCoordinatorNotes(e.target.value)}
-                  />
                   <div className="dash-modal-assignment">
                     <strong>Assignment:</strong>
                     <p>Tasks will be created and assigned to <b>your task queue</b> for immediate action.</p>
