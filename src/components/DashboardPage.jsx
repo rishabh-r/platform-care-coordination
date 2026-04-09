@@ -367,23 +367,7 @@ function buildDynamicTrendTabs(obsData) {
     })
     .filter(g => g.totalPoints > 0)
     .sort((a, b) => b.totalPoints - a.totalPoints)
-  if (!available.length) return []
-  const tabs = available.slice(0, 3)
-  const remaining = available.slice(3)
-  if (remaining.length > 0) {
-    tabs.push({
-      key: 'lab',
-      label: 'Lab Results',
-      codes: remaining.flatMap(r => r.codes),
-      colors: LAB_COLORS.slice(0, remaining.flatMap(r => r.codes).length),
-      targets: null,
-      targetLabels: remaining.map(r => {
-        const range = OBSERVATION_NORMAL_RANGES[r.codes[0]]
-        return range ? `${r.label} (${range.normal} ${range.unit})` : r.label
-      }),
-    })
-  }
-  return tabs
+  return available
 }
 
 function parseAllObservationsForTrends(bundle) {
@@ -490,7 +474,17 @@ function parsePatientFromResource(resource, patientId) {
     }
   }
 
-  return { name, initials, age, gender, dob, phone, email, mrn: patientId }
+  let mrn = patientId
+  const identifiers = resource.identifier || []
+  for (const ident of identifiers) {
+    const typeCode = ident.type?.coding?.[0]?.code
+    if (typeCode === 'MR' || ident.system?.includes('mrn')) {
+      mrn = ident.value || mrn
+      break
+    }
+  }
+
+  return { name, initials, age, gender, dob, phone, email, mrn }
 }
 
 const MOCK_DATA = {
@@ -1093,20 +1087,25 @@ function DashboardPage() {
               </div>
             </div>
             {(aiActionsData || d.aiActions).map((a, i) => {
-              const isApproved = approvedActions.includes(i)
+              if (approvedActions.includes(i)) return null
+              const due = new Date()
+              if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
+              else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
+              else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
+              else due.setDate(due.getDate() + 3)
+              const dueStr = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               return (
-                <div key={i} className={`dash-action-row ${selectedActions.includes(i) ? 'selected' : ''} ${isApproved ? 'approved' : ''}`}>
+                <div key={i} className={`dash-action-row ${selectedActions.includes(i) ? 'selected' : ''}`}>
                   <input
                     type="checkbox"
-                    checked={selectedActions.includes(i) || isApproved}
+                    checked={selectedActions.includes(i)}
                     onChange={() => toggleAction(i)}
-                    disabled={isApproved}
                   />
                   <div className="dash-action-body">
                     <div className="dash-action-title-row">
                       <strong>{a.title}</strong>
                       <span className={`dash-pill pill-${a.priorityClass || priorityClass(a.priority)}`}>{a.priority}</span>
-                      <span className="dash-action-time">⏱ {a.timeframe}</span>
+                      <span className="dash-action-time">📅 Due: {dueStr}</span>
                     </div>
                     <p>{a.description}</p>
                     <div className="dash-rationale">

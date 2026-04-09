@@ -57,7 +57,7 @@ const PREDEFINED_ITEMS = [
   { label: 'View Active Medications', action: 'medications' },
   { label: 'View Last 12 months encounters', action: 'encounters' },
   { label: 'View Care Gaps', action: 'caregaps', query: 'View Care Gaps in details' },
-  { label: 'Plot HbA1c Trends', query: 'plot line chart for last 1 year trend for hba1c' },
+  { label: 'Plot Trends', query: 'plot trends, I\'ll tell you for what observations' },
 ];
 
 export default function ChatWidget({ displayName }) {

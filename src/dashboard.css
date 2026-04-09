@@ -579,11 +579,11 @@
 .ct-period-toggle { display: flex; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; }
 .ct-period-toggle button { padding: 7px 16px; font-size: 12px; font-weight: 600; border: none; background: #fff; color: #64748B; cursor: pointer; transition: all 0.15s; }
 .ct-period-toggle button.active { background: #1E293B; color: #fff; }
-.ct-tabs { display: flex; gap: 0; margin-bottom: 20px; }
-.ct-tab { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 600; border: none; background: #F8FAFC; color: #64748B; cursor: pointer; transition: all 0.15s; border-bottom: 2px solid transparent; }
-.ct-tab:first-child { border-radius: 8px 0 0 0; }
-.ct-tab:last-child { border-radius: 0 8px 0 0; }
-.ct-tab.active { background: #3B82F6; color: #fff; border-radius: 20px; }
+.ct-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #CBD5E1 transparent; padding-bottom: 4px; }
+.ct-tabs::-webkit-scrollbar { height: 4px; }
+.ct-tabs::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+.ct-tab { white-space: nowrap; padding: 8px 18px; text-align: center; font-size: 13px; font-weight: 600; border: none; background: #F8FAFC; color: #64748B; cursor: pointer; transition: all 0.15s; border-radius: 20px; flex-shrink: 0; }
+.ct-tab.active { background: #3B82F6; color: #fff; }
 .ct-chart-area { min-height: 280px; margin-bottom: 12px; }
 .ct-legend-info { text-align: center; padding: 8px 0 16px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
 .ct-legend-item { font-size: 12px; color: #64748B; font-weight: 500; }

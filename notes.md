@@ -1323,3 +1323,35 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 24. `f444a95` — Fix risk modal scroll - protective factors now visible
 25. `3440d8e` — Update notes.md with risk modal scroll fix details
 26. `6511257` — Update risk insights API from POST /5050 to GET /8081 with patient_id query param
+27. `448f110` — Update notes.md with risk API endpoint change and commit history
+
+### Dashboard Batch Update — April 9, 2026
+
+#### 1. Clinical Trends — All Individual Tabs with Horizontal Scroll
+- **Removed** the "Lab Results" combined tab that grouped remaining observations
+- **Now shows all** observation groups as individual tabs (Glucose, Creatinine, Potassium, HbA1c, Cholesterol, LDL, Triglycerides, etc.)
+- Tabs sorted by data density (most data points first)
+- **Horizontal scroll** added to tabs row via `overflow-x: auto` with thin scrollbar styling
+- Each tab is pill-shaped (`border-radius: 20px`), `flex-shrink: 0`, `white-space: nowrap`
+- Files: `DashboardPage.jsx` (simplified `buildDynamicTrendTabs`), `dashboard.css` (`.ct-tabs`, `.ct-tab`)
+
+#### 2. MRN from Patient Identifiers
+- **Previously**: Showed patient UUID as MRN (e.g., `a3f8b2c1-7d4e-...`)
+- **Now**: Extracts actual MRN from Patient resource's `identifier` array, matching `type.coding[0].code === 'MR'` or `system` containing `'mrn'`
+- Falls back to patient UUID if no MRN identifier found
+- File: `DashboardPage.jsx` (`parsePatientFromResource`)
+
+#### 3. AI Actions — Remove Approved Actions
+- **Previously**: Approved actions were greyed out with checkbox ticked and disabled
+- **Now**: Approved actions are completely removed from the AI Recommended Actions list (`return null` if index in `approvedActions`)
+- Only unapproved actions remain visible
+
+#### 4. AI Actions — Exact Due Dates
+- **Previously**: Showed relative timeframes like "Within 24 hours", "Within 48 hours", "Within 1 week"
+- **Now**: Shows computed due date (e.g., "Due: Apr 10, 2026") using the same calculation logic as Task Queue
+- 24 hours → +1 day, 48 hours → +2 days, 1 week → +7 days, other → +3 days
+
+#### 5. Plot Trends Action Chip
+- **Renamed**: "Plot HbA1c Trends" → "Plot Trends"
+- **Silent override**: User sees "Plot Trends" in chat, agent receives `"plot trends, I'll tell you for what observations"`
+- Uses `query` property: `{ label: 'Plot Trends', query: "plot trends, I'll tell you for what observations" }`
