@@ -1308,7 +1308,7 @@ function DashboardPage() {
                     },
                     scales: {
                       x: { grid: { display: false }, ticks: { font: { size: 11 }, maxTicksLimit: 8, callback: (_, i) => { const d = new Date(labels[i]); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) } } },
-                      y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 } }, beginAtZero: false },
+                      y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 } }, beginAtZero: true },
                     },
                   }
 
