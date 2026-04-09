@@ -479,7 +479,8 @@ function parsePatientFromResource(resource, patientId) {
   for (const ident of identifiers) {
     const typeCode = ident.type?.coding?.[0]?.code
     if (typeCode === 'MR' || ident.system?.includes('mrn')) {
-      mrn = ident.value || mrn
+      const raw = ident.value || mrn
+      mrn = raw.replace(/^MRN-/i, '')
       break
     }
   }
