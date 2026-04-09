@@ -1375,3 +1375,16 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 31. `25cacf3` — Show empty state message when all AI actions are approved
 32. `b57388b` — Update Plot Trends silent query to clarify separate from care gaps
 33. `e6cf3cc` — Remove silent override from Plot Trends - sends plain label for now
+34. `622f99e` — Update notes.md with all April 9 dashboard changes
+35. `753b55b` — Set Y-axis to start from 0 in clinical trends charts
+36. `6b6aded` — Filter clinical trends to only show deteriorating observations
+
+### Clinical Trends — Y-Axis Starts from 0
+- Changed `beginAtZero: false` → `beginAtZero: true` in Chart.js Y-axis config
+- All charts now consistently start from 0 on the Y-axis
+
+### Clinical Trends — Deteriorating Only Filter
+- `buildDynamicTrendTabs` now accepts `deterioratingTrends` (from `dynTrends` / care gap analysis)
+- Only shows tabs for observations that match the deteriorating trend labels
+- Matching is flexible: compares group label, key, and LOINC code names (case-insensitive, strips "TREND" suffix)
+- If no deteriorating trends data is available, falls back to showing all observations with data
