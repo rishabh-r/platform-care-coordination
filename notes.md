@@ -1353,5 +1353,25 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 
 #### 5. Plot Trends Action Chip
 - **Renamed**: "Plot HbA1c Trends" → "Plot Trends"
-- **Silent override**: User sees "Plot Trends" in chat, agent receives `"plot trends, I'll tell you for what observations"`
-- Uses `query` property: `{ label: 'Plot Trends', query: "plot trends, I'll tell you for what observations" }`
+- **No silent override** (reverted): Sends plain `"Plot Trends"` to the agent as-is
+- Silent override to be added later per user's instructions
+
+#### 6. Coordinator Notes Removed
+- Removed the "Coordinator Notes (Optional)" textarea from the Approve & Create Tasks modal
+- Only the selected actions list and assignment info remain
+
+#### 7. MRN Prefix Strip
+- MRN display strips the `MRN-` prefix (e.g., `MRN-20230301-001` → `20230301-001`)
+- Dashboard shows `MRN: 20230301-001`
+
+#### 8. AI Actions Empty State
+- When all actions are approved, shows: "✅ All actions have been approved and moved to Task Queue"
+- Centered grey text with padding, replaces blank space
+
+### Git Commit History (continued)
+28. `d4203e7` — Clinical trends all tabs, MRN from identifiers, remove approved actions, due dates, plot trends chip
+29. `028b30c` — Remove Coordinator Notes block from approve modal
+30. `540d4ac` — Strip MRN- prefix from MRN display value
+31. `25cacf3` — Show empty state message when all AI actions are approved
+32. `b57388b` — Update Plot Trends silent query to clarify separate from care gaps
+33. `e6cf3cc` — Remove silent override from Plot Trends - sends plain label for now
