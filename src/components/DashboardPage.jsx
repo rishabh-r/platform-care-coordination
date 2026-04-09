@@ -1087,36 +1087,43 @@ function DashboardPage() {
                 </button>
               </div>
             </div>
-            {(aiActionsData || d.aiActions).map((a, i) => {
-              if (approvedActions.includes(i)) return null
-              const due = new Date()
-              if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
-              else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
-              else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
-              else due.setDate(due.getDate() + 3)
-              const dueStr = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-              return (
-                <div key={i} className={`dash-action-row ${selectedActions.includes(i) ? 'selected' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={selectedActions.includes(i)}
-                    onChange={() => toggleAction(i)}
-                  />
-                  <div className="dash-action-body">
-                    <div className="dash-action-title-row">
-                      <strong>{a.title}</strong>
-                      <span className={`dash-pill pill-${a.priorityClass || priorityClass(a.priority)}`}>{a.priority}</span>
-                      <span className="dash-action-time">📅 Due: {dueStr}</span>
-                    </div>
-                    <p>{a.description}</p>
-                    <div className="dash-rationale">
-                      <span className="dash-rationale-tag">AI RATIONALE:</span>
-                      <em>{a.rationale}</em>
+            {(() => {
+              const actions = aiActionsData || d.aiActions
+              const pendingActions = actions.filter((_, i) => !approvedActions.includes(i))
+              if (!pendingActions.length) {
+                return <p style={{ textAlign: 'center', color: '#94A3B8', padding: '32px 0', fontSize: '14px' }}>✅ All actions have been approved and moved to Task Queue</p>
+              }
+              return actions.map((a, i) => {
+                if (approvedActions.includes(i)) return null
+                const due = new Date()
+                if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
+                else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
+                else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
+                else due.setDate(due.getDate() + 3)
+                const dueStr = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                return (
+                  <div key={i} className={`dash-action-row ${selectedActions.includes(i) ? 'selected' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedActions.includes(i)}
+                      onChange={() => toggleAction(i)}
+                    />
+                    <div className="dash-action-body">
+                      <div className="dash-action-title-row">
+                        <strong>{a.title}</strong>
+                        <span className={`dash-pill pill-${a.priorityClass || priorityClass(a.priority)}`}>{a.priority}</span>
+                        <span className="dash-action-time">📅 Due: {dueStr}</span>
+                      </div>
+                      <p>{a.description}</p>
+                      <div className="dash-rationale">
+                        <span className="dash-rationale-tag">AI RATIONALE:</span>
+                        <em>{a.rationale}</em>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })
+            })()}
           </div>
 
           {/* Approve Modal */}
