@@ -825,7 +825,6 @@ function DashboardPage() {
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 
   const toggleAction = (i) => {
-    if (approvedActions.includes(i)) return
     setSelectedActions(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
   }
 
@@ -857,9 +856,8 @@ function DashboardPage() {
 
   const handleApprove = async () => {
     setShowModal(false)
-    const actions = aiActionsData || d.aiActions
     const payload = selectedActions.map(i => {
-      const a = actions[i]
+      const a = displayActions[i]
       const due = new Date()
       if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
       else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
@@ -882,12 +880,11 @@ function DashboardPage() {
         body: JSON.stringify(payload),
       })
     } catch (e) { console.warn('[Dashboard] Create recommendations failed:', e) }
-    setApprovedActions(prev => [...new Set([...prev, ...selectedActions])])
     setSelectedActions([])
     setCoordinatorNotes('')
     setApproveAlert(true)
     setTimeout(() => setApproveAlert(false), 2000)
-    fetchTaskQueue()
+    await fetchTaskQueue()
   }
 
   const updateTaskStatus = async (taskId, newStatus) => {
@@ -906,12 +903,37 @@ function DashboardPage() {
 
   useEffect(() => { if (patientId) fetchTaskQueue() }, [patientId])
 
+  const FALLBACK_ACTIONS = [
+    { title: 'Care Plan Review', priority: 'Medium Priority', priorityClass: 'medium', timeframe: 'Within 1 week',
+      description: 'Review and update the patient care plan based on latest clinical data and outcomes',
+      rationale: 'Regular care plan reviews ensure interventions remain aligned with patient needs' },
+    { title: 'Follow-up Lab Orders', priority: 'Medium Priority', priorityClass: 'medium', timeframe: 'Within 48 hours',
+      description: 'Order follow-up labs to monitor treatment response and adjust interventions as needed',
+      rationale: 'Periodic lab monitoring is essential to track progress and detect emerging issues' },
+  ]
+
+  const taskQueueTitles = new Set(taskQueue.map(t => t.title.toLowerCase()))
+  const statusPriority = { completed: 3, inprocess: 2, pending: 1 }
+  const dedupedTaskQueue = Object.values(
+    taskQueue.reduce((acc, t) => {
+      const key = t.title.toLowerCase()
+      if (!acc[key] || (statusPriority[t.status] || 0) > (statusPriority[acc[key].status] || 0)) acc[key] = t
+      return acc
+    }, {})
+  )
+
   const taskCounts = {
-    pending: taskQueue.filter(t => t.status === 'pending').length,
-    inprocess: taskQueue.filter(t => t.status === 'inprocess').length,
-    completed: taskQueue.filter(t => t.status === 'completed').length,
+    pending: dedupedTaskQueue.filter(t => t.status === 'pending').length,
+    inprocess: dedupedTaskQueue.filter(t => t.status === 'inprocess').length,
+    completed: dedupedTaskQueue.filter(t => t.status === 'completed').length,
   }
-  const filteredTasks = taskQueue.filter(t => t.status === taskFilter)
+  const filteredTasks = dedupedTaskQueue.filter(t => t.status === taskFilter)
+
+  const rawActions = aiActionsData || d.aiActions
+  const visibleActions = rawActions.filter((a, i) => !approvedActions.includes(i) && !taskQueueTitles.has(a.title.toLowerCase()))
+  const displayActions = visibleActions.length > 0
+    ? visibleActions
+    : FALLBACK_ACTIONS.filter(f => !taskQueueTitles.has(f.title.toLowerCase())).slice(0, 2)
 
   const priorityClass = (p) => {
     if (!p) return 'medium'
@@ -1138,43 +1160,33 @@ function DashboardPage() {
                 </button>
               </div>
             </div>
-            {(() => {
-              const actions = aiActionsData || d.aiActions
-              const pendingActions = actions.filter((_, i) => !approvedActions.includes(i))
-              if (!pendingActions.length) {
-                return <p style={{ textAlign: 'center', color: '#94A3B8', padding: '32px 0', fontSize: '14px' }}>✅ All actions have been approved and moved to Task Queue</p>
-              }
-              return actions.map((a, i) => {
-                if (approvedActions.includes(i)) return null
-                const due = new Date()
-                if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
-                else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
-                else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
-                else due.setDate(due.getDate() + 3)
-                const dueStr = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                return (
-                  <div key={i} className={`dash-action-row ${selectedActions.includes(i) ? 'selected' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={selectedActions.includes(i)}
-                      onChange={() => toggleAction(i)}
-                    />
-                    <div className="dash-action-body">
-                      <div className="dash-action-title-row">
-                        <strong>{a.title}</strong>
-                        <span className={`dash-pill pill-${a.priorityClass || priorityClass(a.priority)}`}>{a.priority}</span>
-                        <span className="dash-action-time">📅 Due: {dueStr}</span>
-                      </div>
-                      <p>{a.description}</p>
-                      <div className="dash-rationale">
-                        <span className="dash-rationale-tag">AI RATIONALE:</span>
-                        <em>{a.rationale}</em>
-                      </div>
+            {displayActions.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#94A3B8', padding: '32px 0', fontSize: '14px' }}>✅ All actions have been approved and moved to Task Queue</p>
+            ) : displayActions.map((a, i) => {
+              const due = new Date()
+              if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
+              else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
+              else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
+              else due.setDate(due.getDate() + 3)
+              const dueStr = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              return (
+                <div key={i} className={`dash-action-row ${selectedActions.includes(i) ? 'selected' : ''}`}>
+                  <input type="checkbox" checked={selectedActions.includes(i)} onChange={() => toggleAction(i)} />
+                  <div className="dash-action-body">
+                    <div className="dash-action-title-row">
+                      <strong>{a.title}</strong>
+                      <span className={`dash-pill pill-${a.priorityClass || priorityClass(a.priority)}`}>{a.priority}</span>
+                      <span className="dash-action-time">📅 Due: {dueStr}</span>
+                    </div>
+                    <p>{a.description}</p>
+                    <div className="dash-rationale">
+                      <span className="dash-rationale-tag">AI RATIONALE:</span>
+                      <em>{a.rationale}</em>
                     </div>
                   </div>
-                )
-              })
-            })()}
+                </div>
+              )
+            })}
           </div>
 
           {/* Approve Modal */}
@@ -1192,7 +1204,7 @@ function DashboardPage() {
                   <p className="dash-modal-label">Selected Actions ({selectedActions.length}):</p>
                   <div className="dash-modal-actions-list">
                     {selectedActions.map(i => {
-                      const a = (aiActionsData || d.aiActions)[i]
+                      const a = displayActions[i]
                       return (
                         <div key={i} className="dash-modal-action-item">
                           <span className="dash-modal-check">✓</span>
