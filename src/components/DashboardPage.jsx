@@ -685,6 +685,7 @@ function DashboardPage() {
   const [showAllMeds, setShowAllMeds] = useState(false)
   const [showAllAppts, setShowAllAppts] = useState(false)
   const [isReviewed, setIsReviewed] = useState(false)
+  const [lastReviewDate, setLastReviewDate] = useState(null)
   const [selectedActions, setSelectedActions] = useState([])
   const [approvedActions, setApprovedActions] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -838,6 +839,46 @@ function DashboardPage() {
     description: t.description || '',
     notes: t.aiRationale || '',
   })
+
+  const fetchReviewStatus = async () => {
+    try {
+      const token = localStorage.getItem('cb_token')
+      const res = await fetch(`${FHIR_BASE}/baseR4/portal/get-review?patientId=${patientId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.isReviewed && data.createdDate) {
+        const reviewDate = new Date(data.createdDate)
+        const now = new Date()
+        const diffDays = (now - reviewDate) / (1000 * 60 * 60 * 24)
+        if (diffDays <= 7) {
+          setIsReviewed(true)
+          setLastReviewDate(reviewDate)
+        } else {
+          setIsReviewed(false)
+          setLastReviewDate(reviewDate)
+        }
+      } else {
+        setIsReviewed(false)
+        setLastReviewDate(null)
+      }
+    } catch (e) { console.warn('[Dashboard] Review status fetch failed:', e) }
+  }
+
+  const handleMarkReviewed = async () => {
+    try {
+      const token = localStorage.getItem('cb_token')
+      await fetch(`${FHIR_BASE}/baseR4/portal/create-review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ patientId }),
+      })
+      await fetchReviewStatus()
+    } catch (e) { console.warn('[Dashboard] Create review failed:', e) }
+  }
+
+  useEffect(() => { if (patientId) fetchReviewStatus() }, [patientId])
 
   const fetchTaskQueue = async () => {
     try {
@@ -1070,12 +1111,20 @@ function DashboardPage() {
             </div>
           </div>
         </div>
-        <button
-          className={`dash-review-btn ${isReviewed ? 'reviewed' : ''}`}
-          onClick={() => setIsReviewed(prev => !prev)}
-        >
-          {isReviewed ? '✓ Reviewed' : '✓ Mark as Reviewed'}
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          <button
+            className={`dash-review-btn ${isReviewed ? 'reviewed' : ''}`}
+            onClick={isReviewed ? undefined : handleMarkReviewed}
+            style={isReviewed ? { cursor: 'default' } : {}}
+          >
+            {isReviewed ? '✓ Reviewed' : '✓ Mark as Reviewed'}
+          </button>
+          {lastReviewDate && (
+            <span style={{ fontSize: '11px', color: '#94A3B8' }}>
+              Last reviewed: {lastReviewDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ── Main Content ── */}
