@@ -1445,3 +1445,27 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 39. `90c4eb3` — Add Task Started and Task Completed alert toasts in Task Queue
 40. `846bb8f` — Cross-check AI actions with task queue, dedup tasks by title, fallback actions
 41. `97393b5` — Replace hardcoded fallback actions with AI-generated ones via LLM call
+42. `4548cb6` — Update notes.md with task queue APIs, cross-check, alerts, and fallback details
+43. `bbeb101` — Integrate review APIs: GET review status, POST mark as reviewed, 1-week expiry logic
+
+### Mark as Reviewed — Database API Integration (IMPLEMENTED)
+
+#### GET `/baseR4/portal/get-review?patientId=...`
+- Called on page load via `useEffect`
+- Returns `{ reviewId, parentId, isReviewed, createdDate }`
+- New/unreviewed patient: `isReviewed: false`, `createdDate: null`
+- Reviewed patient: `isReviewed: true`, `createdDate: "2026-04-10T17:50:45.9320689"`
+
+#### POST `/baseR4/portal/create-review`
+- Body: `{ patientId: "..." }`
+- Called when user clicks "Mark as Reviewed"
+- Inserts new review record in DB
+- After POST, GET is called again to refresh UI
+
+#### Review Logic:
+- `isReviewed: false` OR `createdDate: null` → Show **"Mark as Reviewed"** button (clickable)
+- `isReviewed: true` + `createdDate` within 1 week → Show **"✓ Reviewed"** (non-clickable) + last review date
+- `isReviewed: true` + `createdDate` older than 1 week → Show **"Mark as Reviewed"** again (needs re-review) + last review date still shown
+- Last review date displayed below button: "Last reviewed: Apr 10, 2026"
+- State: `isReviewed` (boolean), `lastReviewDate` (Date object)
+- Functions: `fetchReviewStatus()`, `handleMarkReviewed()`
