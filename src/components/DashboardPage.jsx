@@ -690,6 +690,7 @@ function DashboardPage() {
   const [showModal, setShowModal] = useState(false)
   const [coordinatorNotes, setCoordinatorNotes] = useState('')
   const [approveAlert, setApproveAlert] = useState(false)
+  const [taskAlert, setTaskAlert] = useState(null)
   const [noteFilter, setNoteFilter] = useState('all')
   const [activeTab, setActiveTab] = useState('actions')
   const [taskQueue, setTaskQueue] = useState([])
@@ -898,6 +899,8 @@ function DashboardPage() {
         headers: { 'Authorization': `Bearer ${token}` },
       })
     } catch (e) { console.warn('[Dashboard] Update task failed:', e) }
+    setTaskAlert(newStatus === 'inprocess' ? '▶ Task Started' : '✓ Task Completed')
+    setTimeout(() => setTaskAlert(null), 2000)
     fetchTaskQueue()
   }
 
@@ -1437,6 +1440,7 @@ function DashboardPage() {
               <div className="tq-section-header">
                 <h3>⏳ {taskFilter === 'pending' ? 'Pending' : taskFilter === 'inprocess' ? 'In Process' : 'Completed'} Tasks</h3>
                 <p>{taskFilter === 'pending' ? 'Tasks awaiting action' : taskFilter === 'inprocess' ? 'Tasks currently being worked on' : 'Tasks that have been finished'}</p>
+                {taskAlert && <span className="dash-approve-alert">{taskAlert}</span>}
               </div>
 
               {filteredTasks.length === 0 && (
