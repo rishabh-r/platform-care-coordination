@@ -828,24 +828,29 @@ function DashboardPage() {
     setSelectedActions(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
   }
 
-  const fetchTaskQueue = async (status) => {
+  const mapTask = (t) => ({
+    id: t.actionId,
+    title: t.action || 'Untitled',
+    priority: t.priority ? (t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + ' Priority') : 'Medium Priority',
+    priorityClass: t.priority || 'medium',
+    status: t.status === 'in-process' ? 'inprocess' : (t.status || 'pending'),
+    dueDate: t.dueDate || '—',
+    description: t.description || '',
+    notes: t.aiRationale || '',
+  })
+
+  const fetchTaskQueue = async () => {
     try {
       const token = localStorage.getItem('cb_token')
-      const url = `${FHIR_BASE}/baseR4/portal/task-queue?patientId=${patientId}${status ? `&status=${status}` : ''}`
-      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
-      const data = await res.json()
-      if (Array.isArray(data)) {
-        setTaskQueue(data.map(t => ({
-          id: t.actionId,
-          title: t.action || 'Untitled',
-          priority: t.priority ? (t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + ' Priority') : 'Medium Priority',
-          priorityClass: t.priority || 'medium',
-          status: t.status === 'in-process' ? 'inprocess' : (t.status || 'pending'),
-          dueDate: t.dueDate || '—',
-          description: t.description || '',
-          notes: t.aiRationale || '',
-        })))
-      }
+      const base = `${FHIR_BASE}/baseR4/portal/task-queue?patientId=${patientId}`
+      const headers = { 'Authorization': `Bearer ${token}` }
+      const [r1, r2, r3] = await Promise.all([
+        fetch(`${base}&status=pending`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${base}&status=in-process`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${base}&status=completed`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
+      ])
+      const all = [...(Array.isArray(r1) ? r1 : []), ...(Array.isArray(r2) ? r2 : []), ...(Array.isArray(r3) ? r3 : [])]
+      setTaskQueue(all.map(mapTask))
     } catch (e) { console.warn('[Dashboard] Task queue fetch failed:', e) }
   }
 
