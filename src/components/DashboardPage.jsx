@@ -903,14 +903,8 @@ function DashboardPage() {
 
   useEffect(() => { if (patientId) fetchTaskQueue() }, [patientId])
 
-  const FALLBACK_ACTIONS = [
-    { title: 'Care Plan Review', priority: 'Medium Priority', priorityClass: 'medium', timeframe: 'Within 1 week',
-      description: 'Review and update the patient care plan based on latest clinical data and outcomes',
-      rationale: 'Regular care plan reviews ensure interventions remain aligned with patient needs' },
-    { title: 'Follow-up Lab Orders', priority: 'Medium Priority', priorityClass: 'medium', timeframe: 'Within 48 hours',
-      description: 'Order follow-up labs to monitor treatment response and adjust interventions as needed',
-      rationale: 'Periodic lab monitoring is essential to track progress and detect emerging issues' },
-  ]
+  const [generatedFallbackActions, setGeneratedFallbackActions] = useState(null)
+  const fallbackGeneratedRef = useRef(false)
 
   const taskQueueTitles = new Set(taskQueue.map(t => t.title.toLowerCase()))
   const statusPriority = { completed: 3, inprocess: 2, pending: 1 }
@@ -931,9 +925,29 @@ function DashboardPage() {
 
   const rawActions = aiActionsData || d.aiActions
   const visibleActions = rawActions.filter((a, i) => !approvedActions.includes(i) && !taskQueueTitles.has(a.title.toLowerCase()))
+
+  useEffect(() => {
+    if (visibleActions.length === 0 && taskQueue.length > 0 && !fallbackGeneratedRef.current && !generatedFallbackActions) {
+      fallbackGeneratedRef.current = true
+      const existingTitles = [...taskQueueTitles].join(', ')
+      const prompt = `You are a care coordination AI. A patient already has these approved tasks: [${existingTitles}]. Generate exactly 2 NEW and DIFFERENT follow-up actions for this patient's ongoing care. Return ONLY a JSON array with 2 objects, each having: title, priority ("High Priority"/"Medium Priority"/"Low Priority"), priorityClass ("high"/"medium"/"low"), timeframe ("Within 24 hours"/"Within 48 hours"/"Within 1 week"/"During next contact"), description (1 sentence), rationale (1 sentence). No markdown, no explanation, just the JSON array.`
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'gpt-4.1-mini', messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 500 })
+      }).then(r => r.json()).then(data => {
+        try {
+          const content = data.choices?.[0]?.message?.content || ''
+          const parsed = JSON.parse(content.replace(/```json?\n?/g, '').replace(/```/g, '').trim())
+          if (Array.isArray(parsed)) setGeneratedFallbackActions(parsed.slice(0, 2))
+        } catch (_) { console.warn('[Dashboard] Fallback action generation parse failed') }
+      }).catch(() => {})
+    }
+  }, [visibleActions.length, taskQueue.length])
+
   const displayActions = visibleActions.length > 0
     ? visibleActions
-    : FALLBACK_ACTIONS.filter(f => !taskQueueTitles.has(f.title.toLowerCase())).slice(0, 2)
+    : (generatedFallbackActions || []).filter(f => !taskQueueTitles.has(f.title.toLowerCase()))
 
   const priorityClass = (p) => {
     if (!p) return 'medium'
