@@ -828,40 +828,75 @@ function DashboardPage() {
     setSelectedActions(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
   }
 
-  const handleApprove = () => {
+  const fetchTaskQueue = async (status) => {
+    try {
+      const token = localStorage.getItem('cb_token')
+      const url = `${FHIR_BASE}/baseR4/portal/task-queue?patientId=${patientId}${status ? `&status=${status}` : ''}`
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setTaskQueue(data.map(t => ({
+          id: t.actionId,
+          title: t.action || 'Untitled',
+          priority: t.priority ? (t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + ' Priority') : 'Medium Priority',
+          priorityClass: t.priority || 'medium',
+          status: t.status === 'in-process' ? 'inprocess' : (t.status || 'pending'),
+          dueDate: t.dueDate || '—',
+          description: t.description || '',
+          notes: t.aiRationale || '',
+        })))
+      }
+    } catch (e) { console.warn('[Dashboard] Task queue fetch failed:', e) }
+  }
+
+  const handleApprove = async () => {
     setShowModal(false)
-    setApprovedActions(prev => [...new Set([...prev, ...selectedActions])])
     const actions = aiActionsData || d.aiActions
-    const newTasks = selectedActions
-      .filter(i => !taskQueue.some(t => t.title === actions[i]?.title))
-      .map(i => {
-        const a = actions[i]
-        const due = new Date()
-        if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
-        else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
-        else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
-        else due.setDate(due.getDate() + 3)
-        return {
-          id: Date.now() + i,
-          title: a.title,
-          priority: a.priority,
-          priorityClass: a.priorityClass || priorityClass(a.priority),
-          status: 'pending',
-          dueDate: due.toISOString().slice(0, 10),
-          description: a.description,
-          notes: coordinatorNotes || a.rationale,
-        }
+    const payload = selectedActions.map(i => {
+      const a = actions[i]
+      const due = new Date()
+      if (a.timeframe?.includes('24 hours')) due.setDate(due.getDate() + 1)
+      else if (a.timeframe?.includes('48 hours')) due.setDate(due.getDate() + 2)
+      else if (a.timeframe?.includes('1 week')) due.setDate(due.getDate() + 7)
+      else due.setDate(due.getDate() + 3)
+      return {
+        patientId,
+        priority: (a.priorityClass || priorityClass(a.priority)).replace('pill-', ''),
+        action: a.title,
+        description: a.description,
+        aiRationale: a.rationale,
+        dueDate: due.toISOString().slice(0, 10),
+      }
+    })
+    try {
+      const token = localStorage.getItem('cb_token')
+      await fetch(`${FHIR_BASE}/baseR4/portal/create-recommendations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(payload),
       })
-    setTaskQueue(prev => [...prev, ...newTasks])
+    } catch (e) { console.warn('[Dashboard] Create recommendations failed:', e) }
+    setApprovedActions(prev => [...new Set([...prev, ...selectedActions])])
     setSelectedActions([])
     setCoordinatorNotes('')
     setApproveAlert(true)
     setTimeout(() => setApproveAlert(false), 2000)
+    fetchTaskQueue()
   }
 
-  const updateTaskStatus = (taskId, newStatus) => {
-    setTaskQueue(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
+  const updateTaskStatus = async (taskId, newStatus) => {
+    const apiStatus = newStatus === 'inprocess' ? 'in-process' : newStatus
+    try {
+      const token = localStorage.getItem('cb_token')
+      await fetch(`${FHIR_BASE}/baseR4/portal/update-task?actionId=${taskId}&status=${apiStatus}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+    } catch (e) { console.warn('[Dashboard] Update task failed:', e) }
+    fetchTaskQueue()
   }
+
+  useEffect(() => { if (patientId) fetchTaskQueue() }, [patientId])
 
   const taskCounts = {
     pending: taskQueue.filter(t => t.status === 'pending').length,

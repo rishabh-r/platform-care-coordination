@@ -1388,3 +1388,32 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - Only shows tabs for observations that match the deteriorating trend labels
 - Matching is flexible: compares group label, key, and LOINC code names (case-insensitive, strips "TREND" suffix)
 - If no deteriorating trends data is available, falls back to showing all observations with data
+
+### Task Queue — Database API Integration (IMPLEMENTED)
+**3 new API endpoints integrated for persistent task management:**
+
+#### 1. POST `/baseR4/portal/create-recommendations`
+- Called when user approves selected AI actions
+- Body: Array of `{ patientId, priority, action, description, aiRationale, dueDate }`
+- Status always goes as `"pending"`
+- Returns created records with `actionId` UUIDs
+- Bearer token auth (same login token)
+
+#### 2. GET `/baseR4/portal/task-queue?patientId=...&status=...`
+- Fetches tasks from database on dashboard load
+- Optional `status` filter: `pending`, `in-process`, `completed`
+- Returns array of task objects with all fields
+- Task Queue now loads from DB instead of local React state
+- Called on initial load via `useEffect` and refreshed after every approve/status change
+
+#### 3. PATCH `/baseR4/portal/update-task?actionId=...&status=...`
+- Updates task status: `pending` → `in-process` → `completed`
+- "Start Task" sends `status=in-process`, "Mark Complete" sends `status=completed`
+- After PATCH, `fetchTaskQueue()` is called to refresh the list
+
+**Key changes in `DashboardPage.jsx`:**
+- `handleApprove`: Now async, POSTs to create-recommendations API, then refreshes task queue
+- `updateTaskStatus`: Now async, PATCHes update-task API, then refreshes task queue
+- `fetchTaskQueue`: New function, GETs tasks from API and maps to local format (maps `in-process` ↔ `inprocess` for internal state)
+- `useEffect` on `patientId` triggers initial task queue fetch
+- Tasks persist across page refreshes since they're in the database
