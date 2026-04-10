@@ -1417,3 +1417,31 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - `fetchTaskQueue`: New function, GETs tasks from API and maps to local format (maps `in-process` ↔ `inprocess` for internal state)
 - `useEffect` on `patientId` triggers initial task queue fetch
 - Tasks persist across page refreshes since they're in the database
+
+### Task Queue — 500 Error Fix
+- Backend requires `status` param on GET endpoint — calling without it returned 500
+- Fixed `fetchTaskQueue` to make 3 parallel GET calls (pending, in-process, completed) and merge results
+- Each call has individual error handling so one failure doesn't break others
+- Commit: `0efc576`
+
+### Task Status Alerts
+- "Start Task" → shows "▶ Task Started" alert for 2 seconds
+- "Mark Complete" → shows "✓ Task Completed" alert for 2 seconds
+- Uses `taskAlert` state, same green alert style as approve toast
+- Commit: `90c4eb3`
+
+### AI Actions — Cross-Check with Task Queue (IMPLEMENTED)
+1. **Cross-check on refresh**: After task queue loads from DB, AI action titles are compared against task queue titles (case-insensitive). Matched actions are hidden from AI Recommended Actions
+2. **Task Queue dedup by title**: Same title with multiple statuses → only highest status kept (completed > in-process > pending)
+3. **AI-generated fallback actions**: When all AI actions are matched, a lightweight LLM call (gpt-4.1-mini) generates 2 new unique actions based on existing task titles. No hardcoded fallbacks
+4. `displayActions` computed from `visibleActions` (filtered) or AI-generated fallbacks
+5. `handleApprove` and modal now reference `displayActions` instead of raw action array
+6. Fallback generation triggers once per page load via `fallbackGeneratedRef`
+- Commits: `846bb8f`, `97393b5`
+
+### Git Commit History (continued)
+37. `ab9fe89` — Integrate task queue APIs: POST create, GET fetch, PATCH update status
+38. `0efc576` — Fix task queue fetch - call GET with explicit status for each
+39. `90c4eb3` — Add Task Started and Task Completed alert toasts in Task Queue
+40. `846bb8f` — Cross-check AI actions with task queue, dedup tasks by title, fallback actions
+41. `97393b5` — Replace hardcoded fallback actions with AI-generated ones via LLM call
