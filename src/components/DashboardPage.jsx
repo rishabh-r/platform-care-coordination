@@ -693,6 +693,7 @@ function DashboardPage() {
   const [approveAlert, setApproveAlert] = useState(false)
   const [taskAlert, setTaskAlert] = useState(null)
   const [noteFilter, setNoteFilter] = useState('clinical')
+  const [notePage, setNotePage] = useState(1)
   const [activeTab, setActiveTab] = useState('actions')
   const [taskQueue, setTaskQueue] = useState([])
   const [taskFilter, setTaskFilter] = useState('pending')
@@ -1033,6 +1034,9 @@ function DashboardPage() {
     : noteFilter === 'admin' ? adminNotes
     : careNotes
   const totalNotesCount = clinicNotes.length + adminNotes.length + careNotes.length
+  const NOTES_PER_PAGE = 5
+  const totalNotePages = Math.ceil(filteredNotes.length / NOTES_PER_PAGE)
+  const paginatedNotes = filteredNotes.slice((notePage - 1) * NOTES_PER_PAGE, notePage * NOTES_PER_PAGE)
 
   const handleAddNote = () => {
     if (!newNote.text.trim()) return
@@ -1762,12 +1766,12 @@ function DashboardPage() {
                 { key: 'coordination', label: `Care (${careNotes.length})` },
                 { key: 'admin', label: `Admin (${adminNotes.length})` },
               ].map(f => (
-                <button key={f.key} className={`dash-note-filter ${noteFilter === f.key ? 'active' : ''}`} onClick={() => setNoteFilter(f.key)}>
+                <button key={f.key} className={`dash-note-filter ${noteFilter === f.key ? 'active' : ''}`} onClick={() => { setNoteFilter(f.key); setNotePage(1) }}>
                   {f.label}
                 </button>
               ))}
             </div>
-            {filteredNotes.map((n, i) => (
+            {paginatedNotes.map((n, i) => (
               <div key={i} className="dash-note-row">
                 <div className="dash-note-header">
                   <div className="dash-note-avatar">{n.initials}</div>
@@ -1784,6 +1788,15 @@ function DashboardPage() {
                 <p className="dash-note-date">⏰ {n.date}</p>
               </div>
             ))}
+            {totalNotePages > 1 && (
+              <div className="cn-pagination">
+                {notePage > 1 && <button className="cn-page-btn" onClick={() => setNotePage(p => p - 1)}>‹ Prev</button>}
+                {Array.from({ length: totalNotePages }, (_, i) => i + 1).map(pg => (
+                  <button key={pg} className={`cn-page-btn ${notePage === pg ? 'cn-page-active' : ''}`} onClick={() => setNotePage(pg)}>{pg}</button>
+                ))}
+                {notePage < totalNotePages && <button className="cn-page-btn" onClick={() => setNotePage(p => p + 1)}>Next ›</button>}
+              </div>
+            )}
           </div>
 
           {/* Add Note Modal */}
