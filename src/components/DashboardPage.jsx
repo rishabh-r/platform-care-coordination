@@ -692,7 +692,7 @@ function DashboardPage() {
   const [coordinatorNotes, setCoordinatorNotes] = useState('')
   const [approveAlert, setApproveAlert] = useState(false)
   const [taskAlert, setTaskAlert] = useState(null)
-  const [noteFilter, setNoteFilter] = useState('all')
+  const [noteFilter, setNoteFilter] = useState('clinical')
   const [activeTab, setActiveTab] = useState('actions')
   const [taskQueue, setTaskQueue] = useState([])
   const [taskFilter, setTaskFilter] = useState('pending')
@@ -1728,10 +1728,8 @@ function DashboardPage() {
             </div>
             <div className="dash-note-filters">
               {[
-                { key: 'all', label: `All (${allNotes.length})` },
                 { key: 'clinical', label: `Clinic (${allNotes.filter(n => n.type === 'Clinical').length})` },
                 { key: 'coordination', label: `Care (${allNotes.filter(n => n.type === 'Coordination').length})` },
-                { key: 'admin', label: `Admin (${adminNotes.length})` },
               ].map(f => (
                 <button key={f.key} className={`dash-note-filter ${noteFilter === f.key ? 'active' : ''}`} onClick={() => setNoteFilter(f.key)}>
                   {f.label}
