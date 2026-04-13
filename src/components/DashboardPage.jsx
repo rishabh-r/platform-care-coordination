@@ -1771,23 +1771,25 @@ function DashboardPage() {
                 </button>
               ))}
             </div>
-            {paginatedNotes.map((n, i) => (
-              <div key={i} className="dash-note-row">
-                <div className="dash-note-header">
-                  <div className="dash-note-avatar">{n.initials}</div>
-                  <div className="dash-note-author">
-                    <strong>{n.author}</strong>
-                    <p>{n.role}</p>
+            <div className="cn-notes-list">
+              {paginatedNotes.map((n, i) => (
+                <div key={i} className="dash-note-row">
+                  <div className="dash-note-header">
+                    <div className="dash-note-avatar">{n.initials}</div>
+                    <div className="dash-note-author">
+                      <strong>{n.author}</strong>
+                      <p>{n.role}</p>
+                    </div>
+                    <div className="dash-note-tags">
+                      <span className={`dash-pill pill-note-${(n.type || 'clinical').toLowerCase()}`}>{n.type || 'Clinical'}</span>
+                      <span className="dash-note-view" onClick={() => setViewingNote(n)}>View</span>
+                    </div>
                   </div>
-                  <div className="dash-note-tags">
-                    <span className={`dash-pill pill-note-${(n.type || 'clinical').toLowerCase()}`}>{n.type || 'Clinical'}</span>
-                    <span className="dash-note-view" onClick={() => setViewingNote(n)}>View</span>
-                  </div>
+                  <p className="dash-note-text">{n.text}</p>
+                  <p className="dash-note-date">⏰ {n.date}</p>
                 </div>
-                <p className="dash-note-text">{n.text}</p>
-                <p className="dash-note-date">⏰ {n.date}</p>
-              </div>
-            ))}
+              ))}
+            </div>
             {totalNotePages > 1 && (
               <div className="cn-pagination">
                 {notePage > 1 && <button className="cn-page-btn" onClick={() => setNotePage(p => p - 1)}>‹ Prev</button>}
