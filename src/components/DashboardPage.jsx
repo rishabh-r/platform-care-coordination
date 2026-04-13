@@ -697,6 +697,8 @@ function DashboardPage() {
   const [taskQueue, setTaskQueue] = useState([])
   const [taskFilter, setTaskFilter] = useState('pending')
   const [clinicalNotesData, setClinicalNotesData] = useState(null)
+  const [clinicDocNotes, setClinicDocNotes] = useState(null)
+  const [adminDocNotes, setAdminDocNotes] = useState(null)
   const [allObsData, setAllObsData] = useState(null)
   const [trendTab, setTrendTab] = useState(null)
   const [trendPeriod, setTrendPeriod] = useState('all')
@@ -784,6 +786,41 @@ function DashboardPage() {
           setRiskData(risks)
         }
       })
+
+      const parseDocNotes = (bundle) => {
+        if (!bundle?.entry?.length) return []
+        return bundle.entry.map(e => {
+          const r = e.resource
+          if (!r) return null
+          const author = r.author?.[0]
+          const name = author?.display || 'Unknown'
+          const specialty = author?.extension?.find(x => x.url === 'specialty')?.valueString || ''
+          const nameParts = name.replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.)\s*/i, '').trim().split(/\s+/)
+          const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
+          const dt = new Date(r.date)
+          const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+          let fullText = r.description || ''
+          try {
+            const b64 = r.content?.[0]?.attachment?.data
+            if (b64) fullText = atob(b64)
+          } catch (_) {}
+          return { author: name, initials, role: specialty || 'Physician', text: r.description || '', fullText, date: dateStr, rawDate: dt }
+        }).filter(Boolean).sort((a, b) => b.rawDate - a.rawDate)
+      }
+
+      callFhirApi(`${FHIR_BASE}/baseR4/DocumentReference?patient=${patientId}&type.coding=11506-3&page=0&size=100`)
+        .then(bundle => {
+          const notes = parseDocNotes(bundle)
+          console.log('[Dashboard] Parsed', notes.length, 'clinic document notes')
+          setClinicDocNotes(notes)
+        }).catch(e => console.warn('[Dashboard] Clinic doc notes fetch failed:', e))
+
+      callFhirApi(`${FHIR_BASE}/baseR4/DocumentReference?patient=${patientId}&type.coding=34108-1&page=0&size=100`)
+        .then(bundle => {
+          const notes = parseDocNotes(bundle)
+          console.log('[Dashboard] Parsed', notes.length, 'admin document notes')
+          setAdminDocNotes(notes)
+        }).catch(e => console.warn('[Dashboard] Admin doc notes fetch failed:', e))
 
       try {
         const careGapText = sessionStorage.getItem('dashboard_caregap_' + patientId)
@@ -998,10 +1035,13 @@ function DashboardPage() {
     return 'medium'
   }
 
-  const allNotes = [...(clinicalNotesData || d.clinicalNotes), ...addedNotes]
-  const adminNotes = addedNotes.filter(n => n.type === 'Admin')
-  const filteredNotes = noteFilter === 'admin' ? adminNotes
-    : allNotes.filter(n => n.type.toLowerCase() === noteFilter)
+  const careNotes = addedNotes.filter(n => n.type === 'Coordination')
+  const filteredNotes = noteFilter === 'clinical'
+    ? (clinicDocNotes || clinicalNotesData?.filter(n => n.type === 'Clinical') || d.clinicalNotes.filter(n => n.type === 'Clinical'))
+    : noteFilter === 'admin'
+    ? (adminDocNotes || [])
+    : careNotes
+  const allNotesCount = (clinicDocNotes?.length || clinicalNotesData?.filter(n => n.type === 'Clinical')?.length || 0) + (adminDocNotes?.length || 0) + careNotes.length
 
   const handleAddNote = () => {
     if (!newNote.text.trim()) return
@@ -1721,15 +1761,15 @@ function DashboardPage() {
             <div className="dash-card-head">
               <div>
                 <h3>Clinical Notes</h3>
-                <p>{allNotes.length} TOTAL ENTRIES</p>
+                <p>{allNotesCount} TOTAL ENTRIES</p>
               </div>
               {noteFilter === 'coordination' && <button className="dash-add-note-btn" onClick={() => setShowAddNoteModal(true)}>+ Add Note</button>}
             </div>
             <div className="dash-note-filters">
               {[
-                { key: 'clinical', label: `Clinic (${allNotes.filter(n => n.type === 'Clinical').length})` },
-                { key: 'coordination', label: `Care (${allNotes.filter(n => n.type === 'Coordination').length})` },
-                { key: 'admin', label: `Admin (${adminNotes.length})` },
+                { key: 'clinical', label: `Clinic (${clinicDocNotes?.length || clinicalNotesData?.filter(n => n.type === 'Clinical')?.length || 0})` },
+                { key: 'coordination', label: `Care (${careNotes.length})` },
+                { key: 'admin', label: `Admin (${adminDocNotes?.length || 0})` },
               ].map(f => (
                 <button key={f.key} className={`dash-note-filter ${noteFilter === f.key ? 'active' : ''}`} onClick={() => setNoteFilter(f.key)}>
                   {f.label}
@@ -1830,7 +1870,7 @@ function DashboardPage() {
                     </div>
                     <span className={`dash-pill pill-note-${viewingNote.type.toLowerCase()}`}>{viewingNote.type}</span>
                   </div>
-                  <p className="cn-view-text">{viewingNote.text}</p>
+                  <p className="cn-view-text">{viewingNote.fullText || viewingNote.text}</p>
                   <p className="cn-view-date">⏰ {viewingNote.date}</p>
                 </div>
                 <div className="dash-modal-footer">
