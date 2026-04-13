@@ -1001,7 +1001,7 @@ function DashboardPage() {
   const allNotes = [...(clinicalNotesData || d.clinicalNotes), ...addedNotes]
   const adminNotes = addedNotes.filter(n => n.type === 'Admin')
   const filteredNotes = noteFilter === 'admin' ? adminNotes
-    : allNotes.filter(n => n.type.toLowerCase() === noteFilter)
+    : allNotes.filter(n => (n.type || '').toLowerCase() === noteFilter)
 
   const handleAddNote = () => {
     if (!newNote.text.trim()) return
