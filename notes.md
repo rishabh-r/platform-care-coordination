@@ -1543,8 +1543,60 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 | Tab | Data Source | Notes |
 |-----|-----------|-------|
 | Clinic | `GET /baseR4/DocumentReference?type.coding=11506-3` | 20 notes for Patient 1 (4 pages) |
-| Care | Local `addedNotes` state | Coordinator notes via Add Note form |
+| Care | `GET/POST /baseR4/CareCoordinationNote` | Dynamic from API (logged-in coordinator's notes) |
 | Admin | `GET /baseR4/DocumentReference?type.coding=34108-1` | Dynamic from API |
+
+### Care Tab — CareCoordinationNote API Integration (April 13, 2026)
+
+#### API Details
+
+**POST** `https://fhirassist.rsystems.com:8081/baseR4/CareCoordinationNote`
+- Creates a new care coordination note
+- Body: `{ patientId, coordinatorEmail, coordinatorName, coordinatorRole, careNotes }`
+- `coordinatorName` = logged-in user's `userName` (from `cb_user`)
+- `coordinatorEmail` = logged-in user's email (from `cb_email`)
+- `coordinatorRole` = "Care Coordinator" (hardcoded)
+- `careNotes` = text from the textarea
+- Returns 201 Created with the DocumentReference resource
+- Bearer token auth
+
+**GET** `https://fhirassist.rsystems.com:8081/baseR4/CareCoordinationNote/search?patientId=<id>&coordinatorEmail=<email>`
+- Fetches care notes for this patient created by the logged-in coordinator
+- Returns a FHIR Bundle with DocumentReference entries
+- Each entry: `author[0].display` (name), `author[0].extension` (url contains "coordinator-role" → valueString), `description` (note text), `date`
+- No base64 content — full note text is in `description` field directly
+
+#### Implementation
+
+**`auth.js`** — Login now stores `cb_email` in `localStorage`:
+- `localStorage.setItem('cb_email', email)` added after token and name storage
+- User must log out and log back in once for this to take effect
+
+**`DashboardPage.jsx`**:
+- **New state**: `careDocNotes` — care notes fetched from CareCoordinationNote API
+- **`userEmail`**: Read from `localStorage.getItem('cb_email')`
+- **`fetchCareNotes(pid)`**: Async function that GETs care notes from API, parses author name, role (from extension url containing "coordinator-role"), note text (from `description`), date. Sorts newest-first
+- **Called on dashboard load**: If `userEmail` exists, `fetchCareNotes(patientId)` fires alongside other fetches
+- **`careNotes` computed**: Uses `careDocNotes` (API data) if available, falls back to local `addedNotes` state
+- **`handleAddNote`**: Now async — POSTs to `/baseR4/CareCoordinationNote`, then calls `fetchCareNotes()` to refresh. Falls back to local state if POST fails
+- **Page reset**: `setNotePage(1)` called after adding a note
+
+#### Response Structure (per CareCoordinationNote entry)
+- `author[0].display` → Coordinator name (e.g., "hbisth", "Harshit")
+- `author[0].extension` (url contains "coordinator-role") → `valueString` (e.g., "Care Coordinator")
+- `author[0].identifier.system` → "mailto", `.value` → coordinator email
+- `description` → Full note text (not base64, plain text)
+- `date` → Creation timestamp
+
+### All Clinical Notes Tabs — Final State (April 13, 2026)
+
+| Tab | Data Source | Method | Notes |
+|-----|-----------|--------|-------|
+| Clinic | `/baseR4/DocumentReference?type.coding=11506-3` | GET | All clinical notes for patient |
+| Care | `/baseR4/CareCoordinationNote` | GET + POST | Logged-in coordinator's notes only |
+| Admin | `/baseR4/DocumentReference?type.coding=34108-1` | GET | All admin notes for patient |
+
+**All three Clinical Notes tabs are now fully dynamic with API integration. No static/mock data remains.**
 
 ### Git Commit History (continued)
 44. `0a6056f` — Update notes.md with review API integration details
@@ -1561,3 +1613,5 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 55. `349854e` — Integrate DocumentReference API for dynamic Clinic and Admin notes tabs (clean)
 56. `7662668` — Add client-side pagination to Clinical Notes - 5 per page with dynamic page numbers
 57. `73233c8` — Fix notes pagination position - fixed height container so page buttons stay in place
+58. `622760b` — Update notes.md with DocumentReference API integration, pagination, and fixed-height container
+59. `4e4521d` — Integrate CareCoordinationNote API for Care tab - POST to create, GET to fetch notes
