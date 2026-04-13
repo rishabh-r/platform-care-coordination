@@ -9,7 +9,7 @@ import '../dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-const ALERT_ICONS = { 'Clinical Deterioration': '⚠', 'Medication Non-Adherence': '💊', 'Missed Follow-Up Appointments': '📅' }
+const ALERT_ICONS = { 'Clinical Deterioration': '⚠', 'Medication Non-Adherence': 'pill-img', 'Missed Follow-Up Appointments': 'calendar-img' }
 
 function summarizeFhirData(observations, encounters, medications, conditions) {
   const obs = (observations?.entry || []).slice(0, 60).map(e => {
@@ -451,8 +451,12 @@ function parsePatientFromResource(resource, patientId) {
       name = [given, family].filter(Boolean).join(' ') || name
     }
   }
+  const nameParts = name.split(' ').filter(Boolean)
+  if (nameParts.length > 2) {
+    name = nameParts[0] + ' ' + nameParts[nameParts.length - 1]
+  }
   const initials = name !== 'Unknown'
-    ? name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3)
+    ? name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : 'U'
 
   const gender = resource.gender
@@ -1181,8 +1185,8 @@ function DashboardPage() {
               <span>Programs: Diabetes, Hypertension</span>
             </div>
             <div className="dash-banner-contact">
-              <span>📅 DOB: {pt.dob}</span>
-              <span>📞 {pt.phone}</span>
+              <span><img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> DOB: {pt.dob}</span>
+              <span><img src="/images/icon-phone.png" alt="" className="dash-banner-icon" /> {pt.phone}</span>
               <span>✉ {pt.email}</span>
             </div>
           </div>
@@ -1221,7 +1225,7 @@ function DashboardPage() {
                 <div className="dash-alert-list">
                   {dynAlerts.map((a, i) => (
                     <div key={i} className="dash-alert-item">
-                      <span className="dash-alert-icon">{ALERT_ICONS[a.title] || '⚠'}</span>
+                      <span className="dash-alert-icon">{ALERT_ICONS[a.title] === 'pill-img' ? <img src="/images/icon-pill.png" alt="" className="dash-alert-img" /> : ALERT_ICONS[a.title] === 'calendar-img' ? <img src="/images/icon-calendar.png" alt="" className="dash-alert-img" /> : (ALERT_ICONS[a.title] || '⚠')}</span>
                       <div className="dash-alert-body">
                         <strong>{a.title}</strong>
                         <p>{a.detail}</p>
