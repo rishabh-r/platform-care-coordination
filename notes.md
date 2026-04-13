@@ -949,7 +949,7 @@ The Clinical Notes section in the right sidebar is now fully dynamic. It extract
 | Appointments & Encounters | Dynamic | `/baseR4/Encounter` + AI missed appointments |
 | Care Team | Dynamic | `/baseR4/EpisodeOfCare` — care managers |
 | Risk Insights | Dynamic | `POST /api/predict` — risk prediction API |
-| Clinical Notes | **Dynamic** | Clinic: `/baseR4/DocumentReference?type.coding=11506-3`, Admin: `type.coding=34108-1`, Care: local "Add Note" |
+| Clinical Notes | **Dynamic** | `/baseR4/Encounter` (clinicalNotes extension) + `/baseR4/Practitioner` (name resolution) + local "Add Note" |
 
 **All dashboard sections are now dynamic — no more static mock-only sections.**
 
@@ -1196,7 +1196,7 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 | Vitals | Dynamic | Observation API (latest, 4 shown + Show All) |
 | AI Actions | Dynamic | Care gap analysis |
 | Task Queue | Dynamic | Approved AI Actions (local state) |
-| Clinical Notes | Dynamic | Clinic: DocumentReference (11506-3), Admin: DocumentReference (34108-1), Care: local Add Note |
+| Clinical Notes | Dynamic | Encounter API extensions + local Add Note |
 | Patient Outreach | Static | Template with dynamic patient name |
 | Clinical Trends | Dynamic | Observation API (time-series charts, 12m toggle) |
 | Appointments & Encounters | Dynamic | Encounter API |
@@ -1481,34 +1481,6 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - `handleAddNote` no longer checks `newNote.author`, only `newNote.text`
 - Attempted and reverted full removal of All+Admin tabs before settling on this approach
 
-### Clinical Notes — DocumentReference API Integration (Clinic & Admin Tabs)
-
-#### API Details
-- **Clinic tab**: `GET /baseR4/DocumentReference?patient=<id>&type.coding=11506-3&page=0&size=100`
-- **Admin tab**: `GET /baseR4/DocumentReference?patient=<id>&type.coding=34108-1&page=0&size=100`
-- **Care tab**: Remains local (coordinator-added notes via Add Note form)
-- Bearer token auth (same login token)
-
-#### Response Structure (per DocumentReference entry)
-- `author[0].display` → Author name (e.g., "Sarah Chen")
-- `author[0].extension` (url="specialty") → `valueString` (e.g., "Endocrinology", "Wound Care")
-- `description` → Short note summary (shown on card)
-- `content[0].attachment.data` → Base64-encoded full note text (decoded for View modal via `atob()`)
-- `date` → Note date
-- `type.coding[0].code` → `11506-3` for Clinical, `34108-1` for Admin
-
-#### Implementation in DashboardPage.jsx
-- **New state**: `clinicDocNotes`, `adminDocNotes` — fetched from DocumentReference API on load
-- **`parseDocNotes(bundle)`**: Inline parser in `loadDashboard()` that extracts author name, specialty/role, initials, description (card text), full text (base64 decoded), formatted date. Sorts newest-first
-- **Two parallel fetch calls** fire on dashboard load alongside other FHIR calls
-- **Tab data sources**:
-  - Clinic tab: `clinicDocNotes` (from API) → falls back to `clinicalNotesData` (encounter-based) if API returns nothing
-  - Admin tab: `adminDocNotes` (from API) → empty array if API returns nothing
-  - Care tab: `careNotes` (locally added via Add Note form)
-- **Tab counts**: Each tab shows count from its respective data source
-- **Total entries**: Sum of all three tab counts
-- **View modal**: Shows `fullText` (base64-decoded full note) if available, otherwise falls back to `text` (description)
-
 ### Git Commit History (continued)
 44. `0a6056f` — Update notes.md with review API integration details
 45. `bbeb101` — Integrate review APIs: GET review status, POST mark as reviewed, 1-week expiry logic
@@ -1516,5 +1488,3 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 47. `cad9731` — Revert clinical notes tabs - restore All, Clinic, Care, Admin
 48. `eadfe8d` — Remove All tab from clinical notes, show Add Note only on Care tab
 49. `0955456` — Simplify Add Note modal - only textarea, author from login, role hardcoded Care Coordinator
-50. `e1f7a9e` — Update notes.md with clinical notes tab and add note changes
-51. `1cf25b4` — Integrate DocumentReference API for dynamic Clinic and Admin notes tabs
