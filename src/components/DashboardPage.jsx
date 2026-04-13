@@ -700,6 +700,7 @@ function DashboardPage() {
   const [clinicalNotesData, setClinicalNotesData] = useState(null)
   const [clinicDocNotes, setClinicDocNotes] = useState(null)
   const [adminDocNotes, setAdminDocNotes] = useState(null)
+  const [careDocNotes, setCareDocNotes] = useState(null)
   const [allObsData, setAllObsData] = useState(null)
   const [trendTab, setTrendTab] = useState(null)
   const [trendPeriod, setTrendPeriod] = useState('all')
@@ -711,6 +712,7 @@ function DashboardPage() {
 
   const rawUser = localStorage.getItem('cb_user') || 'User'
   const userName = formatDisplayName(rawUser)
+  const userEmail = localStorage.getItem('cb_email') || ''
 
   useEffect(() => {
     if (!localStorage.getItem('cb_token')) { navigate('/'); return }
@@ -814,6 +816,10 @@ function DashboardPage() {
         .then(bundle => { const n = parseDocRefNotes(bundle, 'Admin'); console.log('[Dashboard] Parsed', n.length, 'admin document notes'); setAdminDocNotes(n) })
         .catch(e => console.warn('[Dashboard] Admin doc notes fetch failed:', e))
 
+      if (userEmail) {
+        fetchCareNotes(patientId)
+      }
+
       try {
         const careGapText = sessionStorage.getItem('dashboard_caregap_' + patientId)
 
@@ -908,6 +914,30 @@ function DashboardPage() {
   }
 
   useEffect(() => { if (patientId) fetchReviewStatus() }, [patientId])
+
+  const fetchCareNotes = async (pid) => {
+    try {
+      const token = localStorage.getItem('cb_token')
+      const res = await fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pid || patientId}&coordinatorEmail=${encodeURIComponent(userEmail)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error(`${res.status}`)
+      const bundle = await res.json()
+      const notes = (bundle?.entry || []).map(e => {
+        const r = e.resource
+        if (!r) return null
+        const name = r.author?.[0]?.display || 'Unknown'
+        const role = r.author?.[0]?.extension?.find(x => x.url?.includes('coordinator-role'))?.valueString || 'Care Coordinator'
+        const nameParts = name.replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.)\s*/i, '').trim().split(/\s+/)
+        const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
+        const dt = new Date(r.date)
+        const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        return { author: name, initials, role, type: 'Coordination', text: r.description || '', date: dateStr, rawDate: dt }
+      }).filter(Boolean).sort((a, b) => b.rawDate - a.rawDate)
+      console.log('[Dashboard] Parsed', notes.length, 'care coordination notes')
+      setCareDocNotes(notes)
+    } catch (e) { console.warn('[Dashboard] Care notes fetch failed:', e) }
+  }
 
   const fetchTaskQueue = async () => {
     try {
@@ -1029,7 +1059,7 @@ function DashboardPage() {
 
   const clinicNotes = clinicDocNotes || clinicalNotesData?.filter(n => n.type === 'Clinical') || d.clinicalNotes.filter(n => n.type === 'Clinical')
   const adminNotes = adminDocNotes || []
-  const careNotes = addedNotes.filter(n => n.type === 'Coordination')
+  const careNotes = careDocNotes || addedNotes.filter(n => n.type === 'Coordination')
   const filteredNotes = noteFilter === 'clinical' ? clinicNotes
     : noteFilter === 'admin' ? adminNotes
     : careNotes
@@ -1038,24 +1068,36 @@ function DashboardPage() {
   const totalNotePages = Math.ceil(filteredNotes.length / NOTES_PER_PAGE)
   const paginatedNotes = filteredNotes.slice((notePage - 1) * NOTES_PER_PAGE, notePage * NOTES_PER_PAGE)
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!newNote.text.trim()) return
-    const nameParts = userName.split(/\s+/)
-    const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
-    const now = new Date()
-    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    setAddedNotes(prev => [{
-      author: userName,
-      initials,
-      role: 'Care Coordinator',
-      type: 'Coordination',
-      text: newNote.text.trim(),
-      date: dateStr,
-      rawDate: now,
-      isAdmin: false,
-    }, ...prev])
-    setNewNote({ author: '', role: '', type: 'Clinical', text: '' })
-    setShowAddNoteModal(false)
+    try {
+      const token = localStorage.getItem('cb_token')
+      const res = await fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId,
+          coordinatorEmail: userEmail,
+          coordinatorName: userName,
+          coordinatorRole: 'Care Coordinator',
+          careNotes: newNote.text.trim()
+        })
+      })
+      if (!res.ok) throw new Error(`${res.status}`)
+      setNewNote({ author: '', role: '', type: 'Clinical', text: '' })
+      setShowAddNoteModal(false)
+      setNotePage(1)
+      await fetchCareNotes()
+    } catch (e) {
+      console.error('[Dashboard] Failed to add care note:', e)
+      const nameParts = userName.split(/\s+/)
+      const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
+      const now = new Date()
+      const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+      setAddedNotes(prev => [{ author: userName, initials, role: 'Care Coordinator', type: 'Coordination', text: newNote.text.trim(), date: dateStr, rawDate: now }, ...prev])
+      setNewNote({ author: '', role: '', type: 'Clinical', text: '' })
+      setShowAddNoteModal(false)
+    }
   }
 
   const dynAlerts = alertsData || d.alerts.map(a => ({ title: a.title, detail: a.detail, severity: a.severity.toUpperCase() }))

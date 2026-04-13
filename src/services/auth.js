@@ -19,5 +19,6 @@ export async function doLogin(email, password) {
   const name = data.displayName || data.name || email.split('@')[0];
   localStorage.setItem('cb_token', token);
   localStorage.setItem('cb_user', name);
+  localStorage.setItem('cb_email', email);
   return name;
 }
