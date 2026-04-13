@@ -1469,3 +1469,22 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - Last review date displayed below button: "Last reviewed: Apr 10, 2026"
 - State: `isReviewed` (boolean), `lastReviewDate` (Date object)
 - Functions: `fetchReviewStatus()`, `handleMarkReviewed()`
+
+### Clinical Notes — Tab & Add Note Changes
+- **Removed "All" tab** — only Clinic, Care, and Admin tabs remain
+- **Default tab**: Clinic (was All)
+- **"+ Add Note" button**: Only visible on **Care** tab, hidden on Clinic and Admin
+- **Simplified Add Note modal**: Removed Author Name, Role, and Note Type fields — only textarea remains
+- **Author**: Auto-set from logged-in user's name (`userName` from `localStorage`)
+- **Role**: Hardcoded as "Care Coordinator"
+- **Note type**: Always "Coordination" (appears under Care tab)
+- `handleAddNote` no longer checks `newNote.author`, only `newNote.text`
+- Attempted and reverted full removal of All+Admin tabs before settling on this approach
+
+### Git Commit History (continued)
+44. `0a6056f` — Update notes.md with review API integration details
+45. `bbeb101` — Integrate review APIs: GET review status, POST mark as reviewed, 1-week expiry logic
+46. `d405115` — Remove All and Admin tabs from Clinical Notes (reverted)
+47. `cad9731` — Revert clinical notes tabs - restore All, Clinic, Care, Admin
+48. `eadfe8d` — Remove All tab from clinical notes, show Add Note only on Care tab
+49. `0955456` — Simplify Add Note modal - only textarea, author from login, role hardcoded Care Coordinator
