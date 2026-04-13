@@ -692,7 +692,7 @@ function DashboardPage() {
   const [coordinatorNotes, setCoordinatorNotes] = useState('')
   const [approveAlert, setApproveAlert] = useState(false)
   const [taskAlert, setTaskAlert] = useState(null)
-  const [noteFilter, setNoteFilter] = useState('all')
+  const [noteFilter, setNoteFilter] = useState('clinical')
   const [activeTab, setActiveTab] = useState('actions')
   const [taskQueue, setTaskQueue] = useState([])
   const [taskFilter, setTaskFilter] = useState('pending')
@@ -1000,8 +1000,7 @@ function DashboardPage() {
 
   const allNotes = [...(clinicalNotesData || d.clinicalNotes), ...addedNotes]
   const adminNotes = addedNotes.filter(n => n.type === 'Admin')
-  const filteredNotes = noteFilter === 'all' ? allNotes
-    : noteFilter === 'admin' ? adminNotes
+  const filteredNotes = noteFilter === 'admin' ? adminNotes
     : allNotes.filter(n => n.type.toLowerCase() === noteFilter)
 
   const handleAddNote = () => {
@@ -1724,11 +1723,10 @@ function DashboardPage() {
                 <h3>Clinical Notes</h3>
                 <p>{allNotes.length} TOTAL ENTRIES</p>
               </div>
-              <button className="dash-add-note-btn" onClick={() => setShowAddNoteModal(true)}>+ Add Note</button>
+              {noteFilter === 'coordination' && <button className="dash-add-note-btn" onClick={() => setShowAddNoteModal(true)}>+ Add Note</button>}
             </div>
             <div className="dash-note-filters">
               {[
-                { key: 'all', label: `All (${allNotes.length})` },
                 { key: 'clinical', label: `Clinic (${allNotes.filter(n => n.type === 'Clinical').length})` },
                 { key: 'coordination', label: `Care (${allNotes.filter(n => n.type === 'Coordination').length})` },
                 { key: 'admin', label: `Admin (${adminNotes.length})` },
