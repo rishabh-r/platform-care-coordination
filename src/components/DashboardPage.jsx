@@ -1004,20 +1004,20 @@ function DashboardPage() {
     : allNotes.filter(n => n.type.toLowerCase() === noteFilter)
 
   const handleAddNote = () => {
-    if (!newNote.author.trim() || !newNote.text.trim()) return
-    const nameParts = newNote.author.trim().split(/\s+/)
+    if (!newNote.text.trim()) return
+    const nameParts = userName.split(/\s+/)
     const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
     const now = new Date()
     const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
     setAddedNotes(prev => [{
-      author: newNote.author.trim(),
+      author: userName,
       initials,
-      role: newNote.role.trim() || 'Staff',
-      type: newNote.type,
+      role: 'Care Coordinator',
+      type: 'Coordination',
       text: newNote.text.trim(),
       date: dateStr,
       rawDate: now,
-      isAdmin: true,
+      isAdmin: false,
     }, ...prev])
     setNewNote({ author: '', role: '', type: 'Clinical', text: '' })
     setShowAddNoteModal(false)
@@ -1767,22 +1767,12 @@ function DashboardPage() {
                   <button className="dash-modal-close" onClick={() => setShowAddNoteModal(false)}>✕</button>
                 </div>
                 <div className="dash-modal-body">
-                  <p className="dash-modal-label">Author Name</p>
-                  <input className="cn-input" type="text" placeholder="e.g. Dr. Michael Chen" value={newNote.author} onChange={e => setNewNote(p => ({ ...p, author: e.target.value }))} />
-                  <p className="dash-modal-label">Role</p>
-                  <input className="cn-input" type="text" placeholder="e.g. Primary Care Physician" value={newNote.role} onChange={e => setNewNote(p => ({ ...p, role: e.target.value }))} />
-                  <p className="dash-modal-label">Note Type</p>
-                  <div className="cn-type-select">
-                    {['Clinical', 'Coordination', 'Admin'].map(t => (
-                      <button key={t} className={`cn-type-btn ${newNote.type === t ? 'active' : ''}`} onClick={() => setNewNote(p => ({ ...p, type: t }))}>{t}</button>
-                    ))}
-                  </div>
                   <p className="dash-modal-label">Note</p>
-                  <textarea className="dash-modal-textarea" placeholder="Write the clinical note here..." value={newNote.text} onChange={e => setNewNote(p => ({ ...p, text: e.target.value }))} />
+                  <textarea className="dash-modal-textarea" placeholder="Write the care coordination note here..." value={newNote.text} onChange={e => setNewNote(p => ({ ...p, text: e.target.value }))} />
                 </div>
                 <div className="dash-modal-footer">
                   <button className="dash-modal-cancel" onClick={() => setShowAddNoteModal(false)}>✕ Cancel</button>
-                  <button className="dash-modal-confirm" onClick={handleAddNote} disabled={!newNote.author.trim() || !newNote.text.trim()}>✓ Add Note</button>
+                  <button className="dash-modal-confirm" onClick={handleAddNote} disabled={!newNote.text.trim()}>✓ Add Note</button>
                 </div>
               </div>
             </div>
