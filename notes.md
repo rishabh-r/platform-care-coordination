@@ -1481,6 +1481,71 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - `handleAddNote` no longer checks `newNote.author`, only `newNote.text`
 - Attempted and reverted full removal of All+Admin tabs before settling on this approach
 
+### Clinical Notes — DocumentReference API Integration (Clinic & Admin Tabs) — April 13, 2026
+
+#### API Details
+- **Clinic tab**: `GET /baseR4/DocumentReference?patient=<id>&type.coding=11506-3&page=0&size=100`
+- **Admin tab**: `GET /baseR4/DocumentReference?patient=<id>&type.coding=34108-1&page=0&size=100`
+- **Care tab**: Remains local (coordinator-added notes via Add Note form)
+- Bearer token auth (same login token)
+
+#### Response Structure (per DocumentReference entry)
+- `author[0].display` → Author name (e.g., "Sarah Chen")
+- `author[0].extension` (url="specialty") → `valueString` (e.g., "Endocrinology", "Wound Care")
+- `description` → Short note summary (shown on card)
+- `content[0].attachment.data` → Base64-encoded full note text (decoded via `atob()` for View modal)
+- `date` → Note date
+- `type.coding[0].code` → `11506-3` for Clinical, `34108-1` for Admin
+
+#### Implementation in DashboardPage.jsx
+- **New state**: `clinicDocNotes`, `adminDocNotes` — fetched from DocumentReference API on load
+- **`parseDocRefNotes(bundle, noteType)`**: Inline parser in `loadDashboard()` that extracts author name, specialty/role, initials, description (card text), full text (base64 decoded), formatted date. Each note gets a `type` field set to `noteType` param ('Clinical' or 'Admin'). Sorts newest-first
+- **Two parallel fetch calls** fire on dashboard load alongside other FHIR calls
+- **Tab data sources**:
+  - Clinic tab: `clinicDocNotes` (from API) → falls back to `clinicalNotesData` (encounter-based) if API returns nothing
+  - Admin tab: `adminDocNotes` (from API) → empty array if API returns nothing
+  - Care tab: `careNotes` (locally added via Add Note form)
+- **Tab counts**: Each tab shows count from its respective data source
+- **Total entries**: Sum of all three tab counts
+- **View modal**: Shows `fullText` (base64-decoded full note) if available, otherwise falls back to `text` (description)
+- **Type guards**: All `.toLowerCase()` calls guarded with `(n.type || 'clinical').toLowerCase()` to prevent TypeError on undefined type
+
+#### First Attempt — Reverted
+- First implementation was done and pushed (`1cf25b4`) but had an issue after revert left stale code
+- Reverted (`25c48c9`), fixed `TypeError: Cannot read properties of undefined (reading 'toLowerCase')` in notes filter (`da2a855`)
+- Reimplemented cleanly (`349854e`) with proper type guards and no merging confusion
+
+### Clinical Notes — Pagination (April 13, 2026)
+
+#### Problem
+- Clinic tab has 20 notes — showing all at once is too cluttered
+- Other patients could have even more notes
+
+#### Solution: Client-Side Pagination
+- **5 notes per page** — `NOTES_PER_PAGE = 5`
+- **Dynamic page count**: `Math.ceil(filteredNotes.length / 5)` — adapts to any number of notes
+- **Page state**: `notePage` (starts at 1), resets to 1 when switching tabs
+- **`paginatedNotes`**: `filteredNotes.slice((notePage - 1) * 5, notePage * 5)`
+- **Pagination bar**: Prev / numbered page buttons / Next — only shown when `totalNotePages > 1`
+- **Active page**: Blue highlight (`#2563EB`)
+
+#### Fixed-Height Container
+- **Problem**: Pagination bar position shifted up/down depending on content length of the 5 notes on each page, forcing user to hunt for the buttons
+- **Fix**: Notes rendered inside `.cn-notes-list` container with `height: 520px; overflow-y: auto` — pagination bar stays pinned at the same position regardless of content
+
+#### CSS Classes Added
+- `.cn-notes-list` — Fixed height 520px, overflow-y auto, thin scrollbar
+- `.cn-pagination` — Flex centered, gap 4px, padding 12px top
+- `.cn-page-btn` — Border, rounded, 13px font, hover state
+- `.cn-page-active` — Blue background, white text, bold
+
+### Updated Clinical Notes Data Sources
+| Tab | Data Source | Notes |
+|-----|-----------|-------|
+| Clinic | `GET /baseR4/DocumentReference?type.coding=11506-3` | 20 notes for Patient 1 (4 pages) |
+| Care | Local `addedNotes` state | Coordinator notes via Add Note form |
+| Admin | `GET /baseR4/DocumentReference?type.coding=34108-1` | Dynamic from API |
+
 ### Git Commit History (continued)
 44. `0a6056f` — Update notes.md with review API integration details
 45. `bbeb101` — Integrate review APIs: GET review status, POST mark as reviewed, 1-week expiry logic
@@ -1488,3 +1553,11 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 47. `cad9731` — Revert clinical notes tabs - restore All, Clinic, Care, Admin
 48. `eadfe8d` — Remove All tab from clinical notes, show Add Note only on Care tab
 49. `0955456` — Simplify Add Note modal - only textarea, author from login, role hardcoded Care Coordinator
+50. `e1f7a9e` — Update notes.md with clinical notes tab and add note changes
+51. `1cf25b4` — Integrate DocumentReference API (first attempt, reverted)
+52. `3146a5a` — Update notes.md (reverted with code)
+53. `25c48c9` — Revert DocumentReference API integration
+54. `da2a855` — Fix TypeError in clinical notes filter - guard undefined type
+55. `349854e` — Integrate DocumentReference API for dynamic Clinic and Admin notes tabs (clean)
+56. `7662668` — Add client-side pagination to Clinical Notes - 5 per page with dynamic page numbers
+57. `73233c8` — Fix notes pagination position - fixed height container so page buttons stay in place
