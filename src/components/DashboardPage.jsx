@@ -466,7 +466,11 @@ function parsePatientFromResource(resource, patientId) {
   let phone = '—', email = '—'
   const telecoms = resource.telecom || []
   for (const t of telecoms) {
-    if (t.system === 'phone' && phone === '—') phone = t.value
+    if (t.system === 'phone' && phone === '—') {
+      const digits = (t.value || '').replace(/\D/g, '')
+      const d = digits.length === 11 && digits[0] === '1' ? digits.slice(1) : digits
+      phone = d.length === 10 ? `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}` : t.value
+    }
     if (t.system === 'email' && email === '—') email = t.value
   }
 
