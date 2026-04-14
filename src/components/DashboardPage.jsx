@@ -1298,9 +1298,9 @@ function DashboardPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               AI Actions
             </button>
-            <button className={`dash-tab ${activeTab === 'trends' ? 'active' : ''}`} onClick={() => setActiveTab('trends')}>📈 Clinical Trends</button>
-            <button className={`dash-tab ${activeTab === 'queue' ? 'active' : ''}`} onClick={() => setActiveTab('queue')}>📋 Task Queue</button>
-            <button className={`dash-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}>📤 Patient Outreach</button>
+            <button className={`dash-tab ${activeTab === 'trends' ? 'active' : ''}`} onClick={() => setActiveTab('trends')}><img src="/images/icon-trends.png" alt="" className="dash-tab-icon" /> Clinical Trends</button>
+            <button className={`dash-tab ${activeTab === 'queue' ? 'active' : ''}`} onClick={() => setActiveTab('queue')}><img src="/images/icon-task.png" alt="" className="dash-tab-icon" /> Task Queue</button>
+            <button className={`dash-tab ${activeTab === 'outreach' ? 'active' : ''}`} onClick={() => setActiveTab('outreach')}><img src="/images/icon-outreach.png" alt="" className="dash-tab-icon" /> Patient Outreach</button>
           </div>
 
           {/* AI Actions */}
@@ -1344,7 +1344,7 @@ function DashboardPage() {
                     <div className="dash-action-title-row">
                       <strong>{a.title}</strong>
                       <span className={`dash-pill pill-${a.priorityClass || priorityClass(a.priority)}`}>{a.priority}</span>
-                      <span className="dash-action-time">📅 Due: {dueStr}</span>
+                      <span className="dash-action-time"><img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> Due: {dueStr}</span>
                     </div>
                     <p>{a.description}</p>
                     <div className="dash-rationale">
@@ -1777,8 +1777,8 @@ function DashboardPage() {
                         </div>
                         {a.with && <p>{a.isMissed ? a.with : `with ${a.with}`}</p>}
                         <p className="dash-appt-meta">
-                          {a.date && <>📅 {a.date}</>}
-                          {a.time && <>&nbsp; ⏰ {a.time}</>}
+                          {a.date && <><img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> {a.date}</>}
+                          {a.time && <>&nbsp; <svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="14" height="14" style={{verticalAlign:'middle',marginRight:2}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{a.time}</>}
                           {a.location && <>&nbsp; 📍 {a.location}</>}
                         </p>
                       </div>
@@ -1857,7 +1857,7 @@ function DashboardPage() {
                     </div>
                   </div>
                   <p className="dash-note-text">{n.text}</p>
-                  <p className="dash-note-date">⏰ {n.date}</p>
+                  <p className="dash-note-date"><svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="13" height="13" style={{verticalAlign:'middle',marginRight:3}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{n.date}</p>
                 </div>
               ))}
             </div>
@@ -1948,7 +1948,7 @@ function DashboardPage() {
                     <span className={`dash-pill pill-note-${(viewingNote.type || 'clinical').toLowerCase()}`}>{viewingNote.type || 'Clinical'}</span>
                   </div>
                   <p className="cn-view-text">{viewingNote.fullText || viewingNote.text}</p>
-                  <p className="cn-view-date">⏰ {viewingNote.date}</p>
+                  <p className="cn-view-date"><svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" width="12" height="12" style={{verticalAlign:'middle',marginRight:3}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{viewingNote.date}</p>
                 </div>
                 <div className="dash-modal-footer">
                   <button className="dash-modal-confirm" onClick={() => setViewingNote(null)}>Close</button>
