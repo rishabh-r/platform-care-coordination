@@ -208,8 +208,7 @@
 }
 .dash-tab:last-child { border-right: none; }
 .dash-tab.active { background: #4F46E5; color: white; font-weight: 600; }
-.dash-tab-icon { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
-.dash-tab.active .dash-tab-icon { filter: brightness(0) invert(1); }
+.dash-tab svg { flex-shrink: 0; }
 .dash-tab:disabled { opacity: .45; cursor: not-allowed; }
 .dash-tab:not(.active):not(:disabled):hover { background: #F8FAFC; }
 
