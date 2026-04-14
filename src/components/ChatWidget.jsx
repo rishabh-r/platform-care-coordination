@@ -348,7 +348,7 @@ export default function ChatWidget({ displayName }) {
                               onClick={() => {
                                 const cbEmail = localStorage.getItem('cb_email') || ''
                                 const dashUrl = msg.patientId
-                                  ? `${window.location.origin}/dashboard?patient=${msg.patientId}${cbEmail ? `&email=${encodeURIComponent(cbEmail)}` : ''}`
+                                  ? `${window.location.origin}/dashboard?d=${btoa(msg.patientId + '|' + cbEmail)}`
                                   : `${window.location.origin}/dashboard`;
                                 window.open(dashUrl, '_blank');
                               }}

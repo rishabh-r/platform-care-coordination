@@ -676,8 +676,19 @@ function LoadingScreen({ stepRef }) {
 function DashboardPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const patientId = searchParams.get('patient')
-  const userEmail = searchParams.get('email') || localStorage.getItem('cb_email') || ''
+  const dParam = searchParams.get('d')
+  const [decodedPatientId, decodedEmail] = (() => {
+    if (dParam) {
+      try {
+        const decoded = atob(dParam)
+        const parts = decoded.split('|')
+        return [parts[0] || '', parts[1] || '']
+      } catch (_) { return ['', ''] }
+    }
+    return [searchParams.get('patient') || '', searchParams.get('email') || localStorage.getItem('cb_email') || '']
+  })()
+  const patientId = decodedPatientId
+  const userEmail = decodedEmail
   const [isLoading, setIsLoading] = useState(true)
   const [aiLoading, setAiLoading] = useState(true)
   const [patient, setPatient] = useState(null)
