@@ -117,7 +117,7 @@ Rules:
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4.1-mini',
+      model: 'gpt-5.4-nano-2026-03-17',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent }
@@ -1049,7 +1049,7 @@ function DashboardPage() {
       fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'gpt-4.1-mini', messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 500 })
+        body: JSON.stringify({ model: 'gpt-5.4-nano-2026-03-17', messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 500 })
       }).then(r => r.json()).then(data => {
         try {
           const content = data.choices?.[0]?.message?.content || ''
