@@ -1785,3 +1785,16 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 77. `0af9ead` — Switch dashboard AI calls to gpt-5.4-nano-2026-03-17
 78. `7feb6e3` — Pass coordinator email via URL param
 79. `23cfc08` — Encode patient ID and email in Base64 URL param
+80. `43a2d39` — Update notes.md with April 14 session
+81. `538d14a` — Show Launch CareCord AI button only when patient is known and full care gap response is delivered
+
+### Launch CareCord AI Button — Conditional Display (IMPLEMENTED)
+- **Problem**: "Launch CareCord AI" button appeared whenever the user mentioned "care gaps" — even if the chatbot didn't know which patient yet (e.g., bot asks "could you please provide the patient's name" and the button still showed)
+- **Fix**: Button now only appears when ALL three conditions are met:
+  1. **Patient is known** — `currentPatientRef.current?.id` exists
+  2. **Response is substantial** — `finalText.length > 500` (full care gap analysis, not a short question)
+  3. **Not a clarification question** — response doesn't contain "could you please provide" or "which patient"
+- **File**: `src/components/ChatWidget.jsx`
+- **Variable**: `hasCareGapContent` replaces the old `isCareGap` for `showCareCordBtn` and `sessionStorage` caching
+- **sessionStorage caching**: Also gated by same conditions — care gap text only cached when actual content is present
+- Commit: `538d14a`
