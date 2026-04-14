@@ -1413,22 +1413,22 @@ function DashboardPage() {
             <div className="dash-card" style={{ padding: '24px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📞</div>
+                  <div style={{ marginBottom: '8px' }}><img src="/images/icon-phone.png" alt="" style={{ width: '28px', height: '28px', objectFit: 'contain' }} /></div>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Phone Call</h4>
                   <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Call to discuss care plan</p>
-                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>📞 Initiate Call</button>
+                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Initiate Call</button>
                 </div>
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>💬</div>
+                  <div style={{ marginBottom: '8px' }}><svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="28" height="28"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>SMS Message</h4>
                   <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Send text reminder for medication refill</p>
-                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>💬 Send SMS</button>
+                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Send SMS</button>
                 </div>
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📧</div>
+                  <div style={{ marginBottom: '8px' }}><svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="28" height="28"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Email Portal</h4>
                   <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Send educational materials via portal</p>
-                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>📧 Send Email</button>
+                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send Email</button>
                 </div>
               </div>
 
@@ -1441,8 +1441,8 @@ function DashboardPage() {
                   defaultValue={`Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
                 />
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>📤 Send to Patient</button>
-                  <button style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>📋 Save as Template</button>
+                  <button style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>Send to Patient</button>
+                  <button style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>Save as Template</button>
                 </div>
               </div>
             </div>
