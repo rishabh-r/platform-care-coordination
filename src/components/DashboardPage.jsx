@@ -677,6 +677,7 @@ function DashboardPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const patientId = searchParams.get('patient')
+  const userEmail = searchParams.get('email') || localStorage.getItem('cb_email') || ''
   const [isLoading, setIsLoading] = useState(true)
   const [aiLoading, setAiLoading] = useState(true)
   const [patient, setPatient] = useState(null)
@@ -721,7 +722,6 @@ function DashboardPage() {
 
   const rawUser = localStorage.getItem('cb_user') || 'User'
   const userName = formatDisplayName(rawUser)
-  const userEmail = localStorage.getItem('cb_email') || ''
 
   useEffect(() => {
     if (!localStorage.getItem('cb_token')) { navigate('/'); return }

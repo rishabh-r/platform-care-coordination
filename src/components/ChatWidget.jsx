@@ -346,8 +346,9 @@ export default function ChatWidget({ displayName }) {
                               onMouseEnter={(e) => { e.target.style.background = '#0d9488'; e.target.style.color = '#fff'; }}
                               onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#0d9488'; }}
                               onClick={() => {
+                                const cbEmail = localStorage.getItem('cb_email') || ''
                                 const dashUrl = msg.patientId
-                                  ? `${window.location.origin}/dashboard?patient=${msg.patientId}`
+                                  ? `${window.location.origin}/dashboard?patient=${msg.patientId}${cbEmail ? `&email=${encodeURIComponent(cbEmail)}` : ''}`
                                   : `${window.location.origin}/dashboard`;
                                 window.open(dashUrl, '_blank');
                               }}
