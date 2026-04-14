@@ -1688,3 +1688,100 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 62. `fe50fd2` — Show dashboard early after FHIR loads, run AI analysis in background with inline spinner
 63. `0cf548b` — Format phone number in US format (XXX) XXX-XXXX
 64. `fe7dff4` — Increase patient banner phone icon size from 14px to 18px
+
+---
+
+## Session: April 14, 2026
+
+### Icon Replacements — Emojis to Images/SVGs
+
+#### Tab Icons — PNG to Inline SVG Fix
+- **Problem**: PNG images (`icon-trends.png`, `icon-task.png`, `icon-outreach.png`) with `filter: brightness(0) invert(1)` turned into solid white blobs on the active (purple) tab — the filter filled the entire transparent PNG white
+- **Fix**: Replaced all 3 tab icons with **inline SVGs** using `stroke="currentColor"` — they automatically inherit the text color (dark when inactive, white when active)
+- Clinical Trends: line chart SVG (`<path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 6-6"/>`)
+- Task Queue: clipboard with checkmark SVG
+- Patient Outreach: people group SVG
+- Removed `.dash-tab-icon` and `.dash-tab.active .dash-tab-icon { filter }` CSS rules
+- Added `.dash-tab svg { flex-shrink: 0; }` CSS
+- Commit: `faea4e2`
+
+#### Task Queue — Calendar Emoji to Image
+- Replaced `📅` emoji next to "DUE:" in task cards with `icon-calendar.png` (same as AI Actions and Appointments)
+- Commit: `edd119a`
+
+#### Patient Outreach — All Icons Replaced
+- **Phone Call card**: Header icon → `icon-phone.png` (28px), button icon → inline SVG phone (14px, white)
+- **SMS Message card**: Header icon → inline SVG chat bubble (`stroke="#475569"`, 28px), button icon → inline SVG chat bubble (14px, white)
+- **Email Portal card**: Header icon → inline SVG envelope (`stroke="#475569"`, 28px), button icon → inline SVG envelope (14px, white)
+- **"Send to Patient" button**: Background changed from red (`#dc2626`) to white with border, icon (`📤`) removed
+- **"Save as Template" button**: Unchanged (already white with border), icon (`📋`) removed
+- Commit: `76a164f`
+
+### AI-Generated Outreach Message — TRIED & REVERTED
+- **Implemented**: Lightweight LLM call (`gpt-4.1-mini`) to generate personalized outreach message based on patient's clinical alerts and recommended actions
+- **How it worked**: After `callAIForAnalysis` completed, a second LLM call generated the outreach message. Textarea showed spinner "Generating personalized message..." then populated with AI content. Used `key` prop to re-render textarea when message arrived
+- **Reverted**: User decided to keep the static template. All outreach AI code removed (state `outreachMessage`, LLM call, spinner)
+- **Current state**: Static template with dynamic patient first name only
+
+### Model Switch — TRIED & REVERTED
+- Tried switching all 3 dashboard `gpt-4.1-mini` calls to `gpt-5.4-nano-2026-03-17`
+- User tested, didn't like the results
+- Reverted back to `gpt-4.1-mini` for dashboard calls
+
+### AI Loading Speed Optimization — TRIED & REVERTED
+- **Problem**: Inline spinners (Alerts & AI Actions) took ~18 seconds
+- **Attempted fix**: 
+  1. Set `aiLoading = false` after main AI call (before outreach)
+  2. Switched `callAIForAnalysis` from streaming to non-streaming
+  3. Reduced `max_tokens` from 3500 to 2000
+  4. Outreach message as fire-and-forget (non-blocking)
+- **Reverted**: Not working as expected
+- **Manager feedback**: Loading time is not a problem, no further optimization needed
+
+### Hard Reset to `76a164f`
+- After multiple model switches and reverts, user requested a clean reset
+- `git reset --hard 76a164f` + force push — returned to clean state after Patient Outreach icon changes
+- All intermediate commits (AI outreach, model switches, speed optimization) discarded
+
+### Models Used (Current State)
+| Model | Where | Purpose |
+|-------|-------|---------|
+| **gpt-5.4-nano-2026-03-17** | Chatbot (`openai.js`) | Main chatbot — conversations, FHIR tool calling, care gap analysis |
+| **gpt-4.1-mini** | Dashboard (`DashboardPage.jsx`) — 2 places | 1. `callAIForAnalysis` — extracts alerts, trends, AI actions from care gap text |
+| | | 2. Fallback actions — generates 2 new actions when all are approved |
+
+### Coordinator Email — URL Parameter (IMPLEMENTED)
+- **Before**: `coordinatorEmail` for Care tab APIs was read from `localStorage` (`cb_email`)
+- **After**: Email is passed in the dashboard URL and read from URL params
+- **`ChatWidget.jsx`**: Reads `cb_email` from `localStorage`, appends to dashboard URL
+- **`DashboardPage.jsx`**: Reads email from URL param first, falls back to `localStorage`
+- Used in Care tab POST (`/baseR4/CareCoordinationNote`) and GET (`/baseR4/CareCoordinationNote/search`)
+- Commit: `7feb6e3`
+
+### Base64 URL Encoding (IMPLEMENTED)
+- **Problem**: Patient ID and coordinator email were exposed as plain text in the URL:
+  `/dashboard?patient=a3f8b2c1-...&email=rishabh.raj@rsystems.com`
+- **Solution**: Encode both values into a single Base64 `d` parameter
+- **Encoding** (`ChatWidget.jsx`): `btoa(patientId + '|' + email)` → single `d` param
+- **Decoding** (`DashboardPage.jsx`): `atob(d)` → split by `|` → `[patientId, email]`
+- **URL now looks like**: `/dashboard?d=YTNmOGIyYzEtN2Q0ZS...`
+- **Backward compatible**: Still supports old `?patient=...&email=...` format as fallback
+- **Dynamic**: Every combination of patient + logged-in user produces a unique encoded URL
+- Commit: `23cfc08`
+
+### Git Commit History (this session)
+65. `ebf195d` — Replace emojis with image icons: due date calendar, notes clock, appointment date/time, tab icons for trends/task/outreach
+66. `faea4e2` — Fix tab icons: replace PNG images with inline SVGs that inherit text color naturally
+67. `edd119a` — Replace calendar emoji with icon-calendar.png in Task Queue due dates
+68. `76a164f` — Patient Outreach: replace emojis with inline SVGs for phone/sms/email, simplify Send to Patient button
+69. `a2d3f1a` — Generate personalized outreach message via AI (REVERTED)
+70. `14cb830` — Switch dashboard AI to gpt-5.4-nano (REVERTED)
+71. `ffbc512` — Revert dashboard AI back to gpt-4.1-mini (REVERTED)
+72. `5c9d549` — Speed up dashboard AI (REVERTED)
+73. `7d2ea4b` — Revert speed optimization (REVERTED)
+74. `1bd5244` — Revert AI-generated outreach message (REVERTED)
+75. **Hard reset to `76a164f`** — discarded commits 69-74
+76. `07a7dfb` — Trigger redeploy
+77. `0af9ead` — Switch dashboard AI calls to gpt-5.4-nano-2026-03-17
+78. `7feb6e3` — Pass coordinator email via URL param
+79. `23cfc08` — Encode patient ID and email in Base64 URL param
