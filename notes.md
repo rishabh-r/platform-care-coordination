@@ -1615,3 +1615,27 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 57. `73233c8` — Fix notes pagination position - fixed height container so page buttons stay in place
 58. `622760b` — Update notes.md with DocumentReference API integration, pagination, and fixed-height container
 59. `4e4521d` — Integrate CareCoordinationNote API for Care tab - POST to create, GET to fetch notes
+60. `19a6aa0` — Show first+last name only, replace emojis with image icons for DOB, phone, alerts
+
+---
+
+## Patient Banner & Alert Icon Updates (April 13, 2026)
+
+### Patient Name — First + Last Only
+- Drops middle name from display: "James Robert Mitchell" → "James Mitchell"
+- Logic: if name has >2 parts, keeps first and last only (`nameParts[0] + nameParts[last]`)
+- Initials now 2 letters (e.g., "JM" not "JRM")
+- Applied in `parsePatientFromResource` function
+
+### Image Icons Replace Emojis
+| Location | Old | New |
+|----------|-----|-----|
+| DOB in patient banner | 📅 emoji | `/images/icon-calendar.png` |
+| Phone in patient banner | 📞 emoji | `/images/icon-phone.png` |
+| Medication Non-Adherence alert | 💊 emoji | `/images/icon-pill.png` |
+| Missed Follow-Up Appointments alert | 📅 emoji | `/images/icon-calendar.png` |
+
+### Files Changed
+- `src/components/DashboardPage.jsx` — Name parsing, `ALERT_ICONS` map updated to use image markers, alert rendering uses `<img>` for pill/calendar, banner DOB/phone use `<img>` tags
+- `src/dashboard.css` — Added `.dash-alert-img` (20x20px), `.dash-banner-icon` (14x14px, vertical-align middle)
+- `public/images/icon-calendar.png`, `icon-phone.png`, `icon-pill.png` — New icon assets

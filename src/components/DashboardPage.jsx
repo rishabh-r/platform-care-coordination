@@ -674,6 +674,7 @@ function DashboardPage() {
   const navigate = useNavigate()
   const patientId = searchParams.get('patient')
   const [isLoading, setIsLoading] = useState(true)
+  const [aiLoading, setAiLoading] = useState(true)
   const [patient, setPatient] = useState(null)
   const [alertsData, setAlertsData] = useState(null)
   const [trendsData, setTrendsData] = useState(null)
@@ -824,13 +825,18 @@ function DashboardPage() {
         fetchCareNotes(patientId)
       }
 
+      await fhirDirectPromise
+      return patientName
+    }
+
+    async function loadAIInsights(pName) {
       try {
         const careGapText = sessionStorage.getItem('dashboard_caregap_' + patientId)
 
         let inputForAI = null
         if (careGapText) {
           console.log('[Dashboard] Using chatbot care gap text for analysis')
-          inputForAI = `Care Gap Analysis for ${patientName}:\n\n${careGapText}`
+          inputForAI = `Care Gap Analysis for ${pName}:\n\n${careGapText}`
         } else {
           console.log('[Dashboard] No chatbot text, fetching FHIR data as fallback')
           const [obsResult, encResult, medResult, condResult] = await Promise.all([
@@ -840,10 +846,8 @@ function DashboardPage() {
             callFhirApi(buildUrl('/baseR4/Condition', { patient: patientId, page: 0 })).catch(() => null)
           ])
           const summary = summarizeFhirData(obsResult, encResult, medResult, condResult)
-          inputForAI = `Patient: ${patientName}\n\nFHIR Data:\n${JSON.stringify(summary)}`
+          inputForAI = `Patient: ${pName}\n\nFHIR Data:\n${JSON.stringify(summary)}`
         }
-
-        if (loadStepRef.current) loadStepRef.current(2)
 
         const aiResult = await callAIForAnalysis(inputForAI)
         if (aiResult?.alerts) setAlertsData(aiResult.alerts)
@@ -852,12 +856,15 @@ function DashboardPage() {
         if (aiResult?.missedAppointments?.length) setMissedAppts(aiResult.missedAppointments)
       } catch (e) {
         console.error('[Dashboard] AI analysis failed:', e)
+      } finally {
+        setAiLoading(false)
       }
-
-      await fhirDirectPromise
     }
 
-    Promise.all([loadDashboard(), minLoadTime]).then(() => setIsLoading(false))
+    Promise.all([loadDashboard(), minLoadTime]).then(([pName]) => {
+      setIsLoading(false)
+      loadAIInsights(pName || 'Patient')
+    })
   }, [navigate, patientId])
 
   const d = MOCK_DATA
@@ -1222,6 +1229,12 @@ function DashboardPage() {
                   </h3>
                   <p>AI-detected issues requiring immediate attention</p>
                 </div>
+                {aiLoading ? (
+                  <div className="ai-loading-inline">
+                    <div className="ai-loading-spinner"></div>
+                    <p>Analyzing clinical data...</p>
+                  </div>
+                ) : (<>
                 <div className="dash-alert-list">
                   {dynAlerts.map((a, i) => (
                     <div key={i} className="dash-alert-item">
@@ -1248,6 +1261,7 @@ function DashboardPage() {
                     ))}
                   </div>
                 </div>
+                </>)}
               </div>
               <div className="dash-alerts-right">
                 <div className="ri-head">
@@ -1286,7 +1300,14 @@ function DashboardPage() {
           </div>
 
           {/* AI Actions */}
-          {activeTab === 'actions' && <><div className="dash-card dash-actions-section">
+          {activeTab === 'actions' && <>{aiLoading ? (
+            <div className="dash-card dash-actions-section">
+              <div className="ai-loading-inline" style={{ padding: '40px 0' }}>
+                <div className="ai-loading-spinner"></div>
+                <p>Generating AI recommendations...</p>
+              </div>
+            </div>
+          ) : (<div className="dash-card dash-actions-section">
             <div className="dash-actions-head">
               <div>
                 <h3>AI-Recommended Actions</h3>
@@ -1330,7 +1351,7 @@ function DashboardPage() {
                 </div>
               )
             })}
-          </div>
+          </div>)}
 
           {/* Approve Modal */}
           {showModal && (
