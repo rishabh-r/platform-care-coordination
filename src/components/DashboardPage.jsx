@@ -1648,7 +1648,7 @@ function DashboardPage() {
                     <span className={`dash-pill tq-status-pill tq-status-${task.status}`}>
                       {task.status === 'pending' ? 'Pending' : task.status === 'inprocess' ? 'In Process' : 'Completed'}
                     </span>
-                    <span className="tq-due">📅 DUE: {task.dueDate}</span>
+                    <span className="tq-due"><img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> DUE: {task.dueDate}</span>
                   </div>
                   <p className="tq-task-desc">{task.description}</p>
                   <div className="tq-notes">
