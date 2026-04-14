@@ -1637,5 +1637,54 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 
 ### Files Changed
 - `src/components/DashboardPage.jsx` — Name parsing, `ALERT_ICONS` map updated to use image markers, alert rendering uses `<img>` for pill/calendar, banner DOB/phone use `<img>` tags
-- `src/dashboard.css` — Added `.dash-alert-img` (20x20px), `.dash-banner-icon` (14x14px, vertical-align middle)
+- `src/dashboard.css` — Added `.dash-alert-img` (20x20px), `.dash-banner-icon` (18x18px, vertical-align middle)
 - `public/images/icon-calendar.png`, `icon-phone.png`, `icon-pill.png` — New icon assets
+
+---
+
+## Early Dashboard Load — AI Runs in Background (April 13, 2026)
+
+### Problem
+- Dashboard loading screen blocked for ~11 seconds until ALL fetches (FHIR + AI analysis) completed
+- The AI call to Azure OpenAI (`callAIForAnalysis`) was the bottleneck (~5-8 seconds)
+
+### Solution
+- **Split the flow**: FHIR data fetches dismiss the loading screen (~3-4s), AI runs separately in the background
+- **`aiLoading` state**: New boolean, `true` while AI call is in progress
+- **`loadDashboard()`**: Now only fetches FHIR data (Patient, Encounters, Observations, Medications, EpisodeOfCare, Risk Insights, DocumentReference, CareCoordinationNote). Returns `patientName` for the AI call
+- **`loadAIInsights(pName)`**: New async function, runs AFTER loading screen dismisses. Fetches care gap text from `sessionStorage` (or FHIR fallback), calls `callAIForAnalysis`, sets alerts/trends/aiActions/missedAppts. Sets `aiLoading = false` when done
+- **Flow**: `Promise.all([loadDashboard(), minLoadTime]).then(() => { setIsLoading(false); loadAIInsights(name) })`
+
+### UI While AI Loads
+- **Alerts & Risk Drivers section**: Shows purple spinner with "Analyzing clinical data..." text
+- **AI Actions tab**: Shows purple spinner with "Generating AI recommendations..." text
+- Both sections populate seamlessly once AI call completes
+
+### CSS Added
+- `.ai-loading-inline` — Flex column centered container with padding
+- `.ai-loading-spinner` — 28px purple spinning ring (`border-top-color: #6366F1`, `animation: ai-spin 0.8s`)
+- `@keyframes ai-spin` — Simple 360deg rotation
+
+### Result
+- Perceived load time: **~3-4 seconds** (down from ~11 seconds)
+- Patient banner, Vitals, Medications, Encounters, Care Team, Clinical Notes, Clinical Trends, Risk Insights all visible immediately
+- AI-dependent sections (Alerts, AI Actions) fill in after a few more seconds
+
+---
+
+## Phone Number US Format (April 13, 2026)
+
+- Phone number in patient banner now displays in US format: `(XXX) XXX-XXXX`
+- Strips all non-digit characters, handles 11-digit numbers with leading `1` (country code)
+- Falls back to raw value if not a valid 10-digit number
+- Example: `2025550185` → `(202) 555-0185`
+
+## Banner Icon Size (April 13, 2026)
+
+- Phone/calendar icon in patient banner increased from 14px to 18px
+
+### Git Commit History (continued)
+61. `08eef0f` — Update notes.md with CareCoordinationNote API integration and final Clinical Notes state
+62. `fe50fd2` — Show dashboard early after FHIR loads, run AI analysis in background with inline spinner
+63. `0cf548b` — Format phone number in US format (XXX) XXX-XXXX
+64. `fe7dff4` — Increase patient banner phone icon size from 14px to 18px
