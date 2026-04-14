@@ -188,11 +188,12 @@ export default function ChatWidget({ displayName }) {
 
           const isCareGap = userMessage.toLowerCase().includes('care gap');
           const carePatientId = isCareGap ? currentPatientRef.current?.id : null;
-          if (isCareGap && carePatientId) {
+          const hasCareGapContent = isCareGap && carePatientId && finalText.length > 500 && !finalText.toLowerCase().includes('could you please provide') && !finalText.toLowerCase().includes('which patient');
+          if (hasCareGapContent) {
             try { sessionStorage.setItem('dashboard_caregap_' + carePatientId, finalText); } catch (_) {}
           }
 
-          const extraProps = { userQuery: userMessage, showCareCordBtn: isCareGap, patientId: carePatientId };
+          const extraProps = { userQuery: userMessage, showCareCordBtn: hasCareGapContent, patientId: carePatientId };
 
           if (streamingMsgId) {
             setMessages(prev => prev.map(m =>
