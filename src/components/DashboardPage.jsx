@@ -1293,7 +1293,7 @@ function DashboardPage() {
                       return (
                         <div key={i} className={`dash-trend-chip ${t.status}`}>
                           <span className="dash-trend-lbl">{t.label}</span>
-                          <b>{mainVal}</b>
+                          <span className="dash-trend-val">{mainVal}</span>
                           {rangeStr && <span className="dash-trend-range">{rangeStr}</span>}
                           {severityStr && <span className={`dash-trend-sev ${sevClass}`}>{severityStr}</span>}
                         </div>

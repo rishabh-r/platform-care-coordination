@@ -32,11 +32,17 @@ function ChartBlock({ chartData }) {
         responsive: true,
         plugins: {
           legend: { display: false },
-          title: { display: !!chartData.title, text: chartData.title || '', font: { size: 13 } }
+          title: { display: !!chartData.title, text: chartData.title || '', font: { size: 13 } },
+          tooltip: {
+            callbacks: {
+              title: (items) => { const raw = chartData.labels[items[0].dataIndex]; const d = new Date(raw); if (isNaN(d)) return raw; const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const yy = String(d.getFullYear()).slice(-2); return `${mm}-${dd}-${yy}` },
+              label: (ctx) => ctx.raw
+            }
+          }
         },
         scales: {
           y: { beginAtZero: false, grid: { color: '#f0f0f0' } },
-          x: { grid: { display: false } }
+          x: { grid: { display: false }, ticks: { callback: (_, i) => { const raw = chartData.labels[i]; const d = new Date(raw); if (isNaN(d)) return raw; const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const yy = String(d.getFullYear()).slice(-2); return `${mm}-${dd}-${yy}` }, font: { size: 10 }, maxRotation: 45, minRotation: 45 } }
         }
       }
     });
@@ -57,7 +63,7 @@ const PREDEFINED_ITEMS = [
   { label: 'View Active Medications', action: 'medications' },
   { label: 'View Last 12 months encounters', action: 'encounters' },
   { label: 'View Care Gaps', action: 'caregaps', query: 'View Care Gaps in details' },
-  { label: 'Observation Trends' },
+  { label: 'Observation Trends', query: 'Plot Trends' },
 ];
 
 export default function ChatWidget({ displayName }) {
