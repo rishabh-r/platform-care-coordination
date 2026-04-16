@@ -134,8 +134,8 @@
 .pill-ai { background: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; }
 .pill-active { background: #DCFCE7; color: #16A34A; }
 .pill-primary { background: #DBEAFE; color: #2563EB; font-size: 10px; }
-.pill-upcoming { background: #DCFCE7; color: #16A34A; }
-.pill-completed { background: #DCFCE7; color: #16A34A; }
+.pill-upcoming { background: #DBEAFE; color: #2563EB; }
+.pill-completed { background: #F1F5F9; color: #64748B; }
 .pill-telehealth { background: #DBEAFE; color: #2563EB; }
 .pill-note-clinical { background: #DBEAFE; color: #2563EB; }
 .pill-note-coordination { background: #FEF3C7; color: #D97706; }
@@ -460,6 +460,8 @@
 
 /* ── Medication status pills ── */
 .pill-discontinued { background: #FEE2E2 !important; color: #DC2626 !important; }
+.pill-stopped { background: #FEE2E2 !important; color: #DC2626 !important; }
+.pill-completed-grey { background: #F1F5F9 !important; color: #64748B !important; }
 .pill-onhold { background: #FEF3C7 !important; color: #D97706 !important; }
 
 /* ── Missed appointment styling ── */
@@ -553,6 +555,22 @@
 }
 .tq-notes-label { font-size: 11px; font-weight: 700; color: #64748B; letter-spacing: .5px; display: block; margin-bottom: 4px; }
 .tq-notes p { font-size: 13px; color: #475569; margin: 0; font-style: italic; }
+.tq-user-notes {
+  background: white; border-radius: 8px; padding: 12px 16px;
+  margin-bottom: 14px; border: 1px solid #E2E8F0;
+}
+.tq-note-input {
+  width: 100%; min-height: 50px; border: 1px solid #E2E8F0; border-radius: 6px;
+  padding: 8px 10px; font-size: 13px; color: #1E293B; resize: vertical; margin-top: 4px;
+  font-family: inherit;
+}
+.tq-note-input:focus { outline: none; border-color: #2563EB; }
+.tq-add-note-btn {
+  margin-top: 8px; background: #2563EB; color: white; border: none; border-radius: 6px;
+  padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.tq-add-note-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tq-add-note-btn:hover:not(:disabled) { background: #1D4ED8; }
 .tq-task-actions { display: flex; gap: 10px; align-items: center; }
 .tq-btn-start {
   background: #16A34A; color: white; border: none; border-radius: 8px;

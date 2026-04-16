@@ -218,6 +218,7 @@ function parseEncountersFromFhir(bundle) {
     today.setHours(0, 0, 0, 0)
     const apptDate = startDate ? new Date(startDate) : null
     if (isMissed) apptStatus = 'missed'
+    else if (status === 'stopped' || status === 'entered-in-error') apptStatus = 'stopped'
     else if (apptDate && apptDate > today) apptStatus = 'upcoming'
 
     encounters.push({
@@ -729,6 +730,8 @@ function DashboardPage() {
   const [showAddNoteModal, setShowAddNoteModal] = useState(false)
   const [newNote, setNewNote] = useState({ author: '', role: '', type: 'Clinical', text: '' })
   const [viewingNote, setViewingNote] = useState(null)
+  const [taskNoteTexts, setTaskNoteTexts] = useState({})
+  const [taskCareNotes, setTaskCareNotes] = useState([])
   const loadStepRef = useRef(null)
 
   const rawUser = localStorage.getItem('cb_user') || 'User'
@@ -1026,6 +1029,7 @@ function DashboardPage() {
 
   const updateTaskStatus = async (taskId, newStatus) => {
     const apiStatus = newStatus === 'inprocess' ? 'in-process' : newStatus
+    setTaskCareNotes(prev => prev.filter(n => n.taskId !== taskId))
     try {
       const token = localStorage.getItem('cb_token')
       await fetch(`${FHIR_BASE}/baseR4/portal/update-task?actionId=${taskId}&status=${apiStatus}`, {
@@ -1036,6 +1040,18 @@ function DashboardPage() {
     setTaskAlert(newStatus === 'inprocess' ? '▶ Task Started' : '✓ Task Completed')
     setTimeout(() => setTaskAlert(null), 2000)
     fetchTaskQueue()
+  }
+
+  const handleTaskAddNote = (taskId, taskTitle, taskStatus) => {
+    const text = (taskNoteTexts[taskId] || '').trim()
+    if (!text) return
+    const statusLabel = taskStatus === 'pending' ? 'Pending' : taskStatus === 'inprocess' ? 'In Process' : 'Completed'
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    const nameParts = userName.split(/\s+/)
+    const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 2)
+    setTaskCareNotes(prev => [...prev, { taskId, author: userName, initials, role: 'Care Coordinator', type: 'Coordination', text: `[Task: ${taskTitle}] [Status: ${statusLabel}] ${text}`, date: dateStr, rawDate: now }])
+    setTaskNoteTexts(prev => ({ ...prev, [taskId]: '' }))
   }
 
   useEffect(() => { if (patientId) fetchTaskQueue() }, [patientId])
@@ -1096,7 +1112,7 @@ function DashboardPage() {
 
   const clinicNotes = clinicDocNotes || clinicalNotesData?.filter(n => n.type === 'Clinical') || d.clinicalNotes.filter(n => n.type === 'Clinical')
   const adminNotes = adminDocNotes || []
-  const careNotes = careDocNotes || addedNotes.filter(n => n.type === 'Coordination')
+  const careNotes = [...(careDocNotes || addedNotes.filter(n => n.type === 'Coordination')), ...taskCareNotes].sort((a, b) => (b.rawDate || 0) - (a.rawDate || 0))
   const filteredNotes = noteFilter === 'clinical' ? clinicNotes
     : noteFilter === 'admin' ? adminNotes
     : careNotes
@@ -1698,8 +1714,13 @@ function DashboardPage() {
                   </div>
                   <p className="tq-task-desc">{task.description}</p>
                   <div className="tq-notes">
-                    <span className="tq-notes-label">NOTES:</span>
+                    <span className="tq-notes-label">AI NOTES:</span>
                     <p>{task.notes}</p>
+                  </div>
+                  <div className="tq-user-notes">
+                    <span className="tq-notes-label">Notes:</span>
+                    <textarea className="tq-note-input" placeholder="Add a note..." value={taskNoteTexts[task.id] || ''} onChange={e => setTaskNoteTexts(prev => ({ ...prev, [task.id]: e.target.value }))} />
+                    <button className="tq-add-note-btn" onClick={() => handleTaskAddNote(task.id, task.title, task.status)} disabled={!(taskNoteTexts[task.id] || '').trim()}>Add Note</button>
                   </div>
                   <div className="tq-task-actions">
                     {task.status === 'pending' && (
@@ -1766,7 +1787,7 @@ function DashboardPage() {
             {(() => {
               const allMeds = medsData || d.medications
               const visible = showAllMeds ? allMeds : allMeds.slice(0, 3)
-              const statusClass = s => s === 'Discontinued' ? 'pill-discontinued' : s === 'On-hold' ? 'pill-onhold' : 'pill-active'
+              const statusClass = s => { const l = s?.toLowerCase() || ''; return l === 'discontinued' || l === 'stopped' ? 'pill-stopped' : l === 'on-hold' || l === 'on hold' ? 'pill-onhold' : l === 'completed' ? 'pill-completed-grey' : 'pill-active' }
               return (
                 <>
                   {visible.map((m, i) => (
@@ -1826,7 +1847,7 @@ function DashboardPage() {
                           <strong>{a.title}</strong>
                           {a.isMissed
                             ? <span className="dash-pill pill-missed">Missed</span>
-                            : <span className={`dash-pill pill-${a.status}`}>{a.status === 'upcoming' ? 'Upcoming' : a.status === 'completed' ? 'Completed' : a.status}</span>
+                            : <span className={`dash-pill pill-${a.status}`}>{a.status === 'upcoming' ? 'Upcoming' : a.status === 'completed' ? 'Completed' : a.status === 'stopped' ? 'Stopped' : a.status}</span>
                           }
                           {a.telehealth && <span className="dash-pill pill-telehealth">📹 Telehealth</span>}
                         </div>
@@ -1884,7 +1905,7 @@ function DashboardPage() {
                 <h3>Clinical Notes</h3>
                 <p>{totalNotesCount} TOTAL ENTRIES</p>
               </div>
-              {noteFilter === 'coordination' && <button className="dash-add-note-btn" onClick={() => setShowAddNoteModal(true)}>+ Add Note</button>}
+              
             </div>
             <div className="dash-note-filters">
               {[
@@ -1927,28 +1948,7 @@ function DashboardPage() {
             )}
           </div>
 
-          {/* Add Note Modal */}
-          {showAddNoteModal && (
-            <div className="dash-modal-overlay" onClick={() => setShowAddNoteModal(false)}>
-              <div className="dash-modal cn-modal" onClick={e => e.stopPropagation()}>
-                <div className="dash-modal-header">
-                  <div>
-                    <h3>Add Clinical Note</h3>
-                    <p>Create a new note for this patient</p>
-                  </div>
-                  <button className="dash-modal-close" onClick={() => setShowAddNoteModal(false)}>✕</button>
-                </div>
-                <div className="dash-modal-body">
-                  <p className="dash-modal-label">Note</p>
-                  <textarea className="dash-modal-textarea" placeholder="Write the care coordination note here..." value={newNote.text} onChange={e => setNewNote(p => ({ ...p, text: e.target.value }))} />
-                </div>
-                <div className="dash-modal-footer">
-                  <button className="dash-modal-cancel" onClick={() => setShowAddNoteModal(false)}>✕ Cancel</button>
-                  <button className="dash-modal-confirm" onClick={handleAddNote} disabled={!newNote.text.trim()}>✓ Add Note</button>
-                </div>
-              </div>
-            </div>
-          )}
+          
 
           {/* Risk Detail Modal */}
           {viewingRisk && (
