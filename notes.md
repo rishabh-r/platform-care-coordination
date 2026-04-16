@@ -1798,3 +1798,67 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - **Variable**: `hasCareGapContent` replaces the old `isCareGap` for `showCareCordBtn` and `sessionStorage` caching
 - **sessionStorage caching**: Also gated by same conditions — care gap text only cached when actual content is present
 - Commit: `538d14a`
+
+---
+
+## Session: April 16, 2026
+
+### UI Batch Update — 7 Changes
+
+#### 1. Action Chip Rename: "Plot Trends" → "Observation Trends"
+- User sees "Observation Trends" in the dropdown
+- Silently sends "Plot Trends" to the chatbot via `query: 'Plot Trends'`
+- File: `src/components/ChatWidget.jsx`
+
+#### 2. Dashboard Chart X-Axis: mm-dd-yy Format
+- Changed from `toLocaleDateString('en-US', { month: 'short', day: 'numeric' })` to `mm-dd-yy` format (e.g., `05-05-24`)
+- Font size reduced from 11px to 10px
+- File: `src/components/DashboardPage.jsx` (Clinical Trends chart options)
+
+#### 3. Dashboard Chart Tooltip: Value Only
+- Changed from `"HbA1c Trend for James Robert Mitchell: 9.1"` to just `9.1`
+- Tooltip title also uses mm-dd-yy date format
+- File: `src/components/DashboardPage.jsx`
+
+#### 4. Chatbot Chart: Same Date + Tooltip Fixes
+- The chatbot's `ChartBlock` component had no date formatting or tooltip customization
+- Added: x-axis ticks with mm-dd-yy format, 45° rotation, font size 10px
+- Added: tooltip shows mm-dd-yy date as title, just the value as label
+- Graceful fallback: if date can't be parsed, shows raw label
+- File: `src/components/ChatWidget.jsx`
+
+#### 5. Deteriorating Clinical Trends: Color Coding
+- Values, ranges, and severity labels now separated with different colors
+- **Values** (e.g., `7.8% → 9.2%`): dark text, regular weight (not bold)
+- **Ranges** (e.g., `(Normal: <5.6%)`): grey text, smaller font (11px)
+- **Severity labels** (CRITICAL/HIGH/MEDIUM/LOW): colored pill badges
+  - CRITICAL: white text on red (`#DC2626`)
+  - HIGH: white text on orange (`#EA580C`)
+  - MEDIUM: dark text on yellow (`#FCD34D`)
+  - LOW: white text on green (`#16A34A`)
+- Parsing logic: regex extracts severity match (`↑ CRITICAL`), range match (`(Normal: ...)`), and remaining value
+- CSS classes: `.dash-trend-val`, `.dash-trend-range`, `.dash-trend-sev`, `.sev-critical`, `.sev-high`, `.sev-medium`, `.sev-low`
+- File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
+
+#### 6. Dynamic Priority Pill
+- **Before**: Hardcoded `<span class="pill-red">High Priority</span>`
+- **After**: Computed from care gap count (`activeGapCount` = alerts with severity !== "NONE")
+  - 3 gaps → "High Priority" (red pill)
+  - 2 gaps → "Medium Priority" (orange pill)
+  - 0-1 gaps → "Low Priority" (green pill)
+- New CSS classes: `.pill-orange` (orange bg), `.pill-green` (green bg)
+- File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
+
+#### 7. Dynamic Care Gap Pill + Alert NONE State
+- **Care Gap pill**:
+  - Has care gaps → `⚠ Care Gap` (red outline)
+  - No care gaps → `✓ No Care Gaps Detected` (green outline)
+  - New CSS: `.pill-green-outline`
+- **Individual alerts**:
+  - AI prompt updated to allow severity `"NONE"` with detail `"No care gaps detected"` when no issue exists for a category
+  - Frontend: if severity is NONE → shows "No care gaps detected" text + green "NONE" pill + dimmed styling (`.dash-alert-none { opacity: 0.6 }`)
+- File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
+
+### Git Commit History (this session)
+82. `3730e84` — UI batch: rename Observation Trends, chart date format, tooltip, color-coded trends, dynamic priority/care gap pills, alert NONE state
+83. `9021f60` — Fix: Observation Trends silent query, chatbot chart dates mm-dd-yy + tooltip value only, remove bold from deteriorating trends
