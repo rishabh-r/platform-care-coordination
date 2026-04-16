@@ -781,9 +781,20 @@ function DashboardPage() {
           setEncData(parsedEnc)
         }
         const parsedTeam = await parseCareTeamFromEoC(eocBundle)
-        if (parsedTeam?.length) {
-          console.log('[Dashboard] Parsed', parsedTeam.length, 'care team members from EpisodeOfCare')
-          setCareTeamData(parsedTeam)
+        const teamWithUser = (() => {
+          const team = parsedTeam || []
+          const loggedInName = formatDisplayName(localStorage.getItem('cb_user') || '')
+          const loggedInEmail = localStorage.getItem('cb_email') || ''
+          if (loggedInName && !team.some(t => t.name.toLowerCase() === loggedInName.toLowerCase())) {
+            const nameParts = loggedInName.split(/\s+/)
+            const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 2)
+            team.unshift({ name: loggedInName, initials, role: 'Care Coordinator', program: 'Care Coordinator', email: loggedInEmail })
+          }
+          return team.length ? team : null
+        })()
+        if (teamWithUser?.length) {
+          console.log('[Dashboard] Parsed', teamWithUser.length, 'care team members (including logged-in user)')
+          setCareTeamData(teamWithUser)
         }
         const parsedVitals = parseVitalsFromFhir(obsBundle)
         if (parsedVitals?.length) {
@@ -1464,7 +1475,7 @@ function DashboardPage() {
                   <div style={{ marginBottom: '8px' }}><svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="28" height="28"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Email Portal</h4>
                   <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Send educational materials via portal</p>
-                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send Email</button>
+                  <a href={`mailto:${pt.email || ''}`} style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none', boxSizing: 'border-box' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send Email</a>
                 </div>
               </div>
 
@@ -1477,8 +1488,7 @@ function DashboardPage() {
                   defaultValue={`Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
                 />
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>Send to Patient</button>
-                  <button style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>Save as Template</button>
+                  <a href={`mailto:${pt.email || ''}`} style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>Send to Patient</a>
                 </div>
               </div>
             </div>
