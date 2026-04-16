@@ -362,6 +362,9 @@
 .dash-note-view { font-size: 12px; color: #4F46E5; font-weight: 500; cursor: pointer; }
 .dash-note-view:hover { text-decoration: underline; }
 .dash-note-text { font-size: 12px; color: #475569; line-height: 1.6; margin: 0 0 6px; }
+.dash-note-task-info { margin: 4px 0 6px; padding: 8px 12px; background: #F8FAFC; border-radius: 6px; border-left: 3px solid #2563EB; }
+.dash-note-task-row { font-size: 12px; color: #475569; margin: 3px 0; line-height: 1.5; }
+.dash-note-task-label { font-weight: 600; color: #1E293B; margin-right: 4px; }
 .dash-note-date { font-size: 11px; color: #94A3B8; margin: 0; }
 
 /* ── Approve Alert ── */

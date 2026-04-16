@@ -1050,7 +1050,7 @@ function DashboardPage() {
     const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
     const nameParts = userName.split(/\s+/)
     const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 2)
-    setTaskCareNotes(prev => [...prev, { taskId, author: userName, initials, role: 'Care Coordinator', type: 'Coordination', text: `[Task: ${taskTitle}] [Status: ${statusLabel}] ${text}`, date: dateStr, rawDate: now }])
+    setTaskCareNotes(prev => [...prev, { taskId, author: userName, initials, role: 'Care Coordinator', type: 'Coordination', text: text, taskTitle, taskStatus: statusLabel, date: dateStr, rawDate: now }])
     setTaskNoteTexts(prev => ({ ...prev, [taskId]: '' }))
   }
 
@@ -1932,7 +1932,15 @@ function DashboardPage() {
                       <span className="dash-note-view" onClick={() => setViewingNote(n)}>View</span>
                     </div>
                   </div>
-                  <p className="dash-note-text">{n.text}</p>
+                  {n.taskTitle ? (
+                    <div className="dash-note-task-info">
+                      <p className="dash-note-task-row"><span className="dash-note-task-label">Task:</span> {n.taskTitle}</p>
+                      <p className="dash-note-task-row"><span className="dash-note-task-label">Status:</span> {n.taskStatus}</p>
+                      <p className="dash-note-task-row"><span className="dash-note-task-label">Note:</span> {n.text}</p>
+                    </div>
+                  ) : (
+                    <p className="dash-note-text">{n.text}</p>
+                  )}
                   <p className="dash-note-date"><svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="13" height="13" style={{verticalAlign:'middle',marginRight:3}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{n.date}</p>
                 </div>
               ))}
