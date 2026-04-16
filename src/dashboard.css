@@ -466,7 +466,6 @@
 
 /* ── Missed appointment styling ── */
 .pill-missed { background: #FEE2E2 !important; color: #DC2626 !important; font-weight: 600; }
-.dash-appt-row.missed { border-left: 3px solid #EF4444; background: #FFF5F5; }
 
 /* ── Clinical Notes Modal ── */
 .cn-modal { max-width: 520px; }

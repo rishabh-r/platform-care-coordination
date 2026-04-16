@@ -1841,7 +1841,7 @@ function DashboardPage() {
               return (
                 <>
                   {visible.map((a, i) => (
-                    <div key={i} className={`dash-appt-row ${a.isMissed ? 'missed' : ''}`}>
+                    <div key={i} className="dash-appt-row">
                       <div className="dash-appt-info">
                         <div className="dash-appt-title">
                           <strong>{a.title}</strong>
