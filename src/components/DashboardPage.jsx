@@ -1869,8 +1869,8 @@ function DashboardPage() {
                           {a.time && <>&nbsp; <svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="14" height="14" style={{verticalAlign:'middle',marginRight:2}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{a.time}</>}
                           {a.endDate && <>&nbsp; → &nbsp;<img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> {a.endDate}</>}
                           {a.endTime && <>&nbsp; <svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="14" height="14" style={{verticalAlign:'middle',marginRight:2}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{a.endTime}</>}
-                          {a.location && <>&nbsp; 📍 {a.location}</>}
                         </p>
+                        {a.location && <p className="dash-appt-meta">📍 {a.location}</p>}
                       </div>
                     </div>
                   ))}
