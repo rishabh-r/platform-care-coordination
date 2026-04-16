@@ -197,6 +197,7 @@ function parseEncountersFromFhir(bundle) {
     const status = r.status || ''
     const cls = r.class?.display || r.class?.code || ''
     const startDate = r.period?.start || ''
+    const endDate = r.period?.end || ''
     const locations = (r.location || []).map(l => l.location?.display || '').filter(Boolean)
     const reason = r.reasonCode?.[0]?.coding?.[0]?.display || r.reasonCode?.[0]?.text || ''
     const isNoShow = locations.some(l => l.toUpperCase().includes('NO SHOW') || l.toUpperCase().includes('N/A'))
@@ -210,6 +211,15 @@ function parseEncountersFromFhir(bundle) {
       if (!isNaN(d)) {
         dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+      }
+    }
+    let endDateStr = ''
+    let endTimeStr = ''
+    if (endDate) {
+      const ed = new Date(endDate)
+      if (!isNaN(ed)) {
+        endDateStr = ed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        endTimeStr = ed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
       }
     }
 
@@ -227,6 +237,8 @@ function parseEncountersFromFhir(bundle) {
       with: reason || cls || type,
       date: dateStr,
       time: timeStr,
+      endDate: endDateStr,
+      endTime: endTimeStr,
       location: locations.join(', ') || '',
       isMissed,
       rawDate: startDate
@@ -1855,6 +1867,8 @@ function DashboardPage() {
                         <p className="dash-appt-meta">
                           {a.date && <><img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> {a.date}</>}
                           {a.time && <>&nbsp; <svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="14" height="14" style={{verticalAlign:'middle',marginRight:2}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{a.time}</>}
+                          {a.endDate && <>&nbsp; → &nbsp;<img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> {a.endDate}</>}
+                          {a.endTime && <>&nbsp; <svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="14" height="14" style={{verticalAlign:'middle',marginRight:2}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{a.endTime}</>}
                           {a.location && <>&nbsp; 📍 {a.location}</>}
                         </p>
                       </div>
