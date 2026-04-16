@@ -1978,3 +1978,21 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 /* Removed */
 .dash-appt-row.missed { /* red border + pink bg on entire row — removed */ }
 ```
+
+### Encounters — End Date Display
+- Added parsing of `r.period?.end` from FHIR Encounter response
+- Each encounter now stores `endDate` and `endTime` (formatted same as start)
+- Rendered inline after the start date/time with an arrow separator: `📅 Oct 15 🕐 9:30 AM → 📅 Oct 15 🕐 10:15 AM 📍 Room`
+- If `period.end` is absent in the API response, nothing extra is shown
+- File: `src/components/DashboardPage.jsx`
+
+### Encounters — Location Row (REVERTED)
+- Briefly moved `📍 location` to its own row below the dates
+- User requested revert — location stays on the same row as dates
+- Commit `09c4326` (moved), reverted by `a04df92`
+
+### Git Commit History (continued)
+92. `8d08c63` — Update notes.md with med/encounter pills, task queue notes, care tab changes
+93. `ee38ca4` — Encounters: show end date and end time from period.end
+94. `09c4326` — Encounters: move location to its own row below dates
+95. `a04df92` — Revert "Encounters: move location to its own row below dates"
