@@ -89,8 +89,8 @@ Rules:
   * Clinical Deterioration: emergencies, worsening conditions, abnormal labs. Be specific with condition names and values.
   * Medication Non-Adherence: self-discontinued meds, gaps, on-hold medications. Include drug name and gap duration.
   * Missed Follow-Up: no-show appointments, missed clinics. Include clinic name and date.
-- severity: CRITICAL = life-threatening/recurring emergencies, HIGH = significant concern, MEDIUM = moderate
-- detail: specific values, dates, drug names. Max 90 chars.
+- severity: CRITICAL = life-threatening/recurring emergencies, HIGH = significant concern, MEDIUM = moderate, NONE = no issue found for this category
+- detail: specific values, dates, drug names. Max 90 chars. If no issue exists for a category, set severity to "NONE" and detail to "No care gaps detected".
 - trends: Extract ALL abnormal/deteriorating observations and clinical findings. SKIP any values that are normal. For each trend include:
   * The actual numeric value(s) with units. If multiple readings exist over time, show the trend with "→" (e.g. "7.2% → 11.8%").
   * Classify each as "critical" (dangerously abnormal), "high" (significantly abnormal), or "medium" (mildly abnormal).
@@ -1132,6 +1132,10 @@ function DashboardPage() {
     { label: 'HBA1C', value: d.trends.hba1c, status: 'high' },
     { label: 'LDL', value: d.trends.ldl, status: 'medium' }
   ]
+  const activeGapCount = dynAlerts.filter(a => a.severity && a.severity.toUpperCase() !== 'NONE').length
+  const dynamicPriority = activeGapCount >= 3 ? 'High' : activeGapCount === 2 ? 'Medium' : 'Low'
+  const dynamicPriorityClass = activeGapCount >= 3 ? 'pill-red' : activeGapCount === 2 ? 'pill-orange' : 'pill-green'
+  const hasCareGaps = activeGapCount > 0
 
   if (isLoading) return <LoadingScreen stepRef={loadStepRef} />
 
@@ -1194,8 +1198,11 @@ function DashboardPage() {
           <div className="dash-banner-info">
             <div className="dash-banner-name-row">
               <h2>{pt.name}</h2>
-              <span className="dash-pill pill-red">High Priority</span>
-              <span className="dash-pill pill-red-outline">⚠ Care Gap</span>
+              <span className={`dash-pill ${dynamicPriorityClass}`}>{dynamicPriority} Priority</span>
+              {hasCareGaps
+                ? <span className="dash-pill pill-red-outline">⚠ Care Gap</span>
+                : <span className="dash-pill pill-green-outline">✓ No Care Gaps Detected</span>
+              }
             </div>
             <div className="dash-banner-meta">
               <span>{pt.age} yrs</span>
@@ -1251,16 +1258,22 @@ function DashboardPage() {
                   </div>
                 ) : (<>
                 <div className="dash-alert-list">
-                  {dynAlerts.map((a, i) => (
-                    <div key={i} className="dash-alert-item">
-                      <span className="dash-alert-icon">{ALERT_ICONS[a.title] === 'pill-img' ? <img src="/images/icon-pill.png" alt="" className="dash-alert-img" /> : ALERT_ICONS[a.title] === 'calendar-img' ? <img src="/images/icon-calendar.png" alt="" className="dash-alert-img" /> : (ALERT_ICONS[a.title] || '⚠')}</span>
-                      <div className="dash-alert-body">
-                        <strong>{a.title}</strong>
-                        <p>{a.detail}</p>
+                  {dynAlerts.map((a, i) => {
+                    const isNone = a.severity?.toUpperCase() === 'NONE'
+                    return (
+                      <div key={i} className={`dash-alert-item ${isNone ? 'dash-alert-none' : ''}`}>
+                        <span className="dash-alert-icon">{ALERT_ICONS[a.title] === 'pill-img' ? <img src="/images/icon-pill.png" alt="" className="dash-alert-img" /> : ALERT_ICONS[a.title] === 'calendar-img' ? <img src="/images/icon-calendar.png" alt="" className="dash-alert-img" /> : (ALERT_ICONS[a.title] || '⚠')}</span>
+                        <div className="dash-alert-body">
+                          <strong>{a.title}</strong>
+                          <p>{isNone ? 'No care gaps detected' : a.detail}</p>
+                        </div>
+                        {isNone
+                          ? <span className="dash-pill pill-green">NONE</span>
+                          : <span className={`dash-pill pill-${a.severity.toLowerCase()}`}>{a.severity}</span>
+                        }
                       </div>
-                      <span className={`dash-pill pill-${a.severity.toLowerCase()}`}>{a.severity}</span>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <div className="dash-trends-bar">
                   <div className="dash-trends-label">
@@ -1268,12 +1281,24 @@ function DashboardPage() {
                     DETERIORATING CLINICAL TRENDS
                   </div>
                   <div className="dash-trends-scroll">
-                    {dynTrends.map((t, i) => (
-                      <div key={i} className={`dash-trend-chip ${t.status}`}>
-                        <span className="dash-trend-lbl">{t.label}</span>
-                        <b>{t.value}</b>
-                      </div>
-                    ))}
+                    {dynTrends.map((t, i) => {
+                      const severityMatch = t.value.match(/(↑\s*|↓\s*)?(CRITICAL|HIGH|MEDIUM|LOW)\s*$/i)
+                      const rangeMatch = t.value.match(/\(Normal:?\s*[^)]+\)/i)
+                      let mainVal = t.value
+                      let rangeStr = ''
+                      let severityStr = ''
+                      if (severityMatch) { severityStr = severityMatch[0].trim(); mainVal = mainVal.replace(severityMatch[0], '').trim() }
+                      if (rangeMatch) { rangeStr = rangeMatch[0]; mainVal = mainVal.replace(rangeMatch[0], '').trim() }
+                      const sevClass = severityStr.toLowerCase().includes('critical') ? 'sev-critical' : severityStr.toLowerCase().includes('high') ? 'sev-high' : severityStr.toLowerCase().includes('medium') ? 'sev-medium' : 'sev-low'
+                      return (
+                        <div key={i} className={`dash-trend-chip ${t.status}`}>
+                          <span className="dash-trend-lbl">{t.label}</span>
+                          <b>{mainVal}</b>
+                          {rangeStr && <span className="dash-trend-range">{rangeStr}</span>}
+                          {severityStr && <span className={`dash-trend-sev ${sevClass}`}>{severityStr}</span>}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
                 </>)}
@@ -1549,16 +1574,16 @@ function DashboardPage() {
                         backgroundColor: '#fff', titleColor: '#1E293B', bodyColor: '#475569', borderColor: '#E2E8F0', borderWidth: 1,
                         padding: 12, cornerRadius: 8, titleFont: { weight: '600' },
                         callbacks: {
-                          title: (items) => { const d = new Date(labels[items[0].dataIndex]); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+                          title: (items) => { const d = new Date(labels[items[0].dataIndex]); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const yy = String(d.getFullYear()).slice(-2); return `${mm}-${dd}-${yy}` },
                           label: (ctx) => {
                             if (ctx.raw == null) return null
-                            return `${ctx.dataset.label}: ${ctx.raw}`
+                            return ctx.raw
                           }
                         }
                       },
                     },
                     scales: {
-                      x: { grid: { display: false }, ticks: { font: { size: 11 }, maxTicksLimit: 8, callback: (_, i) => { const d = new Date(labels[i]); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) } } },
+                      x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8, callback: (_, i) => { const d = new Date(labels[i]); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const yy = String(d.getFullYear()).slice(-2); return `${mm}-${dd}-${yy}` } } },
                       y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 } }, beginAtZero: true },
                     },
                   }
