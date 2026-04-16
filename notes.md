@@ -1898,3 +1898,83 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 85. `9a09bf4` — Deteriorating trends: blue values, green ranges
 86. `fafc0e4` — Deteriorating trends values: change from blue to orange
 87. `704e804` — Outreach: Send Email opens mailto with patient email, remove Save as Template; Care Team: add logged-in user as Care Coordinator
+88. `682c892` — Update notes.md with chart fixes, trend colors, outreach email, care team logged-in user
+89. `15a6314` — Med/encounter pill colors, Task Queue Add Note to Care tab, remove Care tab Add Note button
+90. `1e7caf2` — Fix: only Missed pill is red, not the whole encounter row
+91. `15784f3` — Care tab task notes: structured layout with Task, Status, Note on separate lines
+
+---
+
+## Session: April 16, 2026 (continued)
+
+### Medication Pill Colors
+- **Active** → green (`#16A34A`, `.pill-active`)
+- **Stopped / Discontinued** → red (`#DC2626`, `.pill-stopped`)
+- **Completed** → grey (`#64748B`, `.pill-completed-grey`)
+- **On-hold** → yellow/amber (unchanged, `.pill-onhold`)
+- Status class logic updated: `statusClass` function now checks lowercase status for all variants
+- File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
+
+### Encounter Pill Colors
+- **Completed** → grey (`#64748B`, `.pill-completed`)
+- **Upcoming** → blue (`#2563EB`, `.pill-upcoming`)
+- **Stopped** → red (`#DC2626`, `.pill-stopped`) — only the pill, not the entire row
+- **Missed** → red pill only (`.pill-missed`) — removed the red left border and pink background from the entire row (`.dash-appt-row.missed` CSS rule removed, `missed` class no longer applied to the row div)
+- Added `stopped` as a valid `apptStatus` derived from FHIR `status === 'stopped'`
+- File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
+
+### Clinical Notes — Remove Add Note from Care Tab
+- Removed the `+ Add Note` button that appeared when `noteFilter === 'coordination'`
+- Removed the entire Add Note modal (header, textarea, cancel/confirm buttons)
+- The `handleAddNote` function and related state (`showAddNoteModal`, `newNote`) still exist but are unused (kept for potential future API integration)
+- File: `src/components/DashboardPage.jsx`
+
+### Task Queue — AI NOTES + User Notes → Care Tab
+- **Renamed**: "NOTES:" label → "AI NOTES:" in each task card
+- **New UI**: Below AI NOTES, added a "Notes:" section with:
+  - A `<textarea>` for free-text input (placeholder: "Add a note...")
+  - An "Add Note" button (blue, disabled when text is empty)
+- **State**: Two new state variables:
+  - `taskNoteTexts` — `{ [taskId]: string }` — tracks text input per task
+  - `taskCareNotes` — array of care note objects created from task notes
+- **`handleTaskAddNote(taskId, taskTitle, taskStatus)`**:
+  - Creates a care note object with `taskId`, `taskTitle`, `taskStatus` label, note `text`, author info, and date
+  - Appends to `taskCareNotes` state
+  - Clears the text input for that task
+- **Care Tab integration**: `careNotes` array now merges API-fetched notes + `taskCareNotes`, sorted by date (newest first)
+- **No API** — notes are local state only (will be migrated to API when backend DELETE endpoint is available)
+- File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
+
+### Task Status Change — Remove Old Care Notes
+- When `updateTaskStatus(taskId, newStatus)` is called (Start Task / Mark Complete), all care notes with matching `taskId` are removed from `taskCareNotes` state
+- This means: if a note was added during "Pending" status and the task moves to "In Process", that pending note is deleted from the Care tab
+- Logic: `setTaskCareNotes(prev => prev.filter(n => n.taskId !== taskId))`
+- File: `src/components/DashboardPage.jsx`
+
+### Care Tab Task Notes — Structured Layout
+- **Before**: Notes displayed as a single line: `[Task: ...] [Status: ...] note text`
+- **After**: Notes display in a structured card with blue left accent border:
+  - **Task:** title on its own line (bold label)
+  - **Status:** status on its own line (bold label)
+  - **Note:** user's note text on its own line (bold label)
+- CSS: `.dash-note-task-info` (container with `#F8FAFC` bg, `3px solid #2563EB` left border), `.dash-note-task-row`, `.dash-note-task-label`
+- Regular (non-task) care notes still render as plain text paragraphs
+- File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
+
+### CSS Changes Summary
+```css
+/* New classes added */
+.pill-stopped { background: #FEE2E2; color: #DC2626; }
+.pill-completed-grey { background: #F1F5F9; color: #64748B; }
+.pill-upcoming { background: #DBEAFE; color: #2563EB; }  /* changed from green */
+.pill-completed { background: #F1F5F9; color: #64748B; }  /* changed from green */
+.tq-user-notes { /* container for user note input */ }
+.tq-note-input { /* textarea styling */ }
+.tq-add-note-btn { /* blue Add Note button */ }
+.dash-note-task-info { /* structured task note card */ }
+.dash-note-task-row { /* each row in task note */ }
+.dash-note-task-label { /* bold label (Task:/Status:/Note:) */ }
+
+/* Removed */
+.dash-appt-row.missed { /* red border + pink bg on entire row — removed */ }
+```
