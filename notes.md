@@ -1859,6 +1859,42 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
   - Frontend: if severity is NONE → shows "No care gaps detected" text + green "NONE" pill + dimmed styling (`.dash-alert-none { opacity: 0.6 }`)
 - File: `src/components/DashboardPage.jsx`, `src/dashboard.css`
 
+### Chatbot Chart Fixes
+- **X-axis dates**: Added mm-dd-yy format with 45° rotation, font size 10px
+- **Tooltip**: Title shows mm-dd-yy date, label shows just the value (not "Label: value")
+- Graceful fallback: if date string can't be parsed, shows raw label
+- File: `src/components/ChatWidget.jsx` (`ChartBlock` component)
+
+### Observation Trends Action Chip — Silent Query
+- User sees "Observation Trends" in dropdown
+- Sends "Plot Trends" to the chatbot silently via `query: 'Plot Trends'`
+- File: `src/components/ChatWidget.jsx`
+
+### Deteriorating Clinical Trends — Color Iterations
+- **Values**: Changed from black → blue (`#2563EB`) → **orange** (`#EA580C`) (user chose orange as a "negative" color)
+- **Ranges**: Changed from grey → **green** (`#059669`)
+- Commits: `9a09bf4` (blue→orange), `fafc0e4` (final orange)
+
+### Patient Outreach — Email + Template Changes
+- **Send Email button** (Email Portal card): Changed from `<button>` to `<a href="mailto:${pt.email}">` — opens Outlook/email client with patient's email in "To" field
+- **Send to Patient button**: Also changed to `<a href="mailto:${pt.email}">` — same mailto functionality
+- **Save as Template button**: Removed entirely
+- File: `src/components/DashboardPage.jsx`
+
+### Care Team — Add Logged-In User (IMPLEMENTED)
+- The logged-in user is now automatically added to the **top** of the Care Team list
+- Name: from `cb_user` in localStorage (formatted via `formatDisplayName`)
+- Initials: auto-generated from first letters of name parts (max 2)
+- Specialty/Program: "Care Coordinator"
+- Email: from `cb_email` in localStorage (used for mailto link)
+- **Deduplication**: Won't add if a team member with the same name already exists (case-insensitive)
+- Added inside `loadDashboard()` after `parseCareTeamFromEoC` returns, before `setCareTeamData`
+- File: `src/components/DashboardPage.jsx`
+
 ### Git Commit History (this session)
 82. `3730e84` — UI batch: rename Observation Trends, chart date format, tooltip, color-coded trends, dynamic priority/care gap pills, alert NONE state
 83. `9021f60` — Fix: Observation Trends silent query, chatbot chart dates mm-dd-yy + tooltip value only, remove bold from deteriorating trends
+84. `412d950` — Update notes.md with April 16 session
+85. `9a09bf4` — Deteriorating trends: blue values, green ranges
+86. `fafc0e4` — Deteriorating trends values: change from blue to orange
+87. `704e804` — Outreach: Send Email opens mailto with patient email, remove Save as Template; Care Team: add logged-in user as Care Coordinator
