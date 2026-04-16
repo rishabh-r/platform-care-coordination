@@ -195,7 +195,7 @@
   background: white; font-size: 12px; white-space: nowrap;
 }
 .dash-trend-lbl { font-weight: 600; color: #64748B; letter-spacing: .3px; }
-.dash-trend-val { font-weight: 500; color: #2563EB; }
+.dash-trend-val { font-weight: 500; color: #EA580C; }
 .dash-trend-range { font-size: 11px; color: #059669; font-weight: 500; }
 .dash-trend-sev { font-size: 10px; font-weight: 700; letter-spacing: .5px; padding: 2px 6px; border-radius: 4px; }
 .sev-critical { color: #fff; background: #DC2626; }
