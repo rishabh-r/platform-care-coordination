@@ -1887,7 +1887,7 @@ Requirements:
                 date: m.date, time: '', location: m.location || '', isMissed: true
               }))
               const allAppts = fhirEnc.length || missed.length
-                ? [...missed, ...fhirEnc.filter(e => !e.isMissed), ...fhirEnc.filter(e => e.isMissed)]
+                ? [...missed, ...fhirEnc.filter(e => !e.isMissed)]
                 : d.appointments.map(a => ({ ...a, isMissed: false }))
               const deduped = []
               const seen = new Set()
