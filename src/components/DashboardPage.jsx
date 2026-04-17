@@ -1873,12 +1873,7 @@ Requirements:
           <div id="appts-section" className="dash-card">
             <div className="dash-card-head">
               <h3>Appointments &amp; Encounters</h3>
-              <p>{(() => {
-                const enc = encData || []
-                const missed = missedAppts || []
-                const total = enc.length + missed.length
-                return total ? `${total} encounters` : 'Upcoming and recent visits'
-              })()}</p>
+              <p>{(encData || []).length ? `${(encData || []).length} encounters` : 'Upcoming and recent visits'}</p>
             </div>
             {(() => {
               const fhirEnc = encData || []
