@@ -1873,7 +1873,7 @@ Requirements:
           <div id="appts-section" className="dash-card">
             <div className="dash-card-head">
               <h3>Appointments &amp; Encounters</h3>
-              <p>{(encData || []).length ? `${(encData || []).length} encounters` : 'Upcoming and recent visits'}</p>
+              <p>{(() => { const enc = (encData || []).filter(e => !e.isMissed); const m = missedAppts || []; const t = enc.length + m.length; return t ? `${t} encounters` : 'Upcoming and recent visits' })()}</p>
             </div>
             {(() => {
               const fhirEnc = encData || []
@@ -1882,7 +1882,7 @@ Requirements:
                 date: m.date, time: '', location: m.location || '', isMissed: true
               }))
               const allAppts = fhirEnc.length || missed.length
-                ? [...fhirEnc]
+                ? [...missed, ...fhirEnc.filter(e => !e.isMissed)]
                 : d.appointments.map(a => ({ ...a, isMissed: false }))
               const deduped = []
               const seen = new Set()
