@@ -2093,3 +2093,21 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
   - Systolic BP & Diastolic BP were already correct (`mm[Hg]`)
 - **OBSERVATION_RANGES** — all 5 vitals already had correct ranges, added recommendation to SpO2:
   - `oxygenSaturationArterial`: added "supplemental O2 may be needed" to Low description
+
+### Vitals — Dedicated API Integration
+- **Changed**: Dashboard Vitals section now fetches from **`/baseR4/Observation/vitals/search`** instead of `/baseR4/Observation/search`
+- The regular observations API (`/baseR4/Observation/search`) is **still used** for:
+  - Clinical Trends charts
+  - AI analysis fallback (in `loadAIInsights`)
+- **No other dashboard sections were affected** — only the Vitals card
+- Changes in `src/components/DashboardPage.jsx`:
+  1. Added SpO2 (`59408-5`) to `OBSERVATION_NORMAL_RANGES` with range 95-100%
+  2. Added new API call: `callFhirApi(buildUrl('/baseR4/Observation/vitals/search', { patient: patientId, page: 0, size: 100 }))`
+  3. `parseVitalsFromFhir()` now receives `vitalsBundle` (from new API) instead of `obsBundle`
+  4. Header text changed from "X observation types" to "X vitals"
+- The `parseVitalsFromFhir` function is unchanged — it already handles FHIR bundle format correctly (picks latest value per LOINC code, evaluates against normal ranges)
+- **Knowledge base** (`src/config/knowledgeBases.js`) already has all 5 vitals LOINC codes, units, and ranges
+
+### Git Commit History (continued)
+111. `ea57a42` — Update notes.md with vitals Excel data and knowledge base unit fixes
+112. `49b4f60` — Use dedicated vitals API for dashboard Vitals section
