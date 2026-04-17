@@ -2042,7 +2042,17 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 ### Encounters — Duplicate Missed Appointments Fix
 - **Problem**: Missed appointments were showing twice — once from AI-detected `missedAppointments` (descriptive names like "Diabetic Foot Screening") and once from FHIR Encounter API (generic name "Encounter")
 - **First attempt**: Removed FHIR missed encounters, kept AI ones → user didn't like this
-- **Final fix**: Removed AI-detected missed appointments entirely, kept only FHIR API responses
-- Changed from `[...missed, ...fhirEnc.filter(e => !e.isMissed), ...fhirEnc.filter(e => e.isMissed)]` to `[...fhirEnc]`
-- Now encounters list uses only FHIR API data — no AI-injected duplicates
+- **Second attempt**: Removed AI missed, kept only FHIR API responses (`[...fhirEnc]`) → user wanted to try the opposite
+- **Final fix**: Show AI missed appointments (descriptive names) + FHIR non-missed encounters, hide FHIR missed duplicates
+- Changed to `[...missed, ...fhirEnc.filter(e => !e.isMissed)]`
+- Count in header updated to match: `fhirEnc (non-missed).length + missedAppts.length`
 - File: `src/components/DashboardPage.jsx`
+
+### Git Commit History (continued)
+102. `aa9f174` — Update notes.md with April 17 session
+103. `3abc65d` — Pagination for medications and encounters
+104. `66d4d56` — Fix: fetch all encounters/medications with size=100
+105. `9ddbff6` — Fix: remove duplicate missed encounters (attempt 1 — keep AI, remove FHIR missed)
+106. `90f7c5e` — Encounters: use only FHIR API responses (attempt 2 — keep FHIR, remove AI missed)
+107. `3229a5a` — Fix: encounter count uses only FHIR data
+108. `8474d3b` — Encounters: show AI missed + FHIR non-missed, hide FHIR missed duplicates (final)
