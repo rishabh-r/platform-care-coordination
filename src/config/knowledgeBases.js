@@ -195,7 +195,7 @@ ureaNitrogen: Low <7 (liver/malnutrition) | Normal 7-20 | High >20 (kidney/dehyd
 inhaledOxygenConcentration: Low <21 | Normal 21-100 | High=100 (supplemental O2)
 estimatedGFR: Low <60 (reduced kidney function) | Normal 60-120 | High >120
 HbA1c: Low <4.0 | Normal 4.0-5.6 | High >5.6 (diabetes/poor glucose control)
-oxygenSaturationArterial: Low <95 (hypoxemia) | Normal 95-100 | High >100
+oxygenSaturationArterial: Low <95 (hypoxemia - supplemental O2 may be needed) | Normal 95-100 | High >100
 troponinT: Low <0.01 | Normal 0.01-0.04 | High >0.04 (heart muscle injury - urgent)
 leukocytesCount: Low <4000 (immune suppression) | Normal 4000-11000 | High >11000 (infection/inflammation)
 cReactiveProteinCRP: Low <0.0 | Normal 0.0-10.0 | High >10.0 (inflammation/infection/autoimmune)
@@ -258,15 +258,15 @@ LOINC CODES AND UNITS:
 44. Estimated GFR MDRD: 33914-3
 45. Kidney stone analysis: 34325-7, umol/L
 46. HbA1c: 4548-4, %
-47. Oxygen saturation arterial SpO2: 59408-5, mg/dL
+47. Oxygen saturation arterial SpO2: 59408-5, %
 48. Troponin T: 6598-7, ng/mL
 49. Leukocytes count: 6690-2, umol/L
 50. Anisocytosis: 702-1
 51. Gastrin: 74205-6, mg/dL
-52. Body temperature: 8310-5, mEq/L
+52. Body temperature: 8310-5, [degF]
 53. Diastolic Blood Pressure: 8462-4, mm[Hg]
 54. Systolic Blood Pressure: 8480-6, mm[Hg]
-55. Heart rate: 8867-4, mg/dL
+55. Heart rate: 8867-4, /min
 56. BMI: 39156-5, kg/m2
 57. Albumin: 1751-7, g/dL
 58. Protein/Creatinine Ratio: 2890-2, mg/mg
