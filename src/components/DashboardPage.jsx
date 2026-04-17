@@ -347,6 +347,7 @@ const OBSERVATION_NORMAL_RANGES = {
   '8480-6':  { name: 'SYSTOLIC BP', unit: 'mmHg', low: 90, high: 120, normal: '<120' },
   '8462-4':  { name: 'DIASTOLIC BP', unit: 'mmHg', low: 60, high: 80, normal: '<80' },
   '8310-5':  { name: 'BODY TEMPERATURE', unit: '°C', low: 36.1, high: 37.2, normal: '36.1-37.2' },
+  '59408-5': { name: 'OXYGEN SATURATION (SpO2)', unit: '%', low: 95, high: 100, normal: '95-100' },
   '33762-6': { name: 'NT-proBNP', unit: 'pg/mL', low: 0, high: 125, normal: '<125' },
   '2951-2':  { name: 'SODIUM', unit: 'mEq/L', low: 136, high: 145, normal: '136-145' },
 }
@@ -785,8 +786,9 @@ function DashboardPage() {
         callFhirApi(buildUrl('/baseR4/MedicationRequest', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Meds fetch failed:', e); return null }),
         callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0&size=100`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null }),
         callFhirApi(buildUrl('/baseR4/EpisodeOfCare', { patient: patientId, status: 'active', page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] EpisodeOfCare fetch failed:', e); return null }),
-        callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Observations fetch failed:', e); return null })
-      ]).then(async ([medBundle, encBundle, eocBundle, obsBundle]) => {
+        callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Observations fetch failed:', e); return null }),
+        callFhirApi(buildUrl('/baseR4/Observation/vitals/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Vitals fetch failed:', e); return null })
+      ]).then(async ([medBundle, encBundle, eocBundle, obsBundle, vitalsBundle]) => {
         const parsedMeds = parseMedsFromFhir(medBundle)
         if (parsedMeds?.length) {
           console.log('[Dashboard] Parsed', parsedMeds.length, 'medications from FHIR')
@@ -813,9 +815,9 @@ function DashboardPage() {
           console.log('[Dashboard] Parsed', teamWithUser.length, 'care team members (including logged-in user)')
           setCareTeamData(teamWithUser)
         }
-        const parsedVitals = parseVitalsFromFhir(obsBundle)
+        const parsedVitals = parseVitalsFromFhir(vitalsBundle)
         if (parsedVitals?.length) {
-          console.log('[Dashboard] Parsed', parsedVitals.length, 'latest observations for vitals')
+          console.log('[Dashboard] Parsed', parsedVitals.length, 'vitals from dedicated vitals API')
           setVitalsData(parsedVitals)
         }
         const allObs = parseAllObservationsForTrends(obsBundle)
@@ -1797,7 +1799,7 @@ Requirements:
           <div id="vitals-section" className="dash-card">
             <div className="dash-card-head">
               <h3>Vitals</h3>
-              <p>{vitalsData ? `${vitalsData.length} observation types` : 'Last updated: Today, 9:30 AM'}</p>
+              <p>{vitalsData ? `${vitalsData.length} vitals` : 'Last updated: Today, 9:30 AM'}</p>
             </div>
             {(() => {
               const allVitals = vitalsData || d.vitals
