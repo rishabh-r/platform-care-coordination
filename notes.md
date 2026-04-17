@@ -2126,7 +2126,46 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
   | SpO2 | 59408-5 | 96 % | Oct 2025 |
 - Dashboard now correctly shows 5 vital cards with latest value per type
 
+### CareCoordinationNote API Integration (Task Notes + Care Tab)
+- **Replaced in-memory `taskCareNotes` state** with real API persistence
+- **3 APIs integrated** on `/baseR4/CareCoordinationNote`:
+
+**1. POST** `/baseR4/CareCoordinationNote` — Create a task note
+- Called when "Add Note" is clicked in Task Queue
+- Body: `patientId`, `actionId` (task ID), `coordinatorEmail`, `coordinatorName`, `status` (pending/in-process/completed), `coordinatorRole`, `careNotes`
+- After POST, `fetchCareNotes()` is called to refresh Care tab
+
+**2. GET** `/baseR4/CareCoordinationNote/search` — Fetch care notes for Care tab
+- Requires all 4 params: `patientId`, `coordinatorEmail`, `actionId`, `status`
+- After task queue loads, loops through each task and makes 3 GET calls per task (one per status: pending, in-process, completed)
+- Results are deduplicated and merged, sorted by date descending
+- Parses `recommended-action` extension as task title, `status` extension as task status
+- **Initial attempt** with just `patientId` + `coordinatorEmail` (no actionId/status) returned 500 — API requires all 4 params
+- Care notes fetch is triggered by `fetchTaskQueue` after tasks load (not from `loadDashboard` anymore)
+
+**3. PATCH** `/baseR4/CareCoordinationNote` — Update note status when task status changes
+- Params: `email`, `patientId`, `actionId`, `status` (the **CURRENT/OLD** status, not the new one)
+- Called alongside the existing `portal/update-task` PATCH (which sends the **new** status)
+- 3 possible transitions:
+  - Pending → Start Task → PATCH with `status=pending`
+  - Pending → Mark Complete → PATCH with `status=pending`
+  - In Process → Mark Complete → PATCH with `status=in-process`
+- After PATCH, both `fetchTaskQueue()` and `fetchCareNotes()` are called to refresh UI
+
+**Cleanup:**
+- Removed `taskCareNotes` state entirely
+- Removed in-memory note creation logic from `handleTaskAddNote`
+- Care tab notes are now fully API-driven via `careDocNotes`
+- `parseCareNoteEntry` helper function extracts task title and status from FHIR extensions
+
+**Files changed:** `src/components/DashboardPage.jsx`
+
 ### Git Commit History (continued)
 111. `ea57a42` — Update notes.md with vitals Excel data and knowledge base unit fixes
 112. `49b4f60` — Use dedicated vitals API for dashboard Vitals section
 113. `5737265` — Update notes.md with dedicated vitals API integration
+114. `84e080a` — Fix body temperature range to Fahrenheit; update notes.md
+115. `03ab2a5` — Integrate CareCoordinationNote API for task notes and care tab (POST, GET, PATCH)
+116. `0919f7a` — Fix: simplify care notes GET to single call (500 error fix attempt)
+117. `56b6093` — Fix: fetch care notes per task with actionId and status params
+118. `771ed71` — Fix: PATCH CareCoordinationNote sends current task status, not new status
