@@ -1098,16 +1098,17 @@ Requirements:
     await fetchTaskQueue()
   }
 
-  const updateTaskStatus = async (taskId, newStatus) => {
-    const apiStatus = newStatus === 'inprocess' ? 'in-process' : newStatus
+  const updateTaskStatus = async (taskId, newStatus, currentStatus) => {
+    const apiNewStatus = newStatus === 'inprocess' ? 'in-process' : newStatus
+    const apiCurrentStatus = currentStatus === 'inprocess' ? 'in-process' : currentStatus
     try {
       const token = localStorage.getItem('cb_token')
       await Promise.all([
-        fetch(`${FHIR_BASE}/baseR4/portal/update-task?actionId=${taskId}&status=${apiStatus}`, {
+        fetch(`${FHIR_BASE}/baseR4/portal/update-task?actionId=${taskId}&status=${apiNewStatus}`, {
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${token}` },
         }),
-        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote?email=${encodeURIComponent(userEmail)}&patientId=${patientId}&actionId=${taskId}&status=${apiStatus}`, {
+        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote?email=${encodeURIComponent(userEmail)}&patientId=${patientId}&actionId=${taskId}&status=${apiCurrentStatus}`, {
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${token}` },
         })
@@ -1823,12 +1824,12 @@ Requirements:
                   <div className="tq-task-actions">
                     {task.status === 'pending' && (
                       <>
-                        <button className="tq-btn-start" onClick={() => updateTaskStatus(task.id, 'inprocess')}>▶ Start Task</button>
-                        <button className="tq-btn-complete" onClick={() => updateTaskStatus(task.id, 'completed')}>✓ Mark Complete</button>
+                        <button className="tq-btn-start" onClick={() => updateTaskStatus(task.id, 'inprocess', 'pending')}>▶ Start Task</button>
+                        <button className="tq-btn-complete" onClick={() => updateTaskStatus(task.id, 'completed', 'pending')}>✓ Mark Complete</button>
                       </>
                     )}
                     {task.status === 'inprocess' && (
-                      <button className="tq-btn-complete" onClick={() => updateTaskStatus(task.id, 'completed')}>✓ Mark Complete</button>
+                      <button className="tq-btn-complete" onClick={() => updateTaskStatus(task.id, 'completed', 'inprocess')}>✓ Mark Complete</button>
                     )}
                     {task.status === 'completed' && (
                       <span className="tq-completed-label">✓ Completed</span>
