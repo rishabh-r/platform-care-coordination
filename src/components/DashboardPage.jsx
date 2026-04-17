@@ -245,7 +245,7 @@ function parseEncountersFromFhir(bundle) {
     })
   }
   encounters.sort((a, b) => (b.rawDate || '').localeCompare(a.rawDate || ''))
-  return encounters.length ? encounters.slice(0, 10) : null
+  return encounters.length ? encounters : null
 }
 
 async function parseCareTeamFromEoC(bundle) {
@@ -716,8 +716,8 @@ function DashboardPage() {
   const [riskData, setRiskData] = useState(null)
   const [viewingRisk, setViewingRisk] = useState(null)
   const [showAllVitals, setShowAllVitals] = useState(false)
-  const [showAllMeds, setShowAllMeds] = useState(false)
-  const [showAllAppts, setShowAllAppts] = useState(false)
+  const [medsPage, setMedsPage] = useState(1)
+  const [apptsPage, setApptsPage] = useState(1)
   const [isReviewed, setIsReviewed] = useState(false)
   const [lastReviewDate, setLastReviewDate] = useState(null)
   const [selectedActions, setSelectedActions] = useState([])
@@ -1833,16 +1833,18 @@ Requirements:
           {/* Medications */}
           <div id="meds-section" className="dash-card">
             <div className="dash-card-head">
-              <h3>Current Medications</h3>
+              <h3>Medications</h3>
               <p>{(medsData || d.medications).length} medications</p>
             </div>
             {(() => {
               const allMeds = medsData || d.medications
-              const visible = showAllMeds ? allMeds : allMeds.slice(0, 3)
+              const MEDS_PER_PAGE = 10
+              const totalMedPages = Math.ceil(allMeds.length / MEDS_PER_PAGE)
+              const pagedMeds = allMeds.slice((medsPage - 1) * MEDS_PER_PAGE, medsPage * MEDS_PER_PAGE)
               const statusClass = s => { const l = s?.toLowerCase() || ''; return l === 'discontinued' || l === 'stopped' ? 'pill-stopped' : l === 'on-hold' || l === 'on hold' ? 'pill-onhold' : l === 'completed' ? 'pill-completed-grey' : 'pill-active' }
               return (
                 <>
-                  {visible.map((m, i) => (
+                  {pagedMeds.map((m, i) => (
                     <div key={i} className="dash-med-row">
                       <div className="dash-med-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" width="18" height="18"><path d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-6 18h6"/></svg>
@@ -1853,10 +1855,14 @@ Requirements:
                       </div>
                     </div>
                   ))}
-                  {allMeds.length > 3 && (
-                    <button className="dash-show-more-btn" onClick={() => setShowAllMeds(v => !v)}>
-                      {showAllMeds ? '▲ Show Less' : `▼ Show All (${allMeds.length - 3} more)`}
-                    </button>
+                  {totalMedPages > 1 && (
+                    <div className="cn-pagination">
+                      {medsPage > 1 && <button className="cn-page-btn" onClick={() => setMedsPage(p => p - 1)}>‹ Prev</button>}
+                      {Array.from({ length: totalMedPages }, (_, i) => i + 1).map(pg => (
+                        <button key={pg} className={`cn-page-btn ${medsPage === pg ? 'cn-page-active' : ''}`} onClick={() => setMedsPage(pg)}>{pg}</button>
+                      ))}
+                      {medsPage < totalMedPages && <button className="cn-page-btn" onClick={() => setMedsPage(p => p + 1)}>Next ›</button>}
+                    </div>
                   )}
                 </>
               )
@@ -1889,10 +1895,12 @@ Requirements:
                 const key = `${a.title}|${a.date}`
                 if (!seen.has(key)) { seen.add(key); deduped.push(a) }
               }
-              const visible = showAllAppts ? deduped : deduped.slice(0, 4)
+              const APPTS_PER_PAGE = 10
+              const totalApptPages = Math.ceil(deduped.length / APPTS_PER_PAGE)
+              const pagedAppts = deduped.slice((apptsPage - 1) * APPTS_PER_PAGE, apptsPage * APPTS_PER_PAGE)
               return (
                 <>
-                  {visible.map((a, i) => (
+                  {pagedAppts.map((a, i) => (
                     <div key={i} className="dash-appt-row">
                       <div className="dash-appt-info">
                         <div className="dash-appt-title">
@@ -1914,10 +1922,14 @@ Requirements:
                       </div>
                     </div>
                   ))}
-                  {deduped.length > 4 && (
-                    <button className="dash-show-more-btn" onClick={() => setShowAllAppts(v => !v)}>
-                      {showAllAppts ? '▲ Show Less' : `▼ Show All (${deduped.length - 4} more)`}
-                    </button>
+                  {totalApptPages > 1 && (
+                    <div className="cn-pagination">
+                      {apptsPage > 1 && <button className="cn-page-btn" onClick={() => setApptsPage(p => p - 1)}>‹ Prev</button>}
+                      {Array.from({ length: totalApptPages }, (_, i) => i + 1).map(pg => (
+                        <button key={pg} className={`cn-page-btn ${apptsPage === pg ? 'cn-page-active' : ''}`} onClick={() => setApptsPage(pg)}>{pg}</button>
+                      ))}
+                      {apptsPage < totalApptPages && <button className="cn-page-btn" onClick={() => setApptsPage(p => p + 1)}>Next ›</button>}
+                    </div>
                   )}
                 </>
               )
