@@ -865,10 +865,6 @@ function DashboardPage() {
         .then(bundle => { const n = parseDocRefNotes(bundle, 'Admin'); console.log('[Dashboard] Parsed', n.length, 'admin document notes'); setAdminDocNotes(n) })
         .catch(e => console.warn('[Dashboard] Admin doc notes fetch failed:', e))
 
-      if (userEmail) {
-        fetchCareNotes(patientId)
-      }
-
       await fhirDirectPromise
       return patientName
     }
@@ -1016,19 +1012,39 @@ Requirements:
     return { author: name, initials, role, type: 'Coordination', text: r.description || '', date: dateStr, rawDate: dt, ...(taskTitle ? { taskTitle, taskStatus: statusLabel } : {}) }
   }
 
-  const fetchCareNotes = async (pid) => {
+  const fetchCareNotes = async (pid, tasks) => {
     try {
       const token = localStorage.getItem('cb_token')
       const pId = pid || patientId
       const email = encodeURIComponent(userEmail)
-      const res = await fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const headers = { 'Authorization': `Bearer ${token}` }
+      const taskList = tasks || taskQueue
+      if (!taskList.length) {
+        console.log('[Dashboard] No tasks in queue, skipping care notes fetch')
+        setCareDocNotes([])
+        return
+      }
+      const statusValues = ['pending', 'in-process', 'completed']
+      const fetchPromises = taskList.flatMap(task => {
+        const actionId = task.id
+        return statusValues.map(status =>
+          fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&actionId=${actionId}&status=${status}`, { headers })
+            .then(r => r.ok ? r.json() : { entry: [] })
+            .catch(() => ({ entry: [] }))
+        )
       })
-      if (!res.ok) throw new Error(`${res.status}`)
-      const bundle = await res.json()
-      const notes = (bundle?.entry || []).map(parseCareNoteEntry).filter(Boolean).sort((a, b) => b.rawDate - a.rawDate)
-      console.log('[Dashboard] Parsed', notes.length, 'care coordination notes')
-      setCareDocNotes(notes)
+      const results = await Promise.all(fetchPromises)
+      const seenIds = new Set()
+      const allNotes = results.flatMap(bundle => (bundle?.entry || []).map(parseCareNoteEntry).filter(Boolean))
+        .filter(n => {
+          const key = `${n.author}-${n.rawDate?.getTime()}-${n.text}`
+          if (seenIds.has(key)) return false
+          seenIds.add(key)
+          return true
+        })
+        .sort((a, b) => b.rawDate - a.rawDate)
+      console.log('[Dashboard] Parsed', allNotes.length, 'care coordination notes from', taskList.length, 'tasks')
+      setCareDocNotes(allNotes)
     } catch (e) { console.warn('[Dashboard] Care notes fetch failed:', e) }
   }
 
@@ -1043,7 +1059,9 @@ Requirements:
         fetch(`${base}&status=completed`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
       ])
       const all = [...(Array.isArray(r1) ? r1 : []), ...(Array.isArray(r2) ? r2 : []), ...(Array.isArray(r3) ? r3 : [])]
-      setTaskQueue(all.map(mapTask))
+      const mappedTasks = all.map(mapTask)
+      setTaskQueue(mappedTasks)
+      if (userEmail) fetchCareNotes(null, mappedTasks)
     } catch (e) { console.warn('[Dashboard] Task queue fetch failed:', e) }
   }
 
