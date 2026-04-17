@@ -2056,3 +2056,40 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 106. `90f7c5e` — Encounters: use only FHIR API responses (attempt 2 — keep FHIR, remove AI missed)
 107. `3229a5a` — Fix: encounter count uses only FHIR data
 108. `8474d3b` — Encounters: show AI missed + FHIR non-missed, hide FHIR missed duplicates (final)
+109. `5848517` — Update notes.md with encounter duplicate fix iterations
+110. `09a6ea3` — Fix vitals units in knowledge base: body temp, heart rate, SpO2 to FHIR R4 UCUM compliant
+
+### Vitals — Excel Data (chatbase_data.xlsx)
+- Created new **"Vitals" sheet** with 25 rows (5 vitals × 5 key encounters)
+- **Simplified columns** (10 instead of 15): id, patient_id, encounter_id, observation_code_id, status, value_quantity, value_unit, value_string, interpretation_code, effective_date
+- **No changes to any other sheets** — Measurement_Master already had all 5 LOINC codes
+- All new data has **light green background** (`#D5F5E3`) for backend team visibility
+- **Reference table** at bottom with LOINC codes, UCUM units, normal ranges, FHIR category
+
+**5 Vitals used (all from Measurement_Master):**
+| Vital | Row ID | LOINC | UCUM Unit | Normal Range |
+|---|---|---|---|---|
+| Systolic BP | 754 | 8480-6 | mmHg | 90-120 |
+| Diastolic BP | 755 | 8462-4 | mmHg | 60-80 |
+| Heart Rate | 760 | 8867-4 | /min | 60-100 |
+| Body Temperature | 759 | 8310-5 | [degF] | 97.8-99.1 |
+| SpO2 | 763 | 59408-5 | % | 95-100 |
+
+**5 Encounters mapped (story-consistent):**
+| Date | Event | BP | HR | Temp | SpO2 |
+|---|---|---|---|---|---|
+| Mar 2023 | Initial DM diagnosis | 128/82 (N) | 78 (N) | 98.4 (N) | 98% (N) |
+| Apr 2024 | DKA Episode | 142/90 (H) | 115 (HH) | 99.8 (N) | 92% (L) |
+| Mar 2025 | Foot Infection | 160/100 (HH) | 102 (H) | 101.3 (HH) | 95% (N) |
+| Aug 2025 | Uncontrolled DM | 165/105 (HH) | 96 (N) | 99.6 (N) | 94% (L) |
+| Oct 2025 | Latest visit | 158/96 (HH) | 84 (N) | 98.6 (N) | 96% (N) |
+
+### Knowledge Base — Vitals Units Fix
+- File: `src/config/knowledgeBases.js`
+- **LOINC_CODES** — fixed incorrect units:
+  - Body Temperature (8310-5): `mEq/L` → `[degF]`
+  - Heart Rate (8867-4): `mg/dL` → `/min`
+  - SpO2 (59408-5): `mg/dL` → `%`
+  - Systolic BP & Diastolic BP were already correct (`mm[Hg]`)
+- **OBSERVATION_RANGES** — all 5 vitals already had correct ranges, added recommendation to SpO2:
+  - `oxygenSaturationArterial`: added "supplemental O2 may be needed" to Low description
