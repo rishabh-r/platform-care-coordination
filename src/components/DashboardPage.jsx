@@ -346,7 +346,7 @@ const OBSERVATION_NORMAL_RANGES = {
   '8867-4':  { name: 'HEART RATE', unit: 'bpm', low: 60, high: 100, normal: '60-100' },
   '8480-6':  { name: 'SYSTOLIC BP', unit: 'mmHg', low: 90, high: 120, normal: '<120' },
   '8462-4':  { name: 'DIASTOLIC BP', unit: 'mmHg', low: 60, high: 80, normal: '<80' },
-  '8310-5':  { name: 'BODY TEMPERATURE', unit: '°C', low: 36.1, high: 37.2, normal: '36.1-37.2' },
+  '8310-5':  { name: 'BODY TEMPERATURE', unit: '°F', low: 97.8, high: 99.1, normal: '97.8-99.1' },
   '59408-5': { name: 'OXYGEN SATURATION (SpO2)', unit: '%', low: 95, high: 100, normal: '95-100' },
   '33762-6': { name: 'NT-proBNP', unit: 'pg/mL', low: 0, high: 125, normal: '<125' },
   '2951-2':  { name: 'SODIUM', unit: 'mEq/L', low: 136, high: 145, normal: '136-145' },

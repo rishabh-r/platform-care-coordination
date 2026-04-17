@@ -2108,6 +2108,25 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - The `parseVitalsFromFhir` function is unchanged — it already handles FHIR bundle format correctly (picks latest value per LOINC code, evaluates against normal ranges)
 - **Knowledge base** (`src/config/knowledgeBases.js`) already has all 5 vitals LOINC codes, units, and ranges
 
+### Body Temperature Range — Celsius to Fahrenheit Fix
+- The backend API returns Body Temperature values in **Fahrenheit** (`[degF]`), not Celsius
+- `OBSERVATION_NORMAL_RANGES` for `8310-5` was in Celsius (36.1-37.2 °C), causing 99.6°F to show as wildly elevated
+- Updated to Fahrenheit: `{ unit: '°F', low: 97.8, high: 99.1, normal: '97.8-99.1' }`
+- File: `src/components/DashboardPage.jsx`
+
+### Backend Vitals Data — Confirmed Working
+- Backend team fixed the vitals data — all 5 vital types now returned from `/baseR4/Observation/vitals/search`
+- API returns 10 entries across 5 unique LOINC codes:
+  | Vital | LOINC | Latest Value | Latest Date |
+  |---|---|---|---|
+  | Systolic BP | 8480-6 | 160 mmHg | Mar 2025 |
+  | Diastolic BP | 8462-4 | 82 mmHg | Mar 2023 |
+  | Heart Rate | 8867-4 | 96 /min | Aug 2025 |
+  | Body Temperature | 8310-5 | 99.60 °F | Aug 2025 |
+  | SpO2 | 59408-5 | 96 % | Oct 2025 |
+- Dashboard now correctly shows 5 vital cards with latest value per type
+
 ### Git Commit History (continued)
 111. `ea57a42` — Update notes.md with vitals Excel data and knowledge base unit fixes
 112. `49b4f60` — Use dedicated vitals API for dashboard Vitals section
+113. `5737265` — Update notes.md with dedicated vitals API integration
