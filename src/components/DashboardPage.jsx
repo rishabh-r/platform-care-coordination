@@ -782,8 +782,8 @@ function DashboardPage() {
 
       // Fetch MedicationRequests + Encounters + EpisodeOfCare + Observations directly from FHIR
       const fhirDirectPromise = Promise.all([
-        callFhirApi(buildUrl('/baseR4/MedicationRequest', { patient: patientId, page: 0 })).catch(e => { console.warn('[Dashboard] Meds fetch failed:', e); return null }),
-        callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null }),
+        callFhirApi(buildUrl('/baseR4/MedicationRequest', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Meds fetch failed:', e); return null }),
+        callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0&size=100`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null }),
         callFhirApi(buildUrl('/baseR4/EpisodeOfCare', { patient: patientId, status: 'active', page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] EpisodeOfCare fetch failed:', e); return null }),
         callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Observations fetch failed:', e); return null })
       ]).then(async ([medBundle, encBundle, eocBundle, obsBundle]) => {
@@ -913,10 +913,10 @@ Requirements:
         } else {
           console.log('[Dashboard] No chatbot text, fetching FHIR data as fallback')
           const [obsResult, encResult, medResult, condResult] = await Promise.all([
-            callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0 })).catch(() => null),
-            callFhirApi(buildUrl('/baseR4/Encounter', { patient: patientId, page: 0 })).catch(() => null),
-            callFhirApi(buildUrl('/baseR4/MedicationRequest', { patient: patientId, page: 0 })).catch(() => null),
-            callFhirApi(buildUrl('/baseR4/Condition', { patient: patientId, page: 0 })).catch(() => null)
+            callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0, size: 100 })).catch(() => null),
+            callFhirApi(buildUrl('/baseR4/Encounter', { patient: patientId, page: 0, size: 100 })).catch(() => null),
+            callFhirApi(buildUrl('/baseR4/MedicationRequest', { patient: patientId, page: 0, size: 100 })).catch(() => null),
+            callFhirApi(buildUrl('/baseR4/Condition', { patient: patientId, page: 0, size: 100 })).catch(() => null)
           ])
           const summary = summarizeFhirData(obsResult, encResult, medResult, condResult)
           inputForAI = `Patient: ${pName}\n\nFHIR Data:\n${JSON.stringify(summary)}`
