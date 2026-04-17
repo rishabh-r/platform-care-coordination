@@ -1021,30 +1021,14 @@ Requirements:
       const token = localStorage.getItem('cb_token')
       const pId = pid || patientId
       const email = encodeURIComponent(userEmail)
-      const headers = { 'Authorization': `Bearer ${token}` }
-      const [generalRes, pendingRes, inProcessRes, completedRes] = await Promise.all([
-        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}`, { headers }).catch(() => null),
-        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&status=pending`, { headers }).catch(() => null),
-        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&status=in-process`, { headers }).catch(() => null),
-        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&status=completed`, { headers }).catch(() => null)
-      ])
-      const parseBundle = async (res) => {
-        if (!res?.ok) return []
-        const bundle = await res.json()
-        return (bundle?.entry || []).map(parseCareNoteEntry).filter(Boolean)
-      }
-      const [generalNotes, pendingNotes, inProcessNotes, completedNotes] = await Promise.all([
-        parseBundle(generalRes), parseBundle(pendingRes), parseBundle(inProcessRes), parseBundle(completedRes)
-      ])
-      const seenIds = new Set()
-      const allNotes = [...generalNotes, ...pendingNotes, ...inProcessNotes, ...completedNotes].filter(n => {
-        const key = `${n.author}-${n.rawDate?.getTime()}-${n.text}`
-        if (seenIds.has(key)) return false
-        seenIds.add(key)
-        return true
-      }).sort((a, b) => b.rawDate - a.rawDate)
-      console.log('[Dashboard] Parsed', allNotes.length, 'care coordination notes (general + task notes)')
-      setCareDocNotes(allNotes)
+      const res = await fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error(`${res.status}`)
+      const bundle = await res.json()
+      const notes = (bundle?.entry || []).map(parseCareNoteEntry).filter(Boolean).sort((a, b) => b.rawDate - a.rawDate)
+      console.log('[Dashboard] Parsed', notes.length, 'care coordination notes')
+      setCareDocNotes(notes)
     } catch (e) { console.warn('[Dashboard] Care notes fetch failed:', e) }
   }
 
