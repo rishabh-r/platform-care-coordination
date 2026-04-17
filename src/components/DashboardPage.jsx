@@ -744,6 +744,8 @@ function DashboardPage() {
   const [viewingNote, setViewingNote] = useState(null)
   const [taskNoteTexts, setTaskNoteTexts] = useState({})
   const [taskCareNotes, setTaskCareNotes] = useState([])
+  const [outreachMsg, setOutreachMsg] = useState('')
+  const [outreachLoading, setOutreachLoading] = useState(false)
   const loadStepRef = useRef(null)
 
   const rawUser = localStorage.getItem('cb_user') || 'User'
@@ -870,6 +872,36 @@ function DashboardPage() {
       return patientName
     }
 
+    const generateOutreachMessage = async (pName, careContext, aiResult) => {
+      setOutreachLoading(true)
+      try {
+        const alertSummary = (aiResult?.alerts || []).map(a => `${a.title}: ${a.detail} (${a.severity})`).join('; ')
+        const prompt = `You are a care coordinator writing a patient outreach message. Write a warm, professional, and concise message to the patient.
+
+Patient name: ${pName}
+Care gaps identified: ${alertSummary || 'None identified'}
+
+Requirements:
+- Address the patient by first name
+- Mention specific care gaps found (missed appointments, medication issues, etc.)
+- Offer help with scheduling, medication refills, transportation
+- Include a call-to-action (call us, reply, etc.)
+- Keep it under 150 words
+- Do NOT include subject line, just the message body
+- Sign off as "Care Coordination Team"`
+
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'gpt-5.4-nano-2026-03-17', messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 300 })
+        })
+        const data = await res.json()
+        const msg = data.choices?.[0]?.message?.content?.trim() || ''
+        if (msg) setOutreachMsg(msg)
+      } catch (e) { console.warn('[Dashboard] Outreach message generation failed:', e) }
+      finally { setOutreachLoading(false) }
+    }
+
     async function loadAIInsights(pName) {
       try {
         const careGapText = sessionStorage.getItem('dashboard_caregap_' + patientId)
@@ -895,6 +927,7 @@ function DashboardPage() {
         if (aiResult?.trends) setTrendsData(aiResult.trends)
         if (aiResult?.aiActions) setAiActionsData(aiResult.aiActions)
         if (aiResult?.missedAppointments?.length) setMissedAppts(aiResult.missedAppointments)
+        generateOutreachMessage(pName, inputForAI, aiResult)
       } catch (e) {
         console.error('[Dashboard] AI analysis failed:', e)
       } finally {
@@ -1511,10 +1544,17 @@ function DashboardPage() {
                 <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>Outreach Communication Template</h3>
                 <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Customize message for patient contact</p>
                 <p style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px', color: '#1e293b' }}>MESSAGE</p>
-                <textarea
-                  style={{ width: '100%', minHeight: '140px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', fontSize: '13px', fontFamily: 'inherit', color: '#334155', resize: 'vertical', lineHeight: '1.6' }}
-                  defaultValue={`Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
-                />
+                {outreachLoading ? (
+                  <div style={{ width: '100%', minHeight: '140px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontSize: '13px', gap: '8px' }}>
+                    <span className="ai-loading-spinner" style={{ width: 18, height: 18 }} /> Generating personalized message...
+                  </div>
+                ) : (
+                  <textarea
+                    style={{ width: '100%', minHeight: '140px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', fontSize: '13px', fontFamily: 'inherit', color: '#334155', resize: 'vertical', lineHeight: '1.6' }}
+                    defaultValue={outreachMsg || `Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
+                    key={outreachMsg ? 'ai' : 'static'}
+                  />
+                )}
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                   <a href={`mailto:${pt.email || ''}`} style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>Send to Patient</a>
                 </div>
