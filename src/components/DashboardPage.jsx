@@ -744,7 +744,6 @@ function DashboardPage() {
   const [newNote, setNewNote] = useState({ author: '', role: '', type: 'Clinical', text: '' })
   const [viewingNote, setViewingNote] = useState(null)
   const [taskNoteTexts, setTaskNoteTexts] = useState({})
-  const [taskCareNotes, setTaskCareNotes] = useState([])
   const [outreachMsg, setOutreachMsg] = useState('')
   const [outreachLoading, setOutreachLoading] = useState(false)
   const loadStepRef = useRef(null)
@@ -1002,27 +1001,50 @@ Requirements:
 
   useEffect(() => { if (patientId) fetchReviewStatus() }, [patientId])
 
+  const parseCareNoteEntry = (e) => {
+    const r = e.resource
+    if (!r) return null
+    const name = r.author?.[0]?.display || 'Unknown'
+    const role = r.author?.[0]?.extension?.find(x => x.url?.includes('coordinator-role'))?.valueString || 'Care Coordinator'
+    const nameParts = name.replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.)\s*/i, '').trim().split(/\s+/)
+    const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
+    const dt = new Date(r.date)
+    const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    const taskTitle = r.extension?.find(x => x.url === 'recommended-action')?.valueString || ''
+    const taskStatus = r.extension?.find(x => x.url === 'status')?.valueString || ''
+    const statusLabel = taskStatus === 'pending' ? 'Pending' : taskStatus === 'in-process' ? 'In Process' : taskStatus === 'completed' ? 'Completed' : taskStatus
+    return { author: name, initials, role, type: 'Coordination', text: r.description || '', date: dateStr, rawDate: dt, ...(taskTitle ? { taskTitle, taskStatus: statusLabel } : {}) }
+  }
+
   const fetchCareNotes = async (pid) => {
     try {
       const token = localStorage.getItem('cb_token')
-      const res = await fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pid || patientId}&coordinatorEmail=${encodeURIComponent(userEmail)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (!res.ok) throw new Error(`${res.status}`)
-      const bundle = await res.json()
-      const notes = (bundle?.entry || []).map(e => {
-        const r = e.resource
-        if (!r) return null
-        const name = r.author?.[0]?.display || 'Unknown'
-        const role = r.author?.[0]?.extension?.find(x => x.url?.includes('coordinator-role'))?.valueString || 'Care Coordinator'
-        const nameParts = name.replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.)\s*/i, '').trim().split(/\s+/)
-        const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 3)
-        const dt = new Date(r.date)
-        const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-        return { author: name, initials, role, type: 'Coordination', text: r.description || '', date: dateStr, rawDate: dt }
-      }).filter(Boolean).sort((a, b) => b.rawDate - a.rawDate)
-      console.log('[Dashboard] Parsed', notes.length, 'care coordination notes')
-      setCareDocNotes(notes)
+      const pId = pid || patientId
+      const email = encodeURIComponent(userEmail)
+      const headers = { 'Authorization': `Bearer ${token}` }
+      const [generalRes, pendingRes, inProcessRes, completedRes] = await Promise.all([
+        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}`, { headers }).catch(() => null),
+        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&status=pending`, { headers }).catch(() => null),
+        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&status=in-process`, { headers }).catch(() => null),
+        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&status=completed`, { headers }).catch(() => null)
+      ])
+      const parseBundle = async (res) => {
+        if (!res?.ok) return []
+        const bundle = await res.json()
+        return (bundle?.entry || []).map(parseCareNoteEntry).filter(Boolean)
+      }
+      const [generalNotes, pendingNotes, inProcessNotes, completedNotes] = await Promise.all([
+        parseBundle(generalRes), parseBundle(pendingRes), parseBundle(inProcessRes), parseBundle(completedRes)
+      ])
+      const seenIds = new Set()
+      const allNotes = [...generalNotes, ...pendingNotes, ...inProcessNotes, ...completedNotes].filter(n => {
+        const key = `${n.author}-${n.rawDate?.getTime()}-${n.text}`
+        if (seenIds.has(key)) return false
+        seenIds.add(key)
+        return true
+      }).sort((a, b) => b.rawDate - a.rawDate)
+      console.log('[Dashboard] Parsed', allNotes.length, 'care coordination notes (general + task notes)')
+      setCareDocNotes(allNotes)
     } catch (e) { console.warn('[Dashboard] Care notes fetch failed:', e) }
   }
 
@@ -1076,29 +1098,49 @@ Requirements:
 
   const updateTaskStatus = async (taskId, newStatus) => {
     const apiStatus = newStatus === 'inprocess' ? 'in-process' : newStatus
-    setTaskCareNotes(prev => prev.filter(n => n.taskId !== taskId))
     try {
       const token = localStorage.getItem('cb_token')
-      await fetch(`${FHIR_BASE}/baseR4/portal/update-task?actionId=${taskId}&status=${apiStatus}`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-    } catch (e) { console.warn('[Dashboard] Update task failed:', e) }
+      await Promise.all([
+        fetch(`${FHIR_BASE}/baseR4/portal/update-task?actionId=${taskId}&status=${apiStatus}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote?email=${encodeURIComponent(userEmail)}&patientId=${patientId}&actionId=${taskId}&status=${apiStatus}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${token}` },
+        })
+      ])
+      console.log('[Dashboard] Task status updated + care notes patched to:', apiStatus)
+    } catch (e) { console.warn('[Dashboard] Update task/notes failed:', e) }
     setTaskAlert(newStatus === 'inprocess' ? '▶ Task Started' : '✓ Task Completed')
     setTimeout(() => setTaskAlert(null), 2000)
     fetchTaskQueue()
+    fetchCareNotes()
   }
 
-  const handleTaskAddNote = (taskId, taskTitle, taskStatus) => {
+  const handleTaskAddNote = async (taskId, taskTitle, taskStatus) => {
     const text = (taskNoteTexts[taskId] || '').trim()
     if (!text) return
-    const statusLabel = taskStatus === 'pending' ? 'Pending' : taskStatus === 'inprocess' ? 'In Process' : 'Completed'
-    const now = new Date()
-    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    const nameParts = userName.split(/\s+/)
-    const initials = nameParts.map(p => p[0]?.toUpperCase()).filter(Boolean).join('').slice(0, 2)
-    setTaskCareNotes(prev => [...prev, { taskId, author: userName, initials, role: 'Care Coordinator', type: 'Coordination', text: text, taskTitle, taskStatus: statusLabel, date: dateStr, rawDate: now }])
+    const apiStatus = taskStatus === 'inprocess' ? 'in-process' : taskStatus
+    try {
+      const token = localStorage.getItem('cb_token')
+      await fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId,
+          actionId: taskId,
+          coordinatorEmail: userEmail,
+          coordinatorName: userName,
+          status: apiStatus,
+          coordinatorRole: 'Care Coordinator',
+          careNotes: text
+        })
+      })
+      console.log('[Dashboard] Task note created via API for task:', taskTitle, 'status:', apiStatus)
+    } catch (e) { console.warn('[Dashboard] Create task note failed:', e) }
     setTaskNoteTexts(prev => ({ ...prev, [taskId]: '' }))
+    fetchCareNotes()
   }
 
   useEffect(() => { if (patientId) fetchTaskQueue() }, [patientId])
@@ -1159,7 +1201,7 @@ Requirements:
 
   const clinicNotes = clinicDocNotes || clinicalNotesData?.filter(n => n.type === 'Clinical') || d.clinicalNotes.filter(n => n.type === 'Clinical')
   const adminNotes = adminDocNotes || []
-  const careNotes = [...(careDocNotes || addedNotes.filter(n => n.type === 'Coordination')), ...taskCareNotes].sort((a, b) => (b.rawDate || 0) - (a.rawDate || 0))
+  const careNotes = [...(careDocNotes || addedNotes.filter(n => n.type === 'Coordination'))].sort((a, b) => (b.rawDate || 0) - (a.rawDate || 0))
   const filteredNotes = noteFilter === 'clinical' ? clinicNotes
     : noteFilter === 'admin' ? adminNotes
     : careNotes
