@@ -1321,11 +1321,13 @@ Requirements:
           <div className="dash-banner-info">
             <div className="dash-banner-name-row">
               <h2>{pt.name}</h2>
-              <span className={`dash-pill ${dynamicPriorityClass}`}>{dynamicPriority} Priority</span>
-              {hasCareGaps
-                ? <span className="dash-pill pill-red-outline">⚠ Care Gap</span>
-                : <span className="dash-pill pill-green-outline">✓ No Care Gaps Detected</span>
-              }
+              {!aiLoading && <>
+                <span className={`dash-pill ${dynamicPriorityClass}`}>{dynamicPriority} Priority</span>
+                {hasCareGaps
+                  ? <span className="dash-pill pill-red-outline">⚠ Care Gap</span>
+                  : <span className="dash-pill pill-green-outline">✓ No Care Gaps Detected</span>
+                }
+              </>}
             </div>
             <div className="dash-banner-meta">
               <span>{pt.age} yrs</span>
