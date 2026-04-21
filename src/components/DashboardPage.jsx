@@ -2034,10 +2034,12 @@ Requirements:
               {paginatedNotes.map((n, i) => (
                 <div key={i} className="dash-note-row">
                   <div className="dash-note-header">
-                    <div className="dash-note-avatar">{n.initials}</div>
-                    <div className="dash-note-author">
-                      <strong>{n.author}</strong>
-                      <p>{n.role}</p>
+                    <div className="dash-note-header-left">
+                      <div className="dash-note-avatar">{n.initials}</div>
+                      <div className="dash-note-author">
+                        <strong>{n.author}</strong>
+                        <p>{n.role}</p>
+                      </div>
                     </div>
                     <div className="dash-note-tags">
                       <span className={`dash-pill pill-note-${(n.type || 'clinical').toLowerCase()}`}>{n.type || 'Clinical'}</span>
