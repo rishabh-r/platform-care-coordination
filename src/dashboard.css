@@ -45,15 +45,15 @@
 .dash-nav-left { display: flex; align-items: center; gap: 12px; }
 .dash-nav-logo { height: 28px; object-fit: contain; margin-left: -4px; }
 .dash-nav-title { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
-.dash-nav-links { display: flex; gap: 24px; }
-.dash-nav-link { font-size: 11px; font-weight: 500; letter-spacing: .6px; color: rgba(255,255,255,.5); cursor: pointer; transition: color .2s; }
+.dash-nav-links { display: flex; gap: 16px; margin-right: 16px; }
+.dash-nav-link { font-size: 11px; font-weight: 500; letter-spacing: .6px; color: rgba(255,255,255,.8); cursor: pointer; transition: color .2s; }
 .dash-nav-link.active { color: white; }
-.dash-nav-link:hover { color: rgba(255,255,255,.85); }
-.dash-nav-right { display: flex; align-items: center; gap: 12px; }
+.dash-nav-link:hover { color: white; }
+.dash-nav-right { display: flex; align-items: center; gap: 16px; }
 .dash-nav-bell { background: none; border: none; color: rgba(255,255,255,.6); cursor: pointer; display: flex; padding: 6px; border-radius: 50%; transition: background .2s; }
 .dash-nav-bell svg { width: 18px; height: 18px; }
 .dash-nav-bell:hover { color: white; background: rgba(255,255,255,.1); }
-.dash-nav-user-info { text-align: right; line-height: 1.2; }
+.dash-nav-user-info { text-align: right; line-height: 1.2; padding-left: 12px; border-left: 1px solid rgba(255,255,255,.2); }
 .dash-nav-username { display: block; font-size: 11px; font-weight: 700; }
 .dash-nav-userrole { font-size: 9px; color: rgba(255,255,255,.5); letter-spacing: .5px; text-transform: uppercase; }
 .dash-nav-avatar {
@@ -69,7 +69,7 @@
   border-bottom: 1px solid #E2E8F0;
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
 }
-.dash-breadcrumb { display: flex; align-items: center; gap: 12px; }
+.dash-breadcrumb { display: flex; align-items: center; gap: 12px; flex: 1; }
 .dash-back-btn {
   width: 28px; height: 28px; border-radius: 50%; border: none;
   background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -80,7 +80,7 @@
 .dash-bc-text { font-size: 18px; font-weight: 600; color: #1E293B; }
 .dash-bc-sep { color: #CBD5E1; font-size: 12px; }
 .dash-bc-name { font-size: 18px; font-weight: 600; color: #4F46E5; }
-.dash-bc-sub { font-size: 12px; color: #94A3B8; margin-left: 40px; }
+.dash-bc-sub { font-size: 12px; color: #94A3B8; margin: 0; }
 .dash-quick-pills { display: flex; gap: 8px; }
 .dash-quick-pills button {
   display: flex; align-items: center; gap: 6px;
@@ -109,7 +109,7 @@
 .dash-banner-name-row h2 { font-size: 18px; font-weight: 500; margin: 0; letter-spacing: -.3px; }
 .dash-banner-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #64748B; margin: 6px 0 0; flex-wrap: wrap; }
 .dash-meta-sep { color: #CBD5E1; font-size: 11px; font-weight: 400; line-height: 1; }
-.dash-banner-contact { display: flex; align-items: center; gap: 16px; font-size: 11px; color: #64748B; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F1F5F9; flex-wrap: wrap; }
+.dash-banner-contact { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 11px; color: #64748B; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F1F5F9; }
 .dash-banner-contact-item { display: flex; align-items: center; gap: 6px; }
 .dash-banner-contact-item svg { width: 12px; height: 12px; color: #CBD5E1; flex-shrink: 0; }
 .dash-review-btn {
@@ -133,10 +133,10 @@
 .pill-red-outline { background: transparent; border: 1px solid #DC2626; color: #DC2626; }
 .pill-green-outline { background: transparent; border: 1px solid #16A34A; color: #16A34A; }
 .pill-critical { background: #DC2626; color: white; }
-.pill-high { background: #F97316; color: white; }
-.pill-medium { background: #EAB308; color: #1E293B; }
-.pill-low { background: #3B82F6; color: white; }
-.pill-mod { background: #F97316; color: white; }
+.pill-high { background: #FEF2F2; color: #B91C1C; }
+.pill-medium { background: #FFFBEB; color: #B45309; }
+.pill-low { background: #F8FAFC; color: #475569; }
+.pill-mod { background: #FFFBEB; color: #B45309; }
 .pill-ai { background: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; }
 .pill-active { background: #DCFCE7; color: #16A34A; }
 .pill-primary { background: #DBEAFE; color: #2563EB; font-size: 10px; }
@@ -661,6 +661,7 @@
   .dash-nav-links { display: none; }
   .dash-subheader { padding: 10px 12px; }
   .dash-banner { margin: 10px 12px 0; padding: 12px; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .dash-banner-contact { grid-template-columns: 1fr; }
   .dash-grid { padding: 10px 12px 24px; gap: 12px; }
   .dash-alerts-inner { grid-template-columns: 1fr; }
   .dash-alerts-right { border-left: none; border-top: 1px solid #E2E8F0; padding-left: 0; padding-top: 10px; }

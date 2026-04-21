@@ -1266,12 +1266,12 @@ Requirements:
           <img src="/images/LogoRsi.png" alt="R Systems" className="dash-nav-logo" />
           <span className="dash-nav-title">Patient 360 Portal</span>
         </div>
-        <div className="dash-nav-links">
-          <span className="dash-nav-link active">CARE MANAGER</span>
-          <span className="dash-nav-link">PROVIDER</span>
-          <span className="dash-nav-link">PATIENTS</span>
-        </div>
         <div className="dash-nav-right">
+          <div className="dash-nav-links">
+            <span className="dash-nav-link active">Care Manager</span>
+            <span className="dash-nav-link">Provider</span>
+            <span className="dash-nav-link">Patients</span>
+          </div>
           <button className="dash-nav-bell" title="Notifications">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           </button>
@@ -1289,11 +1289,15 @@ Requirements:
           <button className="dash-back-btn" onClick={() => navigate('/')} title="Back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </button>
-          <span className="dash-bc-text">Care Manager Dashboard</span>
-          <span className="dash-bc-sep">›</span>
-          <span className="dash-bc-name">{pt.name}</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="dash-bc-text">Care Manager Dashboard</span>
+              <span className="dash-bc-sep">›</span>
+              <span className="dash-bc-name">{pt.name}</span>
+            </div>
+            <p className="dash-bc-sub">Patient Profile &amp; Care Management</p>
+          </div>
         </div>
-        <p className="dash-bc-sub">Patient Profile &amp; Care Management</p>
         <div className="dash-quick-pills">
           <button onClick={() => scrollTo('vitals-section')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
