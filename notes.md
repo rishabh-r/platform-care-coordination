@@ -2169,3 +2169,153 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 116. `0919f7a` — Fix: simplify care notes GET to single call (500 error fix attempt)
 117. `56b6093` — Fix: fetch care notes per task with actionId and status params
 118. `771ed71` — Fix: PATCH CareCoordinationNote sends current task status, not new status
+119. `c8e003d` — Update notes.md with CareCoordinationNote API integration details
+120. `87417d6` — Refactor CSS to match reference design: compact font sizes, spacing, and container sizing
+121. `051c930` — Fix banner and subheader alignment/gaps to match reference design
+122. `0233410` — Fix nav links to right side, subtitle below heading, contact 3-col grid, priority pill colors
+123. `cebc710` — Update clinical notes UI: tab pills, category badge colors, card layout to match reference
+124. `9f78545` — Redesign Patient Outreach tab UI to match reference: channel cards, template layout, proper CSS classes
+125. `d92bebd` — Hide priority and care gap pills until AI alerts finish loading
+
+---
+
+## Session: CSS Refactoring to Match Reference Design (April 2026)
+
+### Reference Project
+- Path: `D:\Care Manager Screen`
+- Used as a UI reference for font sizes, spacing, container sizing, and responsiveness
+- **No colors were changed** — only sizing, spacing, fonts, and layout
+
+### Global Changes
+- Font family: `'Segoe UI', system-ui` → `system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif`
+- Base font-size: added `14px` with `line-height: 1.5` on `.dash-page`
+- Same font stack applied to `styles.css` global `--font` variable
+- Files: `src/dashboard.css`, `src/styles.css`
+
+### Navbar
+- Height: `60px` → `48px`
+- Padding: `0 32px` → `0 16px`
+- Logo: `32px` → `28px`
+- Title: `16px` → `15px`
+- **Nav links (Care Manager, Provider, Patients)**: moved from center to **right side** — now inside `dash-nav-right` wrapper
+- Nav links changed to title case (was uppercase), `11px`, `font-weight: 500`
+- User info: added `border-left` separator, `11px/9px` font sizes
+- Avatar: `34px` → `32px`, subtle border style
+- Bell: added `padding: 6px`, `border-radius: 50%`, hover background
+- File: `src/dashboard.css`, `src/components/DashboardPage.jsx`
+
+### Sub-header / Breadcrumb
+- **"Patient Profile & Care Management"** subtitle moved from sibling to **inside breadcrumb wrapper** — now renders below the heading row instead of next to it
+- Breadcrumb text: `14px` → `18px` (matching reference `text-lg`)
+- Quick pill buttons: `height: 36px`, purple-tinted border/text, `gap: 8px`
+- File: `src/dashboard.css`, `src/components/DashboardPage.jsx`
+
+### Patient Banner
+- Avatar: `48px` → `56px` (matching reference `size-14`)
+- Avatar-to-content gap: `14px` → `16px`
+- Name: `16px` → `18px`, `font-weight: 500`
+- Meta row gap: `4px` → `8px`
+- **Contact row (DOB, Phone, Email)**: changed from `display: flex` to `display: grid; grid-template-columns: 1fr 1fr 1fr` — evenly distributed across full width
+- Contact row: `border-top: 1px solid #F1F5F9` separator, `padding-top: 8px`
+- File: `src/dashboard.css`
+
+### Cards
+- Padding: `20px 24px` → `16px`
+- Border radius: `14px` → `8px`
+- Headings: `15px/700` → `13px/500`
+- Subtitles: `12px` → `10px/500`
+- Grid gap: `20px` → `16px`
+- Shadow: `0 1px 3px` → `0 1px 2px`
+
+### Pills / Badges
+- Font: `11px/600` → `10px/500`
+- Padding: `3px 10px` → `1px 8px`
+
+### AI Action Priority Pills — New Colors
+- **High Priority**: solid orange → light red background (`#FEF2F2`) with dark red text (`#B91C1C`)
+- **Medium Priority**: solid yellow → light amber background (`#FFFBEB`) with amber text (`#B45309`)
+- **Low Priority**: solid blue → light gray background (`#F8FAFC`) with slate text (`#475569`)
+- Matches reference `bg-red-50 text-red-700`, `bg-amber-50 text-amber-700`, `bg-slate-50 text-slate-700`
+
+### Alerts + Risk Section
+- Alert items: tighter padding `10px`, smaller fonts `11px/10px`
+- Trends bar: compact `10px` fonts, `6px` gap
+- Trend chips: `6px 10px` padding, `10px` font
+
+### Vitals
+- Card padding: `16px` → `12px`
+- Icon container: added subtle background + border (`rgba(59,130,246,.04)`)
+- Values: `20px` → `16px`
+- Progress bars: `5px` → `3px` height
+
+### Medications & Encounters
+- Switched from border-bottom rows to **card-style** with `border-radius: 8px`, `border: 1px solid #F1F5F9`
+- Name fonts: `14px` → `13px/500`
+- Info fonts: `12px` → `11px`
+
+### Care Team
+- Card-style rows with `border-radius: 8px`
+- Avatar: `40px` → `36px`
+- Action buttons: borderless, hover background instead of border
+
+### Clinical Notes
+- **Tab filters**: changed from bordered buttons to **pill-style segmented control** — gray background container (`#F8FAFC`) with `padding: 4px`, `height: 32px`, `grid-template-columns: repeat(3, 1fr)`
+- Active tab: white background with subtle shadow
+- **Category badges** updated to match reference:
+  - Clinical: `bg: #F5F3FF`, `text: #7C3AED`, `border: #EDE9FE` (purple tint)
+  - Coordination: `bg: #EFF6FF`, `text: #2563EB`, `border: #DBEAFE` (blue tint)
+  - Admin: `bg: #F8FAFC`, `text: #475569`, `border: #E2E8F0` (gray tint)
+- Note card layout: header uses `justify-content: space-between` — avatar+author left, badge+View right
+- Added `dash-note-header-left` wrapper div in JSX
+- Note avatar: circle → rounded square (`border-radius: 6px`)
+- Files: `src/dashboard.css`, `src/components/DashboardPage.jsx`
+
+### Patient Outreach Tab — Full Redesign
+- Replaced all inline styles with proper CSS classes (`po-channel`, `po-template`, etc.)
+- **Channel cards** (Phone / SMS / Email):
+  - Each has **colored border** matching theme (blue `rgba(59,130,246,.2)`, green `rgba(16,185,129,.2)`, purple `rgba(139,92,246,.2)`)
+  - Icon in **colored rounded container** (`8px border-radius`, colored background)
+  - Icon + title now **side-by-side** (was stacked/centered)
+  - **Buttons**: each has own theme color (`#2563EB` blue, `#059669` green, `#7C3AED` purple) — was all green
+  - `40px` height, `font-weight: 700`, full width
+- **Outreach Template section**:
+  - Proper card border, `20px` padding
+  - "MESSAGE" label: `10px`, `font-weight: 900`, `uppercase`, `letter-spacing: .8px`
+  - Textarea: `font-family: monospace`, `background: rgba(248,250,252,.8)`
+  - **Send to Patient**: changed from white/bordered to blue filled (`#2563EB`) with send arrow icon
+- Responsive: channels stack to single column on mobile
+- Files: `src/dashboard.css`, `src/components/DashboardPage.jsx`
+
+### Priority & Care Gap Pills — Loading Fix
+- **Problem**: Priority pill ("High Priority") and Care Gap badge showed immediately with fallback/incorrect values while AI alerts were still loading, then jumped to correct values
+- **Fix**: Wrapped both pills in `{!aiLoading && <>...</>}` — they stay hidden until AI alerts finish loading
+- No flash of incorrect values anymore
+- File: `src/components/DashboardPage.jsx`
+
+### Task Queue
+- Summary cards: `18px 20px` → `12px 14px` padding, `1px` border
+- Task cards: tighter spacing, `13px/500` fonts
+- Buttons: `6px 14px` padding, `border-radius: 6px`
+
+### Modals
+- Width: `560px` → `520px`, radius: `16px` → `12px`
+- Header/body/footer padding reduced
+- Font sizes reduced across all modal elements
+
+### Risk Insights Widget
+- Row padding: `10px 12px` → `8px 10px`
+- Icon: `30px` → `26px`
+- Name: `12px/600` → `11px/500`
+- Badge: `9px` → `8px`
+
+### Clinical Trends
+- Title: `18px` → `14px/500`
+- Tab pills: `13px` → `11px`, `14px` padding
+- Chart area: `280px` → `240px` min-height
+
+### Responsive
+- Mobile navbar: `44px` height, `12px` padding
+- Mobile cards: `12px` padding
+- Task queue summary: single column on mobile
+- Patient outreach channels: single column on mobile
+- Banner contact: single column on mobile
