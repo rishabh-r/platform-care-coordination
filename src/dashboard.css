@@ -41,9 +41,7 @@
   padding: 0 16px; height: 48px;
   background: #1E1B4B;
   color: white; position: sticky; top: 0; z-index: 500;
-  max-width: 1600px; margin: 0 auto;
 }
-.dash-nav { max-width: none; }
 .dash-nav-left { display: flex; align-items: center; gap: 12px; }
 .dash-nav-logo { height: 28px; object-fit: contain; margin-left: -4px; }
 .dash-nav-title { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
@@ -67,32 +65,30 @@
 
 /* ── Sub-header ── */
 .dash-subheader {
-  background: white; padding: 12px 16px;
+  background: white; padding: 16px 16px;
   border-bottom: 1px solid #E2E8F0;
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-  max-width: 1600px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
 }
-.dash-subheader { max-width: none; }
-.dash-breadcrumb { display: flex; align-items: center; gap: 8px; }
+.dash-breadcrumb { display: flex; align-items: center; gap: 12px; }
 .dash-back-btn {
   width: 28px; height: 28px; border-radius: 50%; border: none;
   background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  color: #475569; transition: all .2s;
+  color: #475569; transition: all .2s; padding: 6px; flex-shrink: 0;
 }
 .dash-back-btn:hover { background: #F1F5F9; }
-.dash-back-btn svg { width: 14px; height: 14px; }
-.dash-bc-text { font-size: 14px; font-weight: 600; color: #1E293B; }
+.dash-back-btn svg { width: 16px; height: 16px; }
+.dash-bc-text { font-size: 18px; font-weight: 600; color: #1E293B; }
 .dash-bc-sep { color: #CBD5E1; font-size: 12px; }
-.dash-bc-name { font-size: 14px; font-weight: 600; color: #4F46E5; }
-.dash-bc-sub { font-size: 11px; color: #94A3B8; margin-left: 36px; }
-.dash-quick-pills { display: flex; gap: 6px; }
+.dash-bc-name { font-size: 18px; font-weight: 600; color: #4F46E5; }
+.dash-bc-sub { font-size: 12px; color: #94A3B8; margin-left: 40px; }
+.dash-quick-pills { display: flex; gap: 8px; }
 .dash-quick-pills button {
-  display: flex; align-items: center; gap: 5px;
-  padding: 6px 14px; border-radius: 6px; border: 1px solid #E2E8F0;
-  background: white; font-size: 12px; font-weight: 500; color: #475569;
-  cursor: pointer; transition: all .2s; height: 32px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(79,70,229,.2);
+  background: white; font-size: 12px; font-weight: 500; color: #4F46E5;
+  cursor: pointer; transition: all .2s; height: 36px;
 }
-.dash-quick-pills button:hover { border-color: #4F46E5; color: #4F46E5; background: #EEF2FF; }
+.dash-quick-pills button:hover { background: rgba(79,70,229,.04); }
 
 /* ── Patient Banner ── */
 .dash-banner {
@@ -101,18 +97,21 @@
   display: flex; align-items: flex-start; justify-content: space-between;
   box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
-.dash-banner-left { display: flex; align-items: flex-start; gap: 14px; }
+.dash-banner-left { display: flex; align-items: flex-start; gap: 16px; flex: 1; }
 .dash-banner-avatar {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: #EEF2FF; color: #4F46E5; font-weight: 600; font-size: 16px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #EEF2FF; color: #4F46E5; font-weight: 500; font-size: 18px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   border: 2px solid #E2E8F0;
 }
+.dash-banner-info { flex: 1; min-width: 0; }
 .dash-banner-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.dash-banner-name-row h2 { font-size: 16px; font-weight: 500; margin: 0; letter-spacing: -.2px; }
-.dash-banner-meta { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #64748B; margin: 4px 0 0; flex-wrap: wrap; }
-.dash-meta-sep { color: #CBD5E1; margin: 0 4px; font-size: 11px; font-weight: 400; line-height: 1; }
-.dash-banner-contact { display: flex; align-items: center; gap: 20px; font-size: 11px; color: #64748B; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F1F5F9; flex-wrap: wrap; }
+.dash-banner-name-row h2 { font-size: 18px; font-weight: 500; margin: 0; letter-spacing: -.3px; }
+.dash-banner-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #64748B; margin: 6px 0 0; flex-wrap: wrap; }
+.dash-meta-sep { color: #CBD5E1; font-size: 11px; font-weight: 400; line-height: 1; }
+.dash-banner-contact { display: flex; align-items: center; gap: 16px; font-size: 11px; color: #64748B; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F1F5F9; flex-wrap: wrap; }
+.dash-banner-contact-item { display: flex; align-items: center; gap: 6px; }
+.dash-banner-contact-item svg { width: 12px; height: 12px; color: #CBD5E1; flex-shrink: 0; }
 .dash-review-btn {
   padding: 6px 12px; border-radius: 6px; border: 1px solid #E2E8F0;
   background: white; font-size: 12px; font-weight: 500; color: #475569;
