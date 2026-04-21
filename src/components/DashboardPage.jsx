@@ -1569,45 +1569,76 @@ Requirements:
 
           {/* Patient Outreach */}
           {activeTab === 'outreach' && (
-            <div className="dash-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                  <div style={{ marginBottom: '8px' }}><img src="/images/icon-phone.png" alt="" style={{ width: '28px', height: '28px', objectFit: 'contain' }} /></div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Phone Call</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Call to discuss care plan</p>
-                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Initiate Call</button>
+            <div className="dash-card po-card">
+              <div className="po-channels">
+                {/* Phone Call */}
+                <div className="po-channel po-channel-blue">
+                  <div className="po-channel-header">
+                    <div className="po-channel-icon po-icon-blue">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <h4>Phone Call</h4>
+                  </div>
+                  <p className="po-channel-desc">Direct phone outreach to discuss care gaps</p>
+                  <button className="po-channel-btn po-btn-blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    Initiate Call
+                  </button>
                 </div>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                  <div style={{ marginBottom: '8px' }}><svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="28" height="28"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>SMS Message</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Send text reminder for medication refill</p>
-                  <button style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Send SMS</button>
+                {/* SMS */}
+                <div className="po-channel po-channel-green">
+                  <div className="po-channel-header">
+                    <div className="po-channel-icon po-icon-green">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <h4>SMS Message</h4>
+                  </div>
+                  <p className="po-channel-desc">Send text reminder for medication refill</p>
+                  <button className="po-channel-btn po-btn-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Send SMS
+                  </button>
                 </div>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                  <div style={{ marginBottom: '8px' }}><svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="28" height="28"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Email Portal</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Send educational materials via portal</p>
-                  <a href={`mailto:${pt.email || ''}`} style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none', boxSizing: 'border-box' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send Email</a>
+                {/* Email */}
+                <div className="po-channel po-channel-purple">
+                  <div className="po-channel-header">
+                    <div className="po-channel-icon po-icon-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
+                    <h4>Email Portal</h4>
+                  </div>
+                  <p className="po-channel-desc">Send educational materials via portal</p>
+                  <a href={`mailto:${pt.email || ''}`} className="po-channel-btn po-btn-purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Send Email
+                  </a>
                 </div>
               </div>
 
-              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>Outreach Communication Template</h3>
-                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Customize message for patient contact</p>
-                <p style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px', color: '#1e293b' }}>MESSAGE</p>
-                {outreachLoading ? (
-                  <div style={{ width: '100%', minHeight: '140px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontSize: '13px', gap: '8px' }}>
-                    <span className="ai-loading-spinner" style={{ width: 18, height: 18 }} /> Generating personalized message...
-                  </div>
-                ) : (
-                  <textarea
-                    style={{ width: '100%', minHeight: '140px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', fontSize: '13px', fontFamily: 'inherit', color: '#334155', resize: 'vertical', lineHeight: '1.6' }}
-                    defaultValue={outreachMsg || `Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
-                    key={outreachMsg ? 'ai' : 'static'}
-                  />
-                )}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <a href={`mailto:${pt.email || ''}`} style={{ background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>Send to Patient</a>
+              <div className="po-template">
+                <div>
+                  <h3 className="po-template-title">Outreach Communication Template</h3>
+                  <p className="po-template-sub">Customize message for patient contact</p>
+                </div>
+                <div className="po-template-body">
+                  <label className="po-msg-label">MESSAGE</label>
+                  {outreachLoading ? (
+                    <div className="po-msg-loading">
+                      <span className="ai-loading-spinner" style={{ width: 18, height: 18 }} /> Generating personalized message...
+                    </div>
+                  ) : (
+                    <textarea
+                      className="po-msg-textarea"
+                      defaultValue={outreachMsg || `Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
+                      key={outreachMsg ? 'ai' : 'static'}
+                    />
+                  )}
+                </div>
+                <div className="po-template-actions">
+                  <a href={`mailto:${pt.email || ''}`} className="po-send-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Send to Patient
+                  </a>
                 </div>
               </div>
             </div>
