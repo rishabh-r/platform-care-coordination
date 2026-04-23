@@ -1394,7 +1394,7 @@ Requirements:
                         </div>
                         {isNone
                           ? <span className="dash-pill pill-green">NONE</span>
-                          : <span className={`dash-pill pill-${a.severity.toLowerCase()}`}>{a.severity}</span>
+                          : <span className={`dash-pill sev-${a.severity.toLowerCase()}`}>{a.severity}</span>
                         }
                       </div>
                     )
@@ -1631,13 +1631,13 @@ Requirements:
                   ) : (
                     <textarea
                       className="po-msg-textarea"
-                      defaultValue={outreachMsg || `Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
-                      key={outreachMsg ? 'ai' : 'static'}
+                      value={outreachMsg || `Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`}
+                      onChange={e => setOutreachMsg(e.target.value)}
                     />
                   )}
                 </div>
                 <div className="po-template-actions">
-                  <a href={`mailto:${pt.email || ''}`} className="po-send-btn">
+                  <a href={`mailto:${pt.email || ''}?subject=${encodeURIComponent(`Care Coordination Follow-Up – ${pt.name || 'Patient'}`)}&body=${encodeURIComponent(outreachMsg || `Hello ${pt.name?.split(' ')[0] || 'Patient'}, This is [Coordinator Name] from your care team. We noticed you may have missed some medication refills and your recent follow-up appointment. We're here to help and want to make sure you have everything you need. Could we schedule a time to talk about any challenges you're facing with your medications or appointments? We can also help with:\n- Medication refills and pharmacy assistance\n- Rescheduling appointments\n- Transportation support\nPlease call us at (555) 123-4567 or reply to this message. We're here to support your health goals.\nBest regards, Care Coordination Team`)}`} className="po-send-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     Send to Patient
                   </a>
