@@ -2319,3 +2319,26 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - Task queue summary: single column on mobile
 - Patient outreach channels: single column on mobile
 - Banner contact: single column on mobile
+
+---
+
+## Alert Severity Pill Color Update
+
+- **Change**: The "HIGH" severity pill in the Alert Triggers & Risk Drivers section (Medication Non-Adherence, Missed Follow-Up Appointments) now uses the same bold color style as the Deteriorating Clinical Trends section.
+- **Before**: Used `pill-high` class — light red background (`#FEF2F2`) with dark red text (`#B91C1C`).
+- **After**: Uses `sev-high` class — white text on bold orange background (`#EA580C`), matching the trend severity badges.
+- Similarly, "CRITICAL" uses `sev-critical` (white on `#DC2626`) and "MEDIUM" uses `sev-medium` (dark text on yellow `#FCD34D`).
+- The AI-Recommended Actions priority pills remain unchanged (soft tinted style).
+- **File**: `src/components/DashboardPage.jsx` — changed `pill-${a.severity.toLowerCase()}` to `sev-${a.severity.toLowerCase()}` for alert items.
+
+---
+
+## Patient Outreach – Send to Patient with Subject & Body
+
+- **Change**: The "Send to Patient" button in the Patient Outreach tab now opens the email client (Outlook) with a pre-filled subject and body, in addition to the patient's email in the "To" field.
+- **Subject**: `Care Coordination Follow-Up – {Patient Name}`
+- **Body**: The content of the outreach message textarea (AI-generated or manually edited).
+- The textarea was converted from uncontrolled (`defaultValue`) to controlled (`value` + `onChange`) so that any edits the user makes to the message are reflected in the mailto link when "Send to Patient" is clicked.
+- The `mailto:` URL uses `encodeURIComponent` for both subject and body to handle special characters.
+- **File**: `src/components/DashboardPage.jsx`
+- **Commit**: `5201ec5` — "Alert severity pills use bold sev colors; mailto includes subject and body"
