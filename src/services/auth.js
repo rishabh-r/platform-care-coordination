@@ -1,4 +1,5 @@
 import { LOGIN_URL } from '../config/constants';
+import { maybeDecrypt } from './fhir';
 
 export async function doLogin(email, password) {
   const res = await fetch(LOGIN_URL, {
@@ -12,7 +13,8 @@ export async function doLogin(email, password) {
     throw new Error(`Login failed (${res.status}). Please try again.`);
   }
 
-  const data = await res.json();
+  const raw = await res.json();
+  const data = await maybeDecrypt(raw);
   const token = data.idToken || data.token || data.access_token;
   if (!token) throw new Error('Login failed: no token received.');
 

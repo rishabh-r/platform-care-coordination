@@ -1,5 +1,40 @@
 import { FHIR_BASE } from '../config/constants';
 
+const DECRYPT_KEY_B64 = import.meta.env.VITE_DECRYPT_KEY || '';
+
+function b64ToUint8(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+let _cryptoKey = null;
+async function getCryptoKey() {
+  if (_cryptoKey) return _cryptoKey;
+  if (!DECRYPT_KEY_B64) return null;
+  const raw = b64ToUint8(DECRYPT_KEY_B64);
+  _cryptoKey = await crypto.subtle.importKey('raw', raw, 'AES-CBC', false, ['decrypt']);
+  return _cryptoKey;
+}
+
+export async function decryptPayload(payloadB64) {
+  const key = await getCryptoKey();
+  if (!key) throw new Error('No decryption key configured');
+  const data = b64ToUint8(payloadB64);
+  const iv = data.slice(0, 16);
+  const ciphertext = data.slice(16);
+  const decrypted = await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, key, ciphertext);
+  return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
+export async function maybeDecrypt(json) {
+  if (json && json.encrypted === true && typeof json.payload === 'string') {
+    return await decryptPayload(json.payload);
+  }
+  return json;
+}
+
 export function getAuthHeader() {
   const token = localStorage.getItem('cb_token');
   if (!token) {
@@ -17,7 +52,8 @@ export async function callFhirApi(url) {
     window.location.reload();
     throw new Error('Unauthorized');
   }
-  return res.json();
+  const json = await res.json();
+  return maybeDecrypt(json);
 }
 
 export function buildUrl(path, params) {

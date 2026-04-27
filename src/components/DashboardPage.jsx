@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { callFhirApi, buildUrl } from '../services/fhir'
+import { callFhirApi, buildUrl, maybeDecrypt } from '../services/fhir'
 import { FHIR_BASE } from '../config/constants'
 import { formatDisplayName } from '../utils'
 import { Line } from 'react-chartjs-2'
@@ -964,7 +964,7 @@ Requirements:
         headers: { 'Authorization': `Bearer ${token}` },
       })
       if (!res.ok) return
-      const data = await res.json()
+      const data = await maybeDecrypt(await res.json())
       if (data.isReviewed && data.createdDate) {
         const reviewDate = new Date(data.createdDate)
         const now = new Date()
@@ -1030,6 +1030,7 @@ Requirements:
         return statusValues.map(status =>
           fetch(`${FHIR_BASE}/baseR4/CareCoordinationNote/search?patientId=${pId}&coordinatorEmail=${email}&actionId=${actionId}&status=${status}`, { headers })
             .then(r => r.ok ? r.json() : { entry: [] })
+            .then(json => maybeDecrypt(json))
             .catch(() => ({ entry: [] }))
         )
       })
@@ -1054,9 +1055,9 @@ Requirements:
       const base = `${FHIR_BASE}/baseR4/portal/task-queue?patientId=${patientId}`
       const headers = { 'Authorization': `Bearer ${token}` }
       const [r1, r2, r3] = await Promise.all([
-        fetch(`${base}&status=pending`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(`${base}&status=in-process`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(`${base}&status=completed`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${base}&status=pending`, { headers }).then(r => r.ok ? r.json() : []).then(j => maybeDecrypt(j)).catch(() => []),
+        fetch(`${base}&status=in-process`, { headers }).then(r => r.ok ? r.json() : []).then(j => maybeDecrypt(j)).catch(() => []),
+        fetch(`${base}&status=completed`, { headers }).then(r => r.ok ? r.json() : []).then(j => maybeDecrypt(j)).catch(() => []),
       ])
       const all = [...(Array.isArray(r1) ? r1 : []), ...(Array.isArray(r2) ? r2 : []), ...(Array.isArray(r3) ? r3 : [])]
       const mappedTasks = all.map(mapTask)
