@@ -14,7 +14,7 @@ async function getCryptoKey() {
   if (_cryptoKey) return _cryptoKey;
   if (!DECRYPT_KEY_B64) return null;
   const raw = b64ToUint8(DECRYPT_KEY_B64);
-  _cryptoKey = await crypto.subtle.importKey('raw', raw, 'AES-CBC', false, ['decrypt']);
+  _cryptoKey = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['decrypt']);
   return _cryptoKey;
 }
 
@@ -22,9 +22,9 @@ export async function decryptPayload(payloadB64) {
   const key = await getCryptoKey();
   if (!key) throw new Error('No decryption key configured');
   const data = b64ToUint8(payloadB64);
-  const iv = data.slice(0, 16);
-  const ciphertext = data.slice(16);
-  const decrypted = await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, key, ciphertext);
+  const iv = data.slice(0, 12);
+  const ciphertext = data.slice(12);
+  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
   return JSON.parse(new TextDecoder().decode(decrypted));
 }
 
