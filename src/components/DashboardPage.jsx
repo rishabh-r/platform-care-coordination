@@ -2086,11 +2086,13 @@ Requirements:
                 date: m.date, time: '', location: m.location || '', isMissed: true, rawDate: ''
               }))
               const fhirAppts = apptData || []
-              const combined = [...aiMissed, ...fhirAppts]
+              const combined = [...fhirAppts, ...aiMissed]
               const deduped = []
               const seen = new Set()
               for (const a of combined) {
-                const key = `${a.title}|${a.date}`
+                const dateKey = a.date?.replace(/\s+/g, '') || ''
+                const locKey = (a.location || '').toLowerCase().trim()
+                const key = `${dateKey}|${locKey}`
                 if (!seen.has(key)) { seen.add(key); deduped.push(a) }
               }
               deduped.sort((a, b) => {
