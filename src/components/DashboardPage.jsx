@@ -248,6 +248,71 @@ function parseEncountersFromFhir(bundle) {
   return encounters.length ? encounters : null
 }
 
+function parseAppointmentsFromFhir(bundle) {
+  if (!bundle?.entry?.length) return null
+  const appts = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  for (const e of bundle.entry) {
+    const r = e.resource
+    if (r.resourceType !== 'Appointment') continue
+    const desc = r.description || r.serviceType?.[0]?.coding?.[0]?.display || 'Appointment'
+    const rawStatus = r.status || ''
+    const startStr = r.start || ''
+    const endStr = r.end || ''
+    const reason = r.reasonCode?.[0]?.coding?.[0]?.display || r.reasonCode?.[0]?.text || ''
+    const location = r.participant?.find(p => p.actor?.reference?.startsWith('Location'))?.actor?.display || ''
+    const practitioner = r.participant?.find(p => p.actor?.reference?.startsWith('Practitioner'))?.actor?.display || ''
+
+    let dateStr = '', timeStr = ''
+    if (startStr) {
+      const d = new Date(startStr)
+      if (!isNaN(d)) {
+        dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+      }
+    }
+    let endDateStr = '', endTimeStr = ''
+    if (endStr) {
+      const ed = new Date(endStr)
+      if (!isNaN(ed)) {
+        endDateStr = ed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        endTimeStr = ed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+      }
+    }
+
+    let apptStatus = 'completed'
+    const apptDate = startStr ? new Date(startStr) : null
+    if (rawStatus === 'noshow') apptStatus = 'missed'
+    else if (rawStatus === 'cancelled') apptStatus = 'stopped'
+    else if (rawStatus === 'booked' || rawStatus === 'pending' || rawStatus === 'proposed') {
+      apptStatus = apptDate && apptDate >= today ? 'upcoming' : 'completed'
+    } else if (rawStatus === 'fulfilled' || rawStatus === 'arrived' || rawStatus === 'checked-in') {
+      apptStatus = 'completed'
+    }
+
+    appts.push({
+      title: desc,
+      status: apptStatus,
+      with: reason || practitioner || '',
+      date: dateStr,
+      time: timeStr,
+      endDate: endDateStr,
+      endTime: endTimeStr,
+      location: location || '',
+      isMissed: apptStatus === 'missed',
+      rawDate: startStr
+    })
+  }
+  appts.sort((a, b) => {
+    const order = { upcoming: 0, missed: 1, completed: 2, stopped: 3 }
+    const oa = order[a.status] ?? 9, ob = order[b.status] ?? 9
+    if (oa !== ob) return oa - ob
+    return (b.rawDate || '').localeCompare(a.rawDate || '')
+  })
+  return appts.length ? appts : null
+}
+
 async function parseCareTeamFromEoC(bundle) {
   if (!bundle?.entry?.length) return null
   const team = []
@@ -711,7 +776,10 @@ function DashboardPage() {
   const [aiActionsData, setAiActionsData] = useState(null)
   const [medsData, setMedsData] = useState(null)
   const [encData, setEncData] = useState(null)
+  const [apptData, setApptData] = useState(null)
   const [missedAppts, setMissedAppts] = useState(null)
+  const [encApptTab, setEncApptTab] = useState('encounters')
+  const [apptPageNum, setApptPageNum] = useState(1)
   const [careTeamData, setCareTeamData] = useState(null)
   const [vitalsData, setVitalsData] = useState(null)
   const [riskData, setRiskData] = useState(null)
@@ -786,8 +854,9 @@ function DashboardPage() {
         callFhirApi(`${FHIR_BASE}/baseR4/Encounter?patient=${patientId}&page=0&size=100`).catch(e => { console.warn('[Dashboard] Encounters fetch failed:', e); return null }),
         callFhirApi(buildUrl('/baseR4/EpisodeOfCare', { patient: patientId, status: 'active', page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] EpisodeOfCare fetch failed:', e); return null }),
         callFhirApi(buildUrl('/baseR4/Observation/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Observations fetch failed:', e); return null }),
-        callFhirApi(buildUrl('/baseR4/Observation/vitals/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Vitals fetch failed:', e); return null })
-      ]).then(async ([medBundle, encBundle, eocBundle, obsBundle, vitalsBundle]) => {
+        callFhirApi(buildUrl('/baseR4/Observation/vitals/search', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Vitals fetch failed:', e); return null }),
+        callFhirApi(buildUrl('/baseR4/Appointment', { patient: patientId, page: 0, size: 100 })).catch(e => { console.warn('[Dashboard] Appointments fetch failed:', e); return null })
+      ]).then(async ([medBundle, encBundle, eocBundle, obsBundle, vitalsBundle, apptBundle]) => {
         const parsedMeds = parseMedsFromFhir(medBundle)
         if (parsedMeds?.length) {
           console.log('[Dashboard] Parsed', parsedMeds.length, 'medications from FHIR')
@@ -797,6 +866,11 @@ function DashboardPage() {
         if (parsedEnc?.length) {
           console.log('[Dashboard] Parsed', parsedEnc.length, 'encounters from FHIR')
           setEncData(parsedEnc)
+        }
+        const parsedAppts = parseAppointmentsFromFhir(apptBundle)
+        if (parsedAppts?.length) {
+          console.log('[Dashboard] Parsed', parsedAppts.length, 'appointments from FHIR')
+          setApptData(parsedAppts)
         }
         const parsedTeam = await parseCareTeamFromEoC(eocBundle)
         const teamWithUser = (() => {
@@ -1954,33 +2028,83 @@ Requirements:
             })()}
           </div>
 
-          {/* Appointments */}
+          {/* Appointments & Encounters */}
           <div id="appts-section" className="dash-card">
             <div className="dash-card-head">
               <h3>Appointments &amp; Encounters</h3>
-              <p>{(() => { const enc = (encData || []).filter(e => !e.isMissed); const m = missedAppts || []; const t = enc.length + m.length; return t ? `${t} encounters` : 'Upcoming and recent visits' })()}</p>
+              <p>{encApptTab === 'encounters'
+                ? `${(encData || []).filter(e => !e.isMissed).length} encounters`
+                : `${(() => { const ai = (missedAppts || []).length; const api = (apptData || []).length; return ai + api })() } appointments`
+              }</p>
             </div>
-            {(() => {
-              const fhirEnc = encData || []
-              const missed = (missedAppts || []).map(m => ({
+            <div className="dash-enc-appt-tabs">
+              <button className={`dash-enc-appt-tab ${encApptTab === 'encounters' ? 'active' : ''}`} onClick={() => { setEncApptTab('encounters'); setApptsPage(1) }}>Encounters</button>
+              <button className={`dash-enc-appt-tab ${encApptTab === 'appointments' ? 'active' : ''}`} onClick={() => { setEncApptTab('appointments'); setApptPageNum(1) }}>Appointments</button>
+            </div>
+
+            {encApptTab === 'encounters' && (() => {
+              const fhirEnc = (encData || []).filter(e => !e.isMissed)
+              const ITEMS = 10
+              const totalPages = Math.ceil(fhirEnc.length / ITEMS)
+              const paged = fhirEnc.slice((apptsPage - 1) * ITEMS, apptsPage * ITEMS)
+              return (
+                <>
+                  {paged.map((a, i) => (
+                    <div key={i} className="dash-appt-row">
+                      <div className="dash-appt-info">
+                        <div className="dash-appt-title">
+                          <strong>{a.title}</strong>
+                          <span className={`dash-pill pill-${a.status}`}>{a.status === 'upcoming' ? 'Upcoming' : a.status === 'completed' ? 'Completed' : a.status === 'stopped' ? 'Stopped' : a.status}</span>
+                        </div>
+                        {a.with && <p>with {a.with}</p>}
+                        <p className="dash-appt-meta">
+                          {a.date && <><img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> {a.date}</>}
+                          {a.time && <>&nbsp; <svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="14" height="14" style={{verticalAlign:'middle',marginRight:2}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{a.time}</>}
+                          {a.endDate && <>&nbsp; → &nbsp;<img src="/images/icon-calendar.png" alt="" className="dash-banner-icon" /> {a.endDate}</>}
+                          {a.endTime && <>&nbsp; <svg viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" width="14" height="14" style={{verticalAlign:'middle',marginRight:2}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{a.endTime}</>}
+                          {a.location && <>&nbsp; 📍 {a.location}</>}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {totalPages > 1 && (
+                    <div className="cn-pagination">
+                      {apptsPage > 1 && <button className="cn-page-btn" onClick={() => setApptsPage(p => p - 1)}>‹ Prev</button>}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                        <button key={pg} className={`cn-page-btn ${apptsPage === pg ? 'cn-page-active' : ''}`} onClick={() => setApptsPage(pg)}>{pg}</button>
+                      ))}
+                      {apptsPage < totalPages && <button className="cn-page-btn" onClick={() => setApptsPage(p => p + 1)}>Next ›</button>}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
+
+            {encApptTab === 'appointments' && (() => {
+              const aiMissed = (missedAppts || []).map(m => ({
                 title: m.title, status: 'missed', with: m.reason || 'No-Show',
-                date: m.date, time: '', location: m.location || '', isMissed: true
+                date: m.date, time: '', location: m.location || '', isMissed: true, rawDate: ''
               }))
-              const allAppts = fhirEnc.length || missed.length
-                ? [...missed, ...fhirEnc.filter(e => !e.isMissed)]
-                : d.appointments.map(a => ({ ...a, isMissed: false }))
+              const fhirAppts = apptData || []
+              const combined = [...aiMissed, ...fhirAppts]
               const deduped = []
               const seen = new Set()
-              for (const a of allAppts) {
+              for (const a of combined) {
                 const key = `${a.title}|${a.date}`
                 if (!seen.has(key)) { seen.add(key); deduped.push(a) }
               }
-              const APPTS_PER_PAGE = 10
-              const totalApptPages = Math.ceil(deduped.length / APPTS_PER_PAGE)
-              const pagedAppts = deduped.slice((apptsPage - 1) * APPTS_PER_PAGE, apptsPage * APPTS_PER_PAGE)
+              deduped.sort((a, b) => {
+                const order = { upcoming: 0, missed: 1, completed: 2, stopped: 3 }
+                const oa = order[a.status] ?? 9, ob = order[b.status] ?? 9
+                if (oa !== ob) return oa - ob
+                return (b.rawDate || '').localeCompare(a.rawDate || '')
+              })
+              const ITEMS = 10
+              const totalPages = Math.ceil(deduped.length / ITEMS)
+              const paged = deduped.slice((apptPageNum - 1) * ITEMS, apptPageNum * ITEMS)
               return (
                 <>
-                  {pagedAppts.map((a, i) => (
+                  {paged.map((a, i) => (
                     <div key={i} className="dash-appt-row">
                       <div className="dash-appt-info">
                         <div className="dash-appt-title">
@@ -1989,7 +2113,6 @@ Requirements:
                             ? <span className="dash-pill pill-missed">Missed</span>
                             : <span className={`dash-pill pill-${a.status}`}>{a.status === 'upcoming' ? 'Upcoming' : a.status === 'completed' ? 'Completed' : a.status === 'stopped' ? 'Stopped' : a.status}</span>
                           }
-                          {a.telehealth && <span className="dash-pill pill-telehealth">📹 Telehealth</span>}
                         </div>
                         {a.with && <p>{a.isMissed ? a.with : `with ${a.with}`}</p>}
                         <p className="dash-appt-meta">
@@ -2002,13 +2125,13 @@ Requirements:
                       </div>
                     </div>
                   ))}
-                  {totalApptPages > 1 && (
+                  {totalPages > 1 && (
                     <div className="cn-pagination">
-                      {apptsPage > 1 && <button className="cn-page-btn" onClick={() => setApptsPage(p => p - 1)}>‹ Prev</button>}
-                      {Array.from({ length: totalApptPages }, (_, i) => i + 1).map(pg => (
-                        <button key={pg} className={`cn-page-btn ${apptsPage === pg ? 'cn-page-active' : ''}`} onClick={() => setApptsPage(pg)}>{pg}</button>
+                      {apptPageNum > 1 && <button className="cn-page-btn" onClick={() => setApptPageNum(p => p - 1)}>‹ Prev</button>}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                        <button key={pg} className={`cn-page-btn ${apptPageNum === pg ? 'cn-page-active' : ''}`} onClick={() => setApptPageNum(pg)}>{pg}</button>
                       ))}
-                      {apptsPage < totalApptPages && <button className="cn-page-btn" onClick={() => setApptsPage(p => p + 1)}>Next ›</button>}
+                      {apptPageNum < totalPages && <button className="cn-page-btn" onClick={() => setApptPageNum(p => p + 1)}>Next ›</button>}
                     </div>
                   )}
                 </>

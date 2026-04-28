@@ -300,6 +300,20 @@
 .dash-med-info p { font-size: 11px; color: #64748B; margin: 1px 0 0; line-height: 1.4; }
 .dash-med-doc { color: #94A3B8 !important; font-size: 10px !important; font-weight: 500; }
 
+/* ── Encounters/Appointments Tabs ── */
+.dash-enc-appt-tabs {
+  display: flex; gap: 0; margin-bottom: 12px; border-bottom: 2px solid #E2E8F0;
+}
+.dash-enc-appt-tab {
+  flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 500;
+  background: transparent; border: none; cursor: pointer; color: #64748B;
+  border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+}
+.dash-enc-appt-tab:hover { color: #334155; }
+.dash-enc-appt-tab.active {
+  color: #6366F1; border-bottom-color: #6366F1; font-weight: 600;
+}
+
 /* ── Appointments ── */
 .dash-appt-row {
   padding: 10px; border: 1px solid #F1F5F9; border-radius: 8px;
