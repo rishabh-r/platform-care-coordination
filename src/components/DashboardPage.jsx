@@ -2034,7 +2034,7 @@ Requirements:
               <h3>Appointments &amp; Encounters</h3>
               <p>{encApptTab === 'encounters'
                 ? `${(encData || []).filter(e => !e.isMissed).length} encounters`
-                : `${(() => { const ai = (missedAppts || []).length; const api = (apptData || []).length; return ai + api })() } appointments`
+                : `${(() => { const all = [...(apptData || []), ...(missedAppts || []).map(m => ({ date: m.date, location: m.location || '' }))]; const seen = new Set(); let c = 0; for (const a of all) { const k = `${(a.date || '').replace(/\s+/g, '')}|${(a.location || '').toLowerCase().trim()}`; if (!seen.has(k)) { seen.add(k); c++ } } return c })()} appointments`
               }</p>
             </div>
             <div className="dash-enc-appt-tabs">
