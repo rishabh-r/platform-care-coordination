@@ -256,13 +256,13 @@ function parseAppointmentsFromFhir(bundle) {
   for (const e of bundle.entry) {
     const r = e.resource
     if (r.resourceType !== 'Appointment') continue
-    const desc = r.description || r.serviceType?.[0]?.coding?.[0]?.display || 'Appointment'
+    const desc = r.description || r.serviceType?.[0]?.text || r.serviceType?.[0]?.coding?.[0]?.display || 'Appointment'
     const rawStatus = r.status || ''
     const startStr = r.start || ''
     const endStr = r.end || ''
-    const reason = r.reasonCode?.[0]?.coding?.[0]?.display || r.reasonCode?.[0]?.text || ''
-    const location = r.participant?.find(p => p.actor?.reference?.startsWith('Location'))?.actor?.display || ''
-    const practitioner = r.participant?.find(p => p.actor?.reference?.startsWith('Practitioner'))?.actor?.display || ''
+    const reason = r.reasonCode?.[0]?.text || r.reasonCode?.[0]?.coding?.[0]?.display || ''
+    const location = r.extension?.find(ext => ext.url === 'Location')?.valueString || ''
+    const serviceType = r.serviceType?.[0]?.text || r.serviceType?.[0]?.coding?.[0]?.display || ''
 
     let dateStr = '', timeStr = ''
     if (startStr) {
@@ -294,7 +294,7 @@ function parseAppointmentsFromFhir(bundle) {
     appts.push({
       title: desc,
       status: apptStatus,
-      with: reason || practitioner || '',
+      with: reason || serviceType || '',
       date: dateStr,
       time: timeStr,
       endDate: endDateStr,
