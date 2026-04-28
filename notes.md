@@ -2342,3 +2342,106 @@ Added ranges for: Heart Rate (8867-4), Systolic BP (8480-6), Diastolic BP (8462-
 - The `mailto:` URL uses `encodeURIComponent` for both subject and body to handle special characters.
 - **File**: `src/components/DashboardPage.jsx`
 - **Commit**: `5201ec5` — "Alert severity pills use bold sev colors; mailto includes subject and body"
+
+---
+
+## API Response Encryption / Decryption (AES-256-GCM)
+
+- **Change**: All FHIR API responses are now encrypted by the backend. Frontend decrypts them automatically.
+- **Algorithm**: AES-256-GCM (confirmed by backend team)
+- **Key**: Stored in `.env` as `VITE_DECRYPT_KEY` (Base64-encoded 32-byte key). The `.env` file is gitignored.
+- **Encrypted response format**:
+  ```json
+  { "payload": "<base64-encoded encrypted data>", "encrypted": true }
+  ```
+- **Decryption logic** (in `src/services/fhir.js`):
+  - `decryptPayload(payloadB64)`: Decodes Base64, extracts first 12 bytes as IV/nonce, decrypts the rest (ciphertext + 16-byte auth tag) using Web Crypto API `AES-GCM`.
+  - `maybeDecrypt(json)`: Checks if response has `{ encrypted: true }` — if yes, decrypts; otherwise returns as-is. This makes it backward-compatible.
+  - `callFhirApi()` now auto-runs `maybeDecrypt` on every response.
+  - Cached `CryptoKey` instance (`_cryptoKey`) for performance.
+- **Files modified**:
+  - `src/services/fhir.js` — Added `decryptPayload`, `maybeDecrypt`, `getCryptoKey`, `b64ToUint8`. Updated `callFhirApi` to auto-decrypt.
+  - `src/services/auth.js` — Login response also runs through `maybeDecrypt`.
+  - `src/components/DashboardPage.jsx` — All direct FHIR `fetch` calls (review status, task queue, care notes) also run through `maybeDecrypt`. Added `maybeDecrypt` to imports.
+  - `.env` — Created with `VITE_DECRYPT_KEY` (gitignored).
+  - `.env.example` — Template file for reference (committed).
+- **Vercel deployment**: `VITE_DECRYPT_KEY` must be added as an environment variable in Vercel project settings.
+- **Commits**: `4fbced3` (AES-256-CBC initial), `811cadf` (switched to AES-256-GCM)
+
+---
+
+## Excel Data — Lifestyle Goals & Upcoming Appointments
+
+### lifestyle_goals sheet (new data)
+- **34 rows** added: one per day from April 28, 2026 to May 31, 2026
+- **Patient**: James Mitchell (`a3f8b2c1-7d4e-4a91-b6e5-9c2d1f3e8a7b`)
+- **Columns**: `id`, `patient_id`, `steps`, `water_intake_glasses`, `exercise_minutes`, `schedule_start` (7 AM), `schedule_end` (11 PM)
+- **Data characteristics**: Realistic for a diabetic patient — lower activity on weekends, gradual improvement trend over the month. Steps range ~3,000–10,000+, water 4–12 glasses, exercise 0–60 min.
+- **Background**: Light green (`#C6EFCE`) to distinguish from old data.
+
+### appointment sheet (5 new upcoming appointments)
+- All with `status: booked`, dates from June–September 2026
+- **Background**: Light blue (`#BDD7EE`) to distinguish from old data.
+
+| Date | Type | Description | Practitioner |
+|------|------|-------------|-------------|
+| Jun 10, 2026 | Endocrinology | DM quarterly follow-up & HbA1c review | Dr. Sarah Chen |
+| Jun 25, 2026 | Wound Care | Diabetic foot wound reassessment | Dr. Patricia Hoffman |
+| Jul 15, 2026 | Internal Medicine | Nephropathy & neuropathy monitoring | Dr. Michael Brooks |
+| Aug 5, 2026 | Endocrinology | DM comprehensive mid-year review with lipid panel | Dr. Sarah Chen |
+| Sep 1, 2026 | Endocrinology | DM quarterly follow-up & insulin adjustment | Dr. Sarah Chen |
+
+- No other sheets were modified — only `lifestyle_goals` and `appointment`.
+- Script used: `add_lifestyle_appointments.py`
+
+---
+
+## Appointments & Encounters — Tabbed UI with Appointment API
+
+### Overview
+The "Appointments & Encounters" section in the dashboard has been split into two tabs: **Encounters** and **Appointments**.
+
+### Encounters tab (default)
+- Uses `/baseR4/Encounter` API (unchanged)
+- Shows only non-missed encounters (missed/cancelled entries removed from this tab)
+- Pagination: 10 per page
+
+### Appointments tab (new)
+- Calls **Appointment API** (`/baseR4/Appointment`) with `patient` and `page=0&size=100`
+- Also includes **AI-analysed missed appointments** (moved from Encounters tab)
+- **Deduplication**: Uses `date + location` matching to prevent duplicate missed entries (API vs AI). API results take priority.
+- **Status determination** based on today's date:
+  - `booked` + future date → **Upcoming** (blue pill)
+  - `fulfilled` → **Completed** (green pill)
+  - `noshow` → **Missed** (red pill)
+  - `cancelled` → **Stopped** (red pill)
+- Sorted: Upcoming first, then Missed, then Completed
+- Pagination: 10 per page
+
+### Appointment API response parsing
+- **Location**: Extracted from `extension` array (`url: "Location"`, `valueString`), not from `participant`
+- **Service type**: Reads `serviceType[0].text` first, falls back to `coding[0].display`
+- **Reason code**: Reads `reasonCode[0].text` first, falls back to `coding[0].display`
+- **Title**: Uses `description` field from the response
+
+### Header count
+- Shows deduped count (same `date + location` logic) so the number matches actual displayed items.
+
+### State variables added
+- `apptData` — Parsed appointment data from API
+- `encApptTab` — Active tab (`'encounters'` or `'appointments'`)
+- `apptPageNum` — Pagination state for Appointments tab
+
+### CSS added (in `src/dashboard.css`)
+- `.dash-enc-appt-tabs` — Flex container for tab buttons
+- `.dash-enc-appt-tab` — Tab button styling with purple active underline indicator
+
+### Files modified
+- `src/components/DashboardPage.jsx` — New `parseAppointmentsFromFhir()` function, Appointment API call, tabbed UI, dedup logic
+- `src/dashboard.css` — Tab styles
+- **Commits**: `882eef5`, `8435a3c`, `d2f1601`, `bfb81c2`
+
+### Important notes for future agents
+- The **Encounter API** and **Appointment API** are separate FHIR resources with different IDs, statuses, and data structures. They represent the same events from two perspectives (clinical vs scheduling).
+- The **chatbot** also uses the Appointment API via `search_patient_appointment` in `src/services/fhir.js` → `executeTool`.
+- The AI-analysed missed appointments come from the LLM parsing of clinical data (generated in `summarizeFhirData`), not from the Appointment API directly.
