@@ -2445,3 +2445,33 @@ The "Appointments & Encounters" section in the dashboard has been split into two
 - The **Encounter API** and **Appointment API** are separate FHIR resources with different IDs, statuses, and data structures. They represent the same events from two perspectives (clinical vs scheduling).
 - The **chatbot** also uses the Appointment API via `search_patient_appointment` in `src/services/fhir.js` → `executeTool`.
 - The AI-analysed missed appointments come from the LLM parsing of clinical data (generated in `summarizeFhirData`), not from the Appointment API directly.
+
+---
+
+## Auto-Logout (30-Minute Session Expiry)
+
+### Overview
+Implemented automatic logout after 30 minutes to synchronize with the backend bearer token expiry. Once the session expires, the user is redirected to the login page with an alert message.
+
+### How it works
+1. **On login** (`doLogin` in `src/services/auth.js`): stores `cb_login_ts` (current timestamp) in `localStorage`.
+2. **Session helper functions** (exported from `src/services/auth.js`):
+   - `isSessionExpired()` — returns `true` if 30 minutes have elapsed since `cb_login_ts`.
+   - `clearSession()` — removes `cb_token`, `cb_user`, `cb_email`, and `cb_login_ts` from `localStorage`.
+   - `getTimeUntilExpiry()` — returns remaining milliseconds until session expires (minimum 0).
+3. **`SessionGuard` component** (in `src/App.jsx`): wraps all routes.
+   - On mount, checks `isSessionExpired()`. If expired, clears session and redirects to `/`.
+   - Sets a `setTimeout` for `getTimeUntilExpiry()` milliseconds — when it fires, clears session, shows `alert("Session expired. Please log in again.")`, and redirects to login.
+   - Cleanup: clears the timer on unmount or route change.
+4. **Initial load check**: `MainApp`'s `useEffect` also calls `isSessionExpired()` to catch stale sessions on first render.
+
+### Constants
+- `SESSION_TIMEOUT_MS = 30 * 60 * 1000` (30 minutes)
+
+### localStorage keys used
+- `cb_login_ts` — timestamp of last successful login (stored as string via `Date.now().toString()`)
+
+### Files modified
+- `src/services/auth.js` — Added `cb_login_ts` storage in `doLogin`, added `isSessionExpired`, `clearSession`, `getTimeUntilExpiry` exports
+- `src/App.jsx` — Added `SessionGuard` component, imported session functions, wrapped routes
+- **Commit**: `f679e3c`
