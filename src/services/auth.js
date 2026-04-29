@@ -22,5 +22,28 @@ export async function doLogin(email, password) {
   localStorage.setItem('cb_token', token);
   localStorage.setItem('cb_user', name);
   localStorage.setItem('cb_email', email);
+  localStorage.setItem('cb_login_ts', Date.now().toString());
   return name;
+}
+
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+
+export function isSessionExpired() {
+  const ts = localStorage.getItem('cb_login_ts');
+  if (!ts) return true;
+  return Date.now() - parseInt(ts, 10) > SESSION_TIMEOUT_MS;
+}
+
+export function clearSession() {
+  localStorage.removeItem('cb_token');
+  localStorage.removeItem('cb_user');
+  localStorage.removeItem('cb_email');
+  localStorage.removeItem('cb_login_ts');
+}
+
+export function getTimeUntilExpiry() {
+  const ts = localStorage.getItem('cb_login_ts');
+  if (!ts) return 0;
+  const remaining = SESSION_TIMEOUT_MS - (Date.now() - parseInt(ts, 10));
+  return Math.max(remaining, 0);
 }
