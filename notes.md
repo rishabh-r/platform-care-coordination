@@ -2475,3 +2475,374 @@ Implemented automatic logout after 30 minutes to synchronize with the backend be
 - `src/services/auth.js` — Added `cb_login_ts` storage in `doLogin`, added `isSessionExpired`, `clearSession`, `getTimeUntilExpiry` exports
 - `src/App.jsx` — Added `SessionGuard` component, imported session functions, wrapped routes
 - **Commit**: `f679e3c`
+
+---
+
+## 3 New Patients — Data Generation (April 30, 2026)
+
+### Overview
+Created 3 new patients in `chatbase_data.xlsx` via `generate_3patients.py`. Each patient has data across all 29 sheets with unique background colours for identification.
+
+### Background Colours
+- **Patient 3 (Margaret Reynolds)**: Light purple (`#E8DAEF`)
+- **Patient 4 (Robert Anderson)**: Light orange (`#FDEBD0`)
+- **Patient 5 (William Crawford)**: Light pink (`#FADBD8`)
+- (James Mitchell = no colour, Sarah Cooper = yellow `#FFFF99`)
+
+---
+
+## Patient 3 — Margaret Ann Reynolds
+
+- **Patient UUID**: `c7d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f`
+- **MRN**: `MRN-20230312-003`
+- **DOB**: 12-Mar-1966 (age ~60)
+- **Gender**: Female
+- **Marital Status**: Married
+- **Language**: English
+- **Disease**: Essential Hypertension
+- **Primary Practitioner**: Dr. Rachel Kim (Cardiology)
+- **Managing Organization**: Triangle Cardiology & Vascular Center
+- **Time Span**: March 2023 — March 2026 (3 years)
+- **Encounters**: 20 total (3 IMP + 15 AMB + 2 cancelled no-show)
+
+### Clinical Story
+- Mar 2023: Initial HTN diagnosis (BP 158/96) during routine checkup with Dr. Brooks
+- Jun 2023: Started Amlodipine 5mg + HCTZ 25mg
+- Sep 2023: LDL elevated (168), started Atorvastatin 20mg
+- Jan 2024: **CARE GAP — missed appointment (no-show)**
+- Jun 2024: Cardiology consult with Dr. Kim, increased Amlodipine to 10mg, ECG shows early LVH
+- Aug 2024: Added Losartan 50mg (3-drug regimen)
+- Oct 2024: **CARE GAP — self-discontinued HCTZ** due to frequent urination
+- Oct 2024: Echo confirms concentric LVH, LVEF 55% (IMP)
+- Jan 2025: Hypertensive urgency (BP 198/115), ER admission (IMP), restarted HCTZ
+- Apr 2025: CKD Stage II detected — creatinine 1.6, eGFR 55
+- Jun 2025: Nephrology consultation with Dr. Patel
+- Jul 2025: **CARE GAP — missed cardiology follow-up (no-show)**
+- Jan 2026: Brief admission for accelerated HTN (BP 186/108) (IMP)
+- Mar 2026: Latest visit — BP 138/84, stable on 4-drug regimen
+
+### Conditions (ICD-9 codes, condition_code_id from Condition_Master)
+- 4019 (row_id=4304) — Essential Hypertension
+- 4010 (row_id=4302) — Malignant Hypertension
+- 2720 (row_id=2743) — Pure Hypercholesterolemia
+- 2724 (row_id=2747) — Hyperlipidemia
+- 4293 (row_id=4491) — Cardiomegaly / LVH
+- 40390 (row_id=4315) — Hypertensive CKD
+- 5852 (row_id=5910) — CKD Stage II
+
+### Observations (7 unique types)
+| observation_code_id | Label | LOINC |
+|---|---|---|
+| 754 | Systolic BP | 8480-6 |
+| 755 | Diastolic BP | 8462-4 |
+| 113 | Creatinine | 2160-0 |
+| 172 | Potassium | 2823-3 |
+| 184 | Sodium | 2951-2 |
+| 106 | Cholesterol LDL | 2090-9 |
+| 121 | eGFR | 33914-3 |
+
+### Procedures (CPT codes)
+93306 (Echo TTE), 93000 (ECG), 99223 (Hospital visit high), 80053 (CMP), 99232 (Hospital visit moderate)
+
+### Medications
+- Amlodipine 5mg → 10mg (active), HCTZ 25mg (stopped then restarted), Losartan 50mg (active), Atorvastatin 20mg (active), Aspirin 81mg (active)
+- **Care gap**: HCTZ self-discontinued — note: "Care gap — patient self-discontinued HCTZ due to frequent urination"
+
+### Allergies
+- ACE Inhibitor (dry cough) — low criticality
+- Penicillin (skin rash, urticaria) — high criticality
+
+### Episodes of Care (3 programs)
+- Hypertension Disease Management Program (active) — CM: Diana Foster (Cardiovascular CM)
+- Cardiovascular Risk Reduction Program (active) — CM: Catherine Williams (Primary CM)
+- CKD Monitoring Program (active) — CM: Diana Foster (Cardiovascular CM)
+
+---
+
+## Patient 4 — Robert James Anderson
+
+- **Patient UUID**: `d8e3f4a5-6b7c-8d9e-0f1a-2b3c4d5e6f7a`
+- **MRN**: `MRN-20230822-004`
+- **DOB**: 22-Aug-1971 (age ~55)
+- **Gender**: Male
+- **Marital Status**: Married
+- **Language**: English
+- **Disease**: Type II Diabetes with Hypertension
+- **Primary Practitioner**: Dr. Michael Brooks (Internal Medicine) — SHARED with P3
+- **Managing Organization**: (existing Internal Medicine org)
+- **Time Span**: March 2023 — March 2026 (3 years)
+- **Encounters**: 22 total (4 IMP + 16 AMB + 2 cancelled no-show)
+
+### Clinical Story
+- Mar 2023: DM Type II diagnosed (HbA1c 8.2, fasting glucose 185), BP 148/92
+- May 2023: Started Metformin 500mg + Lisinopril 10mg
+- Jul 2023: Started Amlodipine 5mg for HTN
+- Sep 2023: Added Atorvastatin for hyperlipidemia (LDL 155)
+- Nov 2023: Increased Metformin to 1000mg
+- Jan 2024: Retinal exam — no diabetic retinopathy
+- Jun 2024: **CARE GAP — missed appointment (no-show)**
+- Aug 2024: HbA1c worsened to 8.5, non-compliance suspected
+- Nov 2024: **CARE GAP — self-discontinued Metformin 1000mg** (GI side effects). Hospitalized for hyperglycemia (glucose 380), started Insulin Glargine (IMP)
+- Feb 2025: Neuropathy symptoms, started Gabapentin 300mg
+- May 2025: **CARE GAP — missed appointment (no-show)**
+- Jul 2025: Hypoglycemic episode (glucose 38), ER visit (IMP)
+- Sep 2025: Renal function declining — creatinine 1.5, eGFR 52, nephrology consult
+- Oct 2025: Brief admission for BP spike 182/108 (IMP)
+- Mar 2026: Latest — HbA1c 7.4, BP 136/82, CKD Stage II stable
+
+### Conditions (ICD-9 codes)
+- 25000 (row_id=1591) — DM Type II
+- 25002 (row_id=1593) — DM Type II uncontrolled
+- 4019 (row_id=4304) — Essential Hypertension
+- 2724 (row_id=2747) — Hyperlipidemia
+- 25062 (row_id=2265) — DM with neuropathy
+- 25040 (row_id=1680) — DM with renal manifestations
+- 25050 (row_id=2259) — DM with ophthalmic
+- 2510 (row_id=2279) — Hypoglycemic coma
+
+### Observations (7 unique types)
+| observation_code_id | Label | LOINC |
+|---|---|---|
+| 53 | HbA1c | 4548-4 |
+| 132 | Glucose | 2345-7 |
+| 113 | Creatinine | 2160-0 |
+| 172 | Potassium | 2823-3 |
+| 754 | Systolic BP | 8480-6 |
+| 755 | Diastolic BP | 8462-4 |
+| 108 | Cholesterol Total | 2093-3 |
+
+### Procedures
+99223 (Hospital visit high), 80053 (CMP), 99222 (Hospital visit moderate), 93000 (ECG), 99232 (Hospital visit moderate)
+
+### Medications
+- Metformin 500mg (active), Metformin 1000mg (stopped — care gap), Lisinopril 10mg (active), Amlodipine 5mg (active), Atorvastatin 20mg (active), Insulin Glargine (active), Gabapentin 300mg (active)
+- **Care gap**: Metformin 1000mg self-discontinued — note: "Care gap — patient self-discontinued Metformin 1000mg due to GI side effects"
+
+### Allergies
+- Sulfonamide (skin rash) — high criticality
+- Shellfish (angioedema, urticaria) — high criticality
+- Iodine contrast dye (mild flushing) — low criticality
+
+### Episodes of Care (4 programs)
+- Diabetes Disease Management Program (active) — CM: Sandra Mitchell (Endocrine CM)
+- Hypertension Monitoring Program (active) — CM: Diana Foster (Cardiovascular CM)
+- Diabetic Neuropathy Pain Management (active) — CM: Sandra Mitchell (Endocrine CM)
+- CKD Monitoring Program (active) — CM: Catherine Williams (Primary CM)
+
+---
+
+## Patient 5 — William Thomas Crawford
+
+- **Patient UUID**: `e9f4a5b6-7c8d-9e0f-1a2b-3c4d5e6f7a8b`
+- **MRN**: `MRN-20230115-005`
+- **DOB**: 15-Jan-1961 (age ~65)
+- **Gender**: Male
+- **Marital Status**: Widowed
+- **Language**: English
+- **Disease**: Lung Cancer with COPD
+- **Primary Practitioner**: Dr. Sophia Garcia (Oncology)
+- **Managing Organization**: Raleigh Oncology & Pulmonary Institute
+- **Time Span**: March 2023 — March 2026 (3 years)
+- **Encounters**: 25 total (6 IMP + 17 AMB + 2 cancelled no-show)
+
+### Clinical Story
+- Mar 2023: COPD diagnosed (FEV1 65% predicted), 40 pack-year smoker, started Tiotropium + Albuterol
+- Jun 2023: COPD exacerbation, hospitalization (IMP), added Fluticasone/Salmeterol
+- Dec 2023: CT thorax — suspicious 2.3cm spiculated nodule in RUL
+- Jan 2024: Bronchoscopy + biopsy → NSCLC adenocarcinoma Stage IIIA (IMP)
+- Mar-Oct 2024: 6 cycles Carboplatin + Paclitaxel chemotherapy
+- May 2024: WBC dropped to 3.2 (neutropenia risk)
+- Jul 2024: **CARE GAP — missed chemo appointment (no-show)**
+- Aug 2024: Pleural effusion, thoracentesis (IMP) — malignant cells found
+- Nov 2024: CT shows 40% tumor reduction (partial response)
+- Dec 2024: Started Pembrolizumab immunotherapy
+- Feb 2025: **CARE GAP — self-discontinued Tiotropium** (felt not helping)
+- Apr 2025: Pneumonia + COPD exacerbation (IMP), restarted Tiotropium
+- Sep 2025: CT stable disease on immunotherapy
+- Nov 2025: **CARE GAP — missed oncology follow-up (no-show)**
+- Dec 2025: Symptomatic anemia (Hgb 8.8), transfusion admission (IMP)
+- Mar 2026: Latest — stable disease, Hgb 10.2, ongoing Pembrolizumab, COPD managed
+
+### Conditions (ICD-9 codes)
+- 496 (row_id=5123) — COPD
+- 3051 (row_id=2899) — Tobacco use disorder
+- 49322 (row_id=5105) — COPD exacerbation
+- 1628 (row_id=1325) — Mal neo bronchus/lung NEC
+- 1505 (row_id=1195) — Lung Cancer
+- 5119 (row_id=5150) — Pleural effusion
+- 2859 (row_id=3147) — Anemia NOS
+- 486 (row_id=5528) — Pneumonia
+
+### Observations (7 unique types)
+| observation_code_id | Label | LOINC |
+|---|---|---|
+| 763 | SpO2 | 59408-5 |
+| 422 | Hemoglobin | 718-7 |
+| 113 | Creatinine | 2160-0 |
+| 172 | Potassium | 2823-3 |
+| 756 | WBC / Leukocytes | 6690-2 |
+| 465 | Platelet Count | 777-3 |
+| 155 | LDH | 2532-0 |
+
+### Procedures
+94010 (Spirometry PFT), 99222/99223/99232/99233 (Hospital visits), 31625 (Bronchoscopy with biopsy), 71260 (CT Thorax), 80053 (CMP)
+
+### Medications
+- Tiotropium 18mcg (stopped then restarted — care gap), Albuterol 90mcg PRN (active), Fluticasone/Salmeterol 250-50 (active), Carboplatin (completed), Paclitaxel (completed), Pembrolizumab (active)
+- **Care gap**: Tiotropium self-discontinued — note: "Care gap — patient self-discontinued Tiotropium, felt it was not helping"
+
+### Allergies
+- Codeine (nausea, vomiting, confusion) — high criticality
+- Cisplatin (severe nephrotoxicity) — high criticality (Carboplatin used instead)
+
+### Episodes of Care (3 programs)
+- Lung Cancer Treatment Program (active) — CM: Thomas Lee (Oncology CM)
+- COPD Disease Management Program (active) — CM: Thomas Lee (Oncology CM)
+- Supportive Care & Symptom Management (active) — CM: Catherine Williams (Primary CM)
+
+---
+
+## New Staff Added (Practitioner Sheet)
+
+### New Practitioners (Doctors)
+| Name | Specialty | Shared Across | UUID Prefix |
+|---|---|---|---|
+| Dr. Rachel Kim | Cardiology | P3, P4 | f1a2b3c4 |
+| Dr. James Morrison | Pulmonology | P5 | a2b3c4d5 |
+| Dr. Sophia Garcia | Oncology | P5 | b3c4d5e6 |
+
+### New Care Coordinators
+| Name | Specialty | Shared Across | UUID Prefix |
+|---|---|---|---|
+| Natalie Thompson | Hypertension Care Coordinator | P3, P4 | c4d5e6f7 |
+| Mark Rodriguez | Oncology Care Coordinator | P5 | d5e6f7a8 |
+
+### New Care Managers (NEW role type)
+| Name | Specialty | Shared Across | UUID Prefix |
+|---|---|---|---|
+| Catherine Williams | Primary Care Manager | P3, P4, P5 | e6f7a8b9 |
+| Diana Foster | Cardiovascular Care Manager | P3, P4 | f7a8b9c0 |
+| Sandra Mitchell | Endocrine Care Manager | P4 | a8b9c0d1 |
+| Thomas Lee | Oncology Care Manager | P5 | b9c0d1e2 |
+
+### Existing Practitioners Reused
+- **Dr. Michael Brooks** (Internal Medicine) — primary for P3, P4
+- **Dr. David Patel** (Nephrology) — P3 (CKD), P4 (diabetic nephropathy)
+
+### New Organisations
+- **Triangle Cardiology & Vascular Center** (`a1b2c3d4-...`) — for P3
+- **Raleigh Oncology & Pulmonary Institute** (`b2c3d4e5-...`) — for P5
+
+---
+
+## New Medications Added (medication_code_master)
+
+| ID | Code Display | Used By |
+|---|---|---|
+| 12 | Amlodipine 5 MG Oral Tablet | P3, P4 |
+| 13 | Amlodipine 10 MG Oral Tablet | P3 |
+| 14 | Hydrochlorothiazide 25 MG Oral Tablet | P3 |
+| 15 | Losartan 50 MG Oral Tablet | P3 |
+| 16 | Tiotropium 18 MCG Inhalation Capsule | P5 |
+| 17 | Albuterol 90 MCG/ACT Inhalation Aerosol | P5 |
+| 18 | Fluticasone-Salmeterol 250-50 MCG Inhalation | P5 |
+| 19 | Carboplatin 150 MG/15 ML Injection | P5 |
+| 20 | Paclitaxel 100 MG/16.7 ML Injection | P5 |
+| 21 | Pembrolizumab 100 MG/4 ML Injection | P5 |
+
+---
+
+## Knowledge Base Updates (knowledgeBases.js)
+
+### CONDITION_CODES — Added
+- `1505=Lung Cancer`, `1629=Mal neo bronch/lung NOS`, `496=Chr airway obstruct NEC (COPD)`, `49322=COPD exacerbation`, `4293=Cardiomegaly/LVH`, `27800=Obesity NOS`, `25050=DMII ophth`, `25002=DMII wo cmp uncntrld`
+
+### DRUG_CODES — Added
+- `HCTZ25, LOSA50, TIOTR18, ALBUT90, FLUT_SALM, CARBO150, PACLI100, PEMBRO100`
+
+### LOINC_CODES — No changes needed (all LOINC codes already present)
+### OBSERVATION_RANGES — No changes needed (all ranges already present)
+### PROCEDURE_CODES — No changes needed (all CPT codes already present)
+
+---
+
+## Data Generation Script
+- **File**: `generate_3patients.py` (not committed to git)
+- **Library**: openpyxl
+- **Sheets populated**: All 29 sheets
+- **Total data created**: ~1,200+ rows across all sheets for 3 patients
+
+---
+
+## Vitals Per Patient (Vitals Sheet)
+
+5 vitals × 5 key encounters = 25 rows per patient, 75 total new rows.
+
+| Vital | LOINC | observation_code_id | All 3? |
+|---|---|---|---|
+| Systolic BP | 8480-6 | 754 | Yes |
+| Diastolic BP | 8462-4 | 755 | Yes |
+| Heart Rate | 8867-4 | 760 | Yes |
+| Body Temperature | 8310-5 | 759 | Yes |
+| SpO2 | 59408-5 | 763 | Yes |
+
+---
+
+## Lifestyle Goals Per Patient
+
+34 daily entries (Apr 28 — May 31, 2026) per patient, 102 total new rows. Data characteristics:
+- **P3 (HTN, 60F)**: Moderate activity — ~5,500 avg steps, 7 glasses water, 25 min exercise
+- **P4 (DM+HTN, 55M)**: More active — ~6,000 avg steps, 8 glasses water, 30 min exercise
+- **P5 (Cancer+COPD, 65M)**: Limited activity — ~3,000 avg steps, 6 glasses water, 10 min exercise
+
+---
+
+## Upcoming Appointments Per Patient
+
+5 upcoming appointments each (June — October 2026), all `status: booked`.
+
+---
+
+## Care Gaps Summary
+
+| Patient | Medication Non-Adherence | Missed Appointments |
+|---|---|---|
+| P3 | HCTZ self-discontinued (frequent urination) | Jan 2024, Jul 2025 |
+| P4 | Metformin 1000mg self-discontinued (GI effects) | Jun 2024, May 2025 |
+| P5 | Tiotropium self-discontinued (felt not helping) | Jul 2024, Nov 2025 |
+
+---
+
+## Data Generation Fixes (April 30, 2026)
+
+### Date Format Fix
+- **Problem**: All dates in the generated data were stored as plain text strings (`type=str`, `number_format=General`) instead of native Excel datetime objects like James Mitchell's data (`type=datetime`, `number_format=yyyy-mm-dd h:mm:ss`).
+- **Fix**: Rewrote the generation script (`fix_dates_regen.py`) to use Python `datetime()` objects instead of date strings. Cleaned up all old string-based data first, then regenerated with proper datetime objects.
+- All dates across all 29 sheets are now native Excel datetime objects.
+
+### Column Alignment Fixes
+- **organization** — Script wrote 15 columns (including address_line, postal_code, country, email) but the sheet only has 11 columns. Fixed to match: `id, active, name, type_code, type_display, phone, address_city, address_state, version, created_at, updated_at`.
+- **patient_address** — Removed extra `type` column (`physical`). Changed state from "NC" abbreviation to "North Carolina" to match existing data. Sheet has 9 columns: `id, patient_id, use_type, line_1, line_2, city, state, postal_code, country`.
+- **allergy_intolerance** — Added missing `code_system` column (`http://snomed.info/sct`). Removed extra reaction detail columns. Now matches 15-column format.
+- **document_reference** — Removed extra `category_code`/`category_display` columns. Added missing `content_url`, `period_start`, `period_end` columns. Now matches 18-column format.
+
+### Organization FK Fix
+- **Problem**: Robert Anderson (P4) and Catherine Williams (Primary CM) referenced org UUID `a7b2c9d6-3e8f-0a1b-4c5d-6e7f8a9b0c1d` which didn't exist in the organization sheet.
+- **Actual UUID**: `a7b2c9d6-3e8f-9a0b-4c1d-6f7a8b9c0d1e` (Raleigh Internal Medicine Associates, Row 3).
+- **Fix**: Corrected the UUID in `patient` (1 row), `practitioner` (1 row), and `episode_of_care` (4 rows) — 6 total fixes.
+- P4 reuses the existing Internal Medicine org (shared with James Mitchell / Dr. Brooks).
+
+### Background Colour Verification
+- Verified all 637 rows across 22 sheets have correct background colours.
+- P3 = purple `#E8DAEF`, P4 = orange `#FDEBD0`, P5 = pink `#FADBD8`.
+- All confirmed correct, zero fixes needed.
+
+### chatbase_data_new.xlsx (Clean Copy)
+- User duplicated `chatbase_data.xlsx` as `chatbase_data_new.xlsx`.
+- Removed all 340 non-colored rows (James Mitchell's data already in the backend database).
+- New file contains only: headers + P3/P4/P5 colored rows + master tables (for FK reference).
+- Original `chatbase_data.xlsx` untouched.
+
+### Fix Scripts Created (not committed to git)
+- `fix_dates_regen.py` — Cleanup + regenerate with datetime objects
+- `fix_columns.py` — Fix column alignment for patient_address, allergy_intolerance, document_reference

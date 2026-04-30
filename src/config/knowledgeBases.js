@@ -45,6 +45,8 @@ V4511=Renal dialysis status, V560=Renal dialysis encounter,
 20071=Large cell lymphoma head, 20073=Large cell lymph abdom, 20078=Large cell lymph multip,
 2853=Anemia d/t antineo chemo, 28749=Sec thrombocytopenia NEC, 28800=Neutropenia NOS,
 52801=Mucositis d/t antineo rx,
+1505=Lung Cancer, 1629=Mal neo bronch/lung NOS, 496=Chr airway obstruct NEC (COPD), 49322=Ch obst asth w (ac) exac (COPD exacerbation),
+4293=Cardiomegaly/LVH, 27800=Obesity NOS, 25050=DMII ophth nt st uncntrl, 25002=DMII wo cmp uncntrld,
 1123=Cutaneous candidiasis, 1170=Rhinosporidiosis, 1190=Pulmonary TB NOS-unspec,
 1200=Schistosoma haematobium, 1800=Malig neo endocervix, 5733=Hepatitis NOS, 78630=Hemoptysis NOS,
 I10=Essential hypertension, I110=Hypertensive heart disease with HF,
@@ -93,7 +95,8 @@ FILG300, FLUCON150, GRAN1I, IFOS_IV, MELPH_IV, ONDAN4I, ONDAN8, PLERIX, POLAT140
 PRED5, PRED25, RASBU_IV, RITUX500I, TPN_IV,
 ACETY_IV, ETHAMB400, GLYCO_INH, ISONH300, MOXIFL400, PYRAZIN500, PYRIDOX50, RIFAMP450, STREPT_IM, TRANEX_IV,
 INSR,
-ENTR49, ENTR97, SACV49, SACV97
+ENTR49, ENTR97, SACV49, SACV97,
+HCTZ25, LOSA50, TIOTR18, ALBUT90, FLUT_SALM, CARBO150, PACLI100, PEMBRO100
 `;
 
 export const PROCEDURE_CODES = `
