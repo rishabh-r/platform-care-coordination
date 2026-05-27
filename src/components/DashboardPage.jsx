@@ -735,7 +735,7 @@ function LoadingScreen({ stepRef }) {
   return (
     <div className="dash-loading">
       <div className="dash-loading-box">
-        <img src="/images/LogoRsi.png" alt="R Systems" className="dash-loading-logo" />
+        <img src="/images/Rsystems_Logo_White.png" alt="R Systems" className="dash-loading-logo" />
         <div className="dash-loading-spinner-ring"><div></div><div></div><div></div></div>
         <h2>Generating AI Insights...</h2>
         <p className="dash-loading-sub">Analyzing patient data and identifying care gaps</p>
@@ -1338,7 +1338,7 @@ Requirements:
       {/* ── Navbar ── */}
       <nav className="dash-nav">
         <div className="dash-nav-left">
-          <img src="/images/LogoRsi.png" alt="R Systems" className="dash-nav-logo" />
+          <img src="/images/Rsystems_Logo_White.png" alt="R Systems" className="dash-nav-logo" />
           <span className="dash-nav-title">Patient 360 Portal</span>
         </div>
         <div className="dash-nav-right">

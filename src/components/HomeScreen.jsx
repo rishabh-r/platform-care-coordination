@@ -2,7 +2,7 @@ export default function HomeScreen({ displayName, onLogout }) {
   return (
     <div id="home-screen">
       <nav className="navbar">
-        <img src="/images/LogoRsi.png" alt="R Systems" className="nav-logo" />
+        <img src="/images/Rsystems_Logo_White.png" alt="R Systems" className="nav-logo" />
         <span className="nav-tagline">For Care Coordinators &amp; Providers</span>
       </nav>
       <main className="home-main">

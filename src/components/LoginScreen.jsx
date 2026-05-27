@@ -30,7 +30,7 @@ export default function LoginScreen({ onLoginSuccess }) {
   return (
     <div id="login-screen">
       <div className="login-topbar">
-        <img src="/images/LogoRsi.png" alt="R Systems" className="rsi-logo" />
+        <img src="/images/Rsystems_Logo_White.png" alt="R Systems" className="rsi-logo" />
         <span className="login-topbar-badge">For Care Coordinators &amp; Providers</span>
       </div>
       <div className="login-body">
