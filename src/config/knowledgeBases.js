@@ -64,7 +64,31 @@ N18.3=Chronic kidney disease stage 3, N18.9=CKD unspecified,
 E11.9=T2DM without complications, E11.65=T2DM with hyperglycemia,
 E782=Mixed hyperlipidemia, E784=Hyperlipidemia NEC/NOS,
 J810=Acute pulmonary edema, J90=Pleural effusion,
-R600=Localized edema, R0602=Shortness of breath
+R600=Localized edema, R0602=Shortness of breath,
+J44.0=COPD with acute lower resp infection, J44.1=COPD with acute exacerbation, J43.9=Emphysema unspecified,
+J18.9=Pneumonia unspecified organism, J45.50=Severe persistent asthma,
+N18.2=CKD Stage 2, N18.4=CKD Stage 4, N17.9=Acute kidney injury,
+E87.5=Hyperkalemia, E87.6=Hypokalemia,
+D50.9=Iron deficiency anemia, D63.1=Anemia in CKD,
+M06.9=Rheumatoid arthritis unspecified, M05.79=RA with rheumatoid factor multiple sites,
+M81.0=Age-related osteoporosis without fracture,
+I63.9=Cerebral infarction unspecified, I82.40=DVT lower extremity,
+K50.90=Crohn disease unspecified, K50.10=Crohn disease of large intestine,
+M32.10=SLE organ involvement, M32.9=SLE unspecified, I73.0=Raynaud phenomenon,
+G35=Multiple sclerosis, F32.1=Major depressive disorder moderate, N39.0=UTI site unspecified,
+K74.60=Unspecified cirrhosis of liver, K75.81=NASH, K76.6=Portal hypertension,
+I85.00=Esophageal varices without bleeding,
+E66.01=Morbid obesity due to excess calories, K21.0=GERD with esophagitis, G47.33=Obstructive sleep apnea,
+E11.22=T2DM with diabetic CKD,
+E78.5=Hyperlipidemia, E78.0=Pure Hypercholesterolemia,
+I11.9=Hypertensive heart disease without HF, I12.9=Hypertensive CKD,
+I15.0=Renovascular Hypertension, I21.9=Acute MI unspecified,
+I25.10=CAD native vessel, I50.22=Chronic systolic heart failure,
+I16.1=Hypertensive emergency,
+J44.9=COPD unspecified, J96.10=Chronic respiratory failure,
+C34.90=Lung cancer, C34.11=Lung cancer upper lobe,
+Z51.11=Encounter for chemotherapy, D64.81=Anemia due to chemotherapy,
+R04.2=Hemoptysis
 `;
 
 export const DRUG_CODES = `
@@ -96,7 +120,31 @@ PRED5, PRED25, RASBU_IV, RITUX500I, TPN_IV,
 ACETY_IV, ETHAMB400, GLYCO_INH, ISONH300, MOXIFL400, PYRAZIN500, PYRIDOX50, RIFAMP450, STREPT_IM, TRANEX_IV,
 INSR,
 ENTR49, ENTR97, SACV49, SACV97,
-HCTZ25, LOSA50, TIOTR18, ALBUT90, FLUT_SALM, CARBO150, PACLI100, PEMBRO100
+HCTZ25, LOSA50, TIOTR18, ALBUT90, FLUT_SALM, CARBO150, PACLI100, PEMBRO100,
+PRED10, OMEP20, FURO40, MTX25, FOLIC1, WARF5, APIX5, ATOR40, MESA800, AZA50, FESO325,
+HCQ200, MYCO500, SPIR25, METO50ER, IFN30, BACL10, SERT50, LACT10, RIFAX550, PROP40,
+MONT10, BUD_FORM, PHENT375, CALC_VD, ALEN70, EPO10K, INFL100, VITD2000, KCL20ER,
+FD197446, FD198211, FD727711, FD198145, FD1736854, FD311700, FD372567, FD197319,
+FD300002, FD300003, FD300004, FD300006, FD300007, FD300008, FD300009, FD300010,
+FD300011, FD300012, FD300013, FD300014, FD300015, FD300016, FD300017, FD300018,
+FD300019, FD300020, FD300021, FD300022, FD300023, FD300024, FD300025, FD300040,
+FD300053, FD300054
+
+MEDICATION NAMES:
+Metformin 500 MG, Metformin 1000 MG, Aspirin 81 MG EC, Lisinopril 10 MG,
+Insulin Regular 100 UNT/ML, Insulin Glargine 100 UNT/ML Pen, Atorvastatin 20 MG,
+Dextrose 50% Inj, Cephalexin 500 MG, Prednisone 20 MG, Isoniazid 300 MG,
+Erythropoietin 4000 UNT, Calcium Carbonate 500 MG, Sevelamer 800 MG,
+Omeprazole 20 MG, Sertraline 50 MG, Alendronate 70 MG,
+Acetaminophen 500 MG, Ibuprofen 200 MG, Ibuprofen 400 MG,
+Naproxen 250 MG, Naproxen 500 MG, Celecoxib 200 MG, Meloxicam 15 MG,
+Diclofenac 50 MG, Hydrocodone-Acetaminophen 5-325 MG, Oxycodone 5 MG,
+Tramadol 50 MG, Gabapentin 300 MG, Gabapentin 600 MG, Pregabalin 75 MG,
+Levetiracetam 500 MG, Phenytoin 100 MG, Carbamazepine 200 MG,
+Valproic Acid 250 MG, Levothyroxine 50 MCG, Levothyroxine 100 MCG,
+Metformin XR 500 MG, Glipizide 5 MG, Glimepiride 2 MG,
+Sotalol 80 MG, Fenofibrate 145 MG, Omega-3 Acid Ethyl Esters 1 GM,
+Cisplatin 75 MG/M2 Injectable, Pemetrexed 500 MG/M2 Injectable
 `;
 
 export const PROCEDURE_CODES = `
@@ -143,7 +191,19 @@ SPECIFIC CPT CODES:
 71250=CT thorax without contrast, 71260=CT thorax with contrast, 71275=CT angiography thorax,
 85025=CBC with differential, 87040=Blood culture aerobic, 87116=Mycobacterial culture sputum AFB,
 87153=Nucleic acid identification GeneXpert MTB, 92551=Audiometry screening,
-94010=Spirometry PFT, 99251=Inpatient consult straightforward, 99252=Inpatient consult low complexity
+94010=Spirometry PFT, 99251=Inpatient consult straightforward, 99252=Inpatient consult low complexity,
+94060=Bronchospasm evaluation with bronchodilator, 93656=Cardiac catheter ablation PVI,
+45378=Colonoscopy diagnostic, 43239=EGD with band ligation, 47100=Liver biopsy wedge,
+77080=DEXA bone density scan, 20610=Joint aspiration arthrocentesis,
+70553=MRI brain with and without contrast, 72148=MRI cervical spine without contrast,
+74177=CT abdomen and pelvis with contrast, 95810=Polysomnography sleep study,
+76937=Ultrasound guidance vascular access, 86200=Rheumatoid factor quantitative,
+50200=Kidney biopsy percutaneous,
+99213=Office visit, 99214=Office visit detailed,
+36415=Venipuncture,
+94060=Bronchospasm evaluation with bronchodilator,
+82947=Blood glucose quantitative, 83036=HbA1c test,
+82565=Creatinine clearance, 81001=Urinalysis complete
 `;
 
 export const OBSERVATION_RANGES = `
@@ -211,6 +271,11 @@ uricAcid: Low <2.4 (uricosuric agents/malnutrition) | Normal 2.4-7.0 | High >7.0
 neutrophils: Low <1.5 (neutropenia - infection risk) | Normal 1.5-8.0 | High >8.0 (bacterial infection/inflammation)
 plateletCount: Low <150 (thrombocytopenia - bleeding risk) | Normal 150-400 | High >400 (thrombocytosis/reactive)
 lymphocytes: Low <1.0 (lymphopenia - immune suppression) | Normal 1.0-4.8 | High >4.8 (lymphocytosis/viral/lymphoma)
+respiratoryRate: Low <12 (bradypnea) | Normal 12-20 | High >20 (tachypnea/respiratory distress)
+eGFR: Low <60 (reduced kidney function) | Normal 60-120 | High >120
+BUN: Low <7 (liver disease/malnutrition) | Normal 7-20 | High >20 (kidney/dehydration)
+hematocrit: Low <36 (anemia) | Normal 36-54 | High >54 (polycythemia)
+procalcitonin: Low <0.05 | Normal 0.05-0.10 | High >0.10 (bacterial infection/sepsis)
 `;
 
 export const LOINC_CODES = `
@@ -283,4 +348,21 @@ LOINC CODES AND UNITS:
 66. Neutrophils: 26499-4, 10^3/uL
 67. Platelet Count: 777-3, 10^3/uL
 68. Lymphocytes: 731-0, 10^3/uL
+69. Respiratory Rate: 9279-1, /min
+70. Body Weight: 29463-7, kg
+71. Body Height: 8302-2, cm
+72. eGFR CKD-EPI: 48642-3, mL/min/1.73m2
+73. BUN: 3094-0, mg/dL
+74. Hematocrit: 4544-3, %
+75. Microalbumin/Creatinine Ratio: 14959-1, mg/g
+76. INR Coagulation: 6301-6, INR
+77. Procalcitonin: 33959-8, ng/mL
+78. Glucose POC: 2339-0, mg/dL
+79. hs-CRP: 30522-7, mg/L
+80. WBC Count: 6690-2, 10*3/uL
+81. Troponin I: 10839-9, ng/mL
+82. Non-HDL Cholesterol: 13458-5, mg/dL
+83. LDL Cholesterol (direct): 2089-1, mg/dL
+84. Triglycerides (alt): 2571-8, mg/dL
+85. Oxygen saturation SpO2 (arterial): 59408-5, %
 `;
