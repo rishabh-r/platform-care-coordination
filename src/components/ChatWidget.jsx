@@ -82,10 +82,46 @@ export default function ChatWidget({ displayName }) {
   const messagesAreaRef = useRef(null);
   const inputRef = useRef(null);
   const systemPromptCacheRef = useRef({ prompt: null, date: null });
+  const panelRef = useRef(null);
+  const isResizingRef = useRef(false);
+  const resizeStartRef = useRef({ x: 0, y: 0, w: 0, h: 0 });
 
   const userInitial = displayName.charAt(0).toUpperCase();
 
   const userScrolledUpRef = useRef(false);
+
+  const handleResizeStart = useCallback((e) => {
+    e.preventDefault();
+    const panel = panelRef.current;
+    if (!panel) return;
+    isResizingRef.current = true;
+    resizeStartRef.current = {
+      x: e.clientX || e.touches?.[0]?.clientX || 0,
+      y: e.clientY || e.touches?.[0]?.clientY || 0,
+      w: panel.offsetWidth,
+      h: panel.offsetHeight,
+    };
+    const onMove = (ev) => {
+      if (!isResizingRef.current) return;
+      const cx = ev.clientX || ev.touches?.[0]?.clientX || 0;
+      const cy = ev.clientY || ev.touches?.[0]?.clientY || 0;
+      const newW = Math.max(320, resizeStartRef.current.w - (cx - resizeStartRef.current.x));
+      const newH = Math.max(300, resizeStartRef.current.h - (cy - resizeStartRef.current.y));
+      panel.style.width = Math.min(newW, window.innerWidth - 40) + 'px';
+      panel.style.height = Math.min(newH, window.innerHeight - 100) + 'px';
+    };
+    const onEnd = () => {
+      isResizingRef.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchmove', onMove);
+    document.addEventListener('touchend', onEnd);
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     if (messagesAreaRef.current && !userScrolledUpRef.current) {
@@ -298,7 +334,10 @@ export default function ChatWidget({ displayName }) {
 
   return (
     <div id="chat-widget">
-      <div id="chat-panel" className={`chat-panel ${!isPanelOpen ? 'hidden' : ''}`}>
+      <div id="chat-panel" ref={panelRef} className={`chat-panel ${!isPanelOpen ? 'hidden' : ''}`}>
+        <div className="chat-resize-handle" onMouseDown={handleResizeStart} onTouchStart={handleResizeStart} title="Drag to resize">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 11L11 1M5 11L11 5M9 11L11 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        </div>
         <div className="chat-panel-header">
           <div className="chat-panel-info">
             <img src="/chatbot_image/chatbot.png" alt="CareBridge" className="panel-avatar" />
