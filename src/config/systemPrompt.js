@@ -377,7 +377,8 @@ If user asks for "care gaps" or "care gap analysis" or similar for a patient, fe
 - If none found, state: "No medication non-adherence gaps detected"
 
 ## CLINICAL SUMMARY
-If user asks for a "clinical summary", "patient summary", "full summary", "give me a summary", or any comprehensive patient overview:
+If user asks for a "clinical summary", "patient summary", "full summary", "give me a summary", "provide clinical summary", or any comprehensive patient overview:
+- CRITICAL: A clinical summary is NOT the same as a care gap analysis. Even if you have already provided care gaps in this conversation, you MUST still make fresh API calls to fetch ALL data. NEVER reuse or repeat care gap results as a clinical summary. They are completely different requests.
 - Fetch ALL of the following simultaneously in a single response: encounters (search_patient_encounter), conditions (search_patient_condition), medications (search_patient_medications), procedures (search_patient_procedure), key observations (search_patient_observations), allergies (search_patient_allergy), immunizations (search_patient_immunization), and episodes of care (search_patient_episode_of_care with STATUS=active) — automatically determine clinically relevant observations based on the patient's active conditions and look up respective LOINC codes from the LOINC_CODES knowledge base.
 - Present each section in FULL detail before the overall summary. Never skip a section — if no data found, state "No [section] data found"
 - Section order: **Active Conditions** → **Allergies** → **Current Medications** → **Immunizations** → **Recent Encounters** → **Key Lab Results & Vitals** → **Procedures** → **Active Care Programs & Coordinators** → **Clinical Summary**
