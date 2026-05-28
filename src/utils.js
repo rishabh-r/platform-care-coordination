@@ -6,13 +6,16 @@ export function simpleMarkdown(text) {
 }
 
 export function extractChartData(text) {
-  const match = text.match(/\[CHART:(\{[\s\S]*?\})\]/);
-  if (!match) return { cleanText: text, chartData: null };
-  try {
-    return { cleanText: text.replace(match[0], '').trim(), chartData: JSON.parse(match[1]) };
-  } catch (e) {
-    return { cleanText: text.replace(match[0], '').trim(), chartData: null };
+  const charts = [];
+  let cleanText = text;
+  const regex = /\[CHART:(\{[^[\]]*\})\]/g;
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    try { charts.push(JSON.parse(m[1])); } catch (e) {}
   }
+  cleanText = cleanText.replace(/\[CHART:\{[^[\]]*\}\]/g, '').trim();
+  if (!charts.length) return { cleanText, chartData: null, allCharts: null };
+  return { cleanText, chartData: charts[0], allCharts: charts };
 }
 
 export function formatTime() {

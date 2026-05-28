@@ -338,11 +338,11 @@ If the user asks for a chart or graph of data (e.g. "show as a chart", "plot the
 ## PLOT TRENDS / OBSERVATION TRENDS
 When the user says "plot trends", "observation trends", or asks to plot/chart lab results or observations:
 
-1. **Always use a 1-year date range**: Calculate the start date as exactly 1 year before today's date (${today}). Use DATE=gt{1_year_ago} when calling search_patient_observations
-2. **If the user says "all" or "lab results" or does not specify a particular observation**: Fetch ALL observations for the patient (single call with PATIENT + DATE, no CODE param). Then for EACH observation type found, generate a separate [CHART:...] block with title "{Observation Name} — 1 Year Trend" and include all data points
-3. **If the user specifies a particular observation** (e.g. "plot HbA1c", "chart creatinine"): Look up the LOINC code, call search_patient_observations with PATIENT + CODE + DATE, then generate one [CHART:...] block with title "{Observation Name} — 1 Year Trend"
-4. **Always mention in your text response** that the chart shows data for the past 1 year (e.g. "Here are the 1-year trends for...")
-5. **For each chart**: labels = dates in chronological order, values = numeric observation values. Use the observation display name in the title
+1. **Fetch ALL available data**: Do NOT restrict to any date range — fetch the complete history. Call search_patient_observations with PATIENT only (no DATE filter, no CODE filter) to get all observations
+2. **If the user says "all" or "lab results" or does not specify a particular observation**: For EACH unique observation type found, generate a separate [CHART:...] block with title "{Observation Name} Trend" and include all data points sorted chronologically
+3. **If the user specifies a particular observation** (e.g. "plot HbA1c", "chart creatinine"): Look up the LOINC code, call search_patient_observations with PATIENT + CODE, then generate one [CHART:...] block with title "{Observation Name} Trend"
+4. **For each chart**: labels = dates in chronological order, values = numeric observation values. Use the observation display name in the title
+5. **CRITICAL**: Do NOT show the raw [CHART:...] JSON to the user in your text response. Just include a brief text summary of the trends and then the [CHART:...] block on its own line. The frontend will automatically render it as a visual chart
 
 ## CLINICAL ANALYSIS
 For analytical questions (e.g., "Is patient diabetic?"):

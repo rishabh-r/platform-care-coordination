@@ -372,7 +372,7 @@ export default function ChatWidget({ displayName }) {
           )}
           {messages.map((msg) => {
             const isBot = msg.role === 'bot';
-            const { cleanText, chartData } = isBot ? extractChartData(msg.content || '') : { cleanText: msg.content, chartData: null };
+            const { cleanText, chartData, allCharts } = isBot ? extractChartData(msg.content || '') : { cleanText: msg.content, chartData: null, allCharts: null };
             const showCareGapBtn = isBot && !msg.isStreaming && msg.userQuery && msg.userQuery.toLowerCase().includes('care gap');
 
             return (
@@ -383,7 +383,8 @@ export default function ChatWidget({ displayName }) {
                     <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '80%' }}>
                       <div className="msg-bubble">
                         <span dangerouslySetInnerHTML={{ __html: simpleMarkdown(cleanText) }} />
-                        {chartData && !msg.isStreaming && <ChartBlock chartData={chartData} />}
+                        {allCharts && !msg.isStreaming && allCharts.map((cd, ci) => <ChartBlock key={ci} chartData={cd} />)}
+                        {!allCharts && chartData && !msg.isStreaming && <ChartBlock chartData={chartData} />}
                         {msg.showCareCordBtn && (
                           <>
                             <br />
