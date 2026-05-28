@@ -63,7 +63,7 @@ const PREDEFINED_ITEMS = [
   { label: 'View Active Medications', action: 'medications' },
   { label: 'View Last 12 months encounters', action: 'encounters' },
   { label: 'View Care Gaps', action: 'caregaps', query: 'View Care Gaps in details' },
-  { label: 'Observation Trends', query: 'Plot Trends' },
+  { label: 'Observation Trends', query: 'Plot trends but I want you to ask me for which observation? Then after my response you plot the line graph' },
 ];
 
 export default function ChatWidget({ displayName }) {

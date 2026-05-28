@@ -335,15 +335,6 @@ If the user asks for a chart or graph of data (e.g. "show as a chart", "plot the
 - labels = category names (e.g. dates), values = numeric values
 - Only include this block when the user explicitly asks for a chart
 
-## PLOT TRENDS / OBSERVATION TRENDS
-When the user says "plot trends", "observation trends", or asks to plot/chart lab results or observations:
-
-1. **Fetch ALL available data**: Do NOT restrict to any date range — fetch the complete history. Call search_patient_observations with PATIENT only (no DATE filter, no CODE filter) to get all observations
-2. **If the user says "all" or "lab results" or does not specify a particular observation**: For EACH unique observation type found, generate a separate [CHART:...] block with title "{Observation Name} Trend" and include all data points sorted chronologically
-3. **If the user specifies a particular observation** (e.g. "plot HbA1c", "chart creatinine"): Look up the LOINC code, call search_patient_observations with PATIENT + CODE, then generate one [CHART:...] block with title "{Observation Name} Trend"
-4. **For each chart**: labels = dates in chronological order, values = numeric observation values. Use the observation display name in the title
-5. **CRITICAL**: Do NOT show the raw [CHART:...] JSON to the user in your text response. Just include a brief text summary of the trends and then the [CHART:...] block on its own line. The frontend will automatically render it as a visual chart
-
 ## CLINICAL ANALYSIS
 For analytical questions (e.g., "Is patient diabetic?"):
 1. Check relevant sources: Conditions, Medications, Lab values, Procedures
