@@ -2846,3 +2846,64 @@ Created 3 new patients in `chatbase_data.xlsx` via `generate_3patients.py`. Each
 ### Fix Scripts Created (not committed to git)
 - `fix_dates_regen.py` — Cleanup + regenerate with datetime objects
 - `fix_columns.py` — Fix column alignment for patient_address, allergy_intolerance, document_reference
+
+---
+
+## Session: May 5, 2026
+
+### Clinical Trends — Backend Issue (RESOLVED)
+- **Problem**: Clinical Trends tab showed "No observation data available" for new patients (P3, P4, P5) even though chatbot care gaps showed observation data correctly.
+- **Root cause**: Backend's `/baseR4/Observation/search` API returned 60 results for new patients but without the `code.coding` field (LOINC code + display name). The dashboard parser `parseAllObservationsForTrends` requires `r.code?.coding?.[0]?.code` and skips entries without it.
+- **Fix**: Backend team populated the `code.coding` field for new patients' observations (same fix they did for James Mitchell earlier).
+- **No frontend changes needed.**
+
+---
+
+## Session: May 27-28, 2026
+
+### R Systems Logo Update
+- **New white logo**: `Rsystems_Logo_White.png` — used on dark backgrounds (dashboard navbar, dashboard loading)
+- **New purple logo**: `Rsystems_Logo_Purple.png` — used on light backgrounds (login screen topbar, home screen navbar). Black background removed and made transparent via Python PIL.
+- **Old logo** (`LogoRsi.png`) no longer used.
+
+| Screen | Logo | Background |
+|---|---|---|
+| Login screen topbar | Purple | Light |
+| Home screen navbar | Purple | Light |
+| Dashboard navbar | White | Dark |
+| Dashboard loading | White | Dark |
+
+- **Commits**: `d37aa7c`, `360f649`, `4268b90`, `7f16ed1`
+
+### Chatbot Resize Handle
+- Added drag-to-resize functionality to the chat panel via a corner grip handle (top-left).
+- Drag to resize width and height. Min 320x300px, max fills screen.
+- Works with mouse and touch.
+- CSS: `.chat-resize-handle` with `cursor: nwse-resize`, positioned absolute top-left.
+- **Commit**: `4cdc00d`
+
+### Observation Trends — Action Chip
+- Changed internal query from `"Plot Trends"` to `"Plot trends but I want you to ask me for which observation? Then after my response you plot the line graph"`.
+- User clicks "Observation Trends" → chatbot asks which observation → user responds → chatbot plots that specific observation's line chart.
+- Reverted the auto-plot-all and 1-year restriction approaches.
+- **Commit**: `1357a6d`
+
+### Chart Parser Fix (Brace-Depth)
+- **Problem**: When multiple `[CHART:{...}]` blocks were in a response, the old regex (`[^[\]]*`) couldn't handle `[` and `]` inside JSON arrays (like `"labels":["date1","date2"]`). Raw JSON was shown to the user.
+- **Fix**: Replaced regex with brace-depth counting parser. Correctly finds matching `}` for each `{` regardless of nested arrays.
+- Also updated ChatWidget to render ALL chart blocks (not just the first one) via `allCharts` array.
+- **Commit**: `be00b72`
+
+### Patient ID Fix — Multiple Search Results
+- **Problem**: When searching "James" returned 4 patients, the code stored `entries[0]` (James Evans) as current patient immediately — before the user chose one. The Launch CareCord AI button then pointed to the wrong patient.
+- **Fix**: 
+  1. Only set `currentPatientRef` when exactly 1 result returned
+  2. When multiple results and LLM searches with both GIVEN + FAMILY, match by family name to find the correct patient
+  3. When follow-up tools are called with a PATIENT UUID, capture that UUID as fallback
+- **Commits**: `7fc3451`, `40082d3`
+
+### Predefined Action Ref Bug — Clinical Summary After Care Gaps
+- **Problem**: After clicking "View Care Gaps" (predefined action), typing "clinical summary" would silently send `"Show care gaps for patient {id}"` instead. The chatbot repeated care gaps instead of giving a clinical summary.
+- **Root cause**: `handlePredefinedClick` set `pendingChipActionRef = 'caregaps'` but never cleared it — because it calls `agentLoop` directly, not `handleSend` (which clears the ref). So the next user-typed message was intercepted and replaced by the stale action.
+- **Fix**: Predefined actions now build the query immediately and send it without using `pendingChipActionRef`. No leftover state after predefined actions complete.
+- **Commit**: `314b8a9`
