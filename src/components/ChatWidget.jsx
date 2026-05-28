@@ -217,6 +217,9 @@ export default function ChatWidget({ displayName }) {
               const res = await executeTool(tc.function.name, args, (patient) => {
                 currentPatientRef.current = patient;
               });
+              if (!currentPatientRef.current && args.PATIENT && tc.function.name !== 'search_fhir_patient') {
+                currentPatientRef.current = { name: '', id: args.PATIENT };
+              }
               return { role: 'tool', tool_call_id: tc.id, content: JSON.stringify(res) };
             })
           );

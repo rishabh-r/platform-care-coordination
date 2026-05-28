@@ -82,12 +82,23 @@ export async function executeTool(name, args, onPatientFound) {
         const patientResult = await callFhirApi(buildUrl('/baseR4/Patient', params));
         try {
           const entries = patientResult?.entry || [];
-          const resource = entries[0]?.resource || null;
-          const id = resource?.id || args.PATIENT_ID || '';
-          const rGiven = resource?.name?.[0]?.given?.join(' ') || args.GIVEN || '';
-          const rFamily = resource?.name?.[0]?.family || args.FAMILY || '';
-          const fullName = [rGiven, rFamily].filter(Boolean).join(' ');
-          if (fullName && onPatientFound) onPatientFound({ name: fullName, id });
+          if (entries.length === 1) {
+            const resource = entries[0]?.resource || null;
+            const id = resource?.id || args.PATIENT_ID || '';
+            const rGiven = resource?.name?.[0]?.given?.join(' ') || args.GIVEN || '';
+            const rFamily = resource?.name?.[0]?.family || args.FAMILY || '';
+            const fullName = [rGiven, rFamily].filter(Boolean).join(' ');
+            if (fullName && onPatientFound) onPatientFound({ name: fullName, id });
+          } else if (args.PATIENT_ID && entries.length > 0) {
+            const match = entries.find(e => e.resource?.id === args.PATIENT_ID);
+            if (match) {
+              const r = match.resource;
+              const rGiven = r?.name?.[0]?.given?.join(' ') || '';
+              const rFamily = r?.name?.[0]?.family || '';
+              const fullName = [rGiven, rFamily].filter(Boolean).join(' ');
+              if (fullName && onPatientFound) onPatientFound({ name: fullName, id: r.id });
+            }
+          }
         } catch (e) {}
         return patientResult;
       }
