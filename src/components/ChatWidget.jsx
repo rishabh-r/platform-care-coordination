@@ -303,9 +303,23 @@ export default function ChatWidget({ displayName }) {
     userScrolledUpRef.current = false;
     setShowDropdown(false);
     addMessage('user', item.label);
-    if (item.action) pendingChipActionRef.current = item.action;
     setIsBotResponding(true);
-    await agentLoop(item.query || item.label);
+    if (item.action) {
+      let patientRef = '';
+      if (currentPatientRef.current) {
+        patientRef = currentPatientRef.current.id || currentPatientRef.current.name;
+      }
+      const queries = {
+        conditions: `Show active conditions for patient ${patientRef}`,
+        lab: `Latest observations for the patient ${patientRef}`,
+        medications: `List medications for patient ${patientRef}`,
+        encounters: `Show encounters for patient ${patientRef}`,
+        caregaps: `Show care gaps for patient ${patientRef}`,
+      };
+      await agentLoop(queries[item.action] || item.query || item.label);
+    } else {
+      await agentLoop(item.query || item.label);
+    }
     setIsBotResponding(false);
     if (inputRef.current) inputRef.current.focus();
   }, [isBotResponding, addMessage, agentLoop]);
